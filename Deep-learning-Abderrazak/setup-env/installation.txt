@@ -1,0 +1,4 @@
+conda config --prepend channels conda-forge
+conda create -n hais-env --strict-channel-priority osmnx
+conda activate hais-env 
+pip install requirements.txt
