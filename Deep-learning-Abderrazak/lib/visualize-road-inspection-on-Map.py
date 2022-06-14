@@ -60,9 +60,10 @@ def plot_map(graph, origin_edge, nodes, edges, buildings, parks, water):
 	# print(f'\n - {node} \n\n - {origin_edge}, \n coord_center={coord_center}')
 	#- show steets names
 	steets_names=[]
+	max_St = 20
 	for _, edge in edges.fillna('').iterrows():
 		# limit number of street to show
-		max_St = 50
+		
 		if edge['name'] not in steets_names:
 			steets_names.append(edge['name'])
 			c = edge['geometry'].centroid
@@ -95,7 +96,7 @@ def plot_map(graph, origin_edge, nodes, edges, buildings, parks, water):
 
 if __name__ == '__main__':
 	place_coord = (43.94593458427975, -78.89566960105887) # Ontario Tech University
-	radius = 3000  # meters
+	radius = 1000  # meters
 	# vizualise the map
 	viz_road_conditions_map(place_coord, radius),
 	print(f'\n\n #####  END  #####')

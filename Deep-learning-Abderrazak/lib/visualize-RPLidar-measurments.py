@@ -64,22 +64,23 @@ class RPLidar_records(object):
 				------
 				scan : list
 						List of the measures. Each measurment is tuple with following
-						format: (quality, angle, distance). For values description please
+						format: (quality, Azimuth , distance). For values description please
 						refer to `iter_measures` method's documentation.
 				'''
 				scans_dict_list= read_scan(self.filename)
+				altitude=0
 				quality = -1
 				scan_list = []
 				for	scan in scans_dict_list:
 					distance_list = scan['lidar/dist_array']
 					time_tag = scan["_timestamp_ms"]/1000
-					angle = 0
+					Azimuth  = 0
 					scan_list = []
 					for distance in distance_list :
-						angle = angle + self.angle_step
+						Azimuth  = Azimuth  + self.angle_step
 						if distance > 0:
-							scan_list.append((quality, angle, distance))
-					print(f'\t\t - time= {time_tag} sec , total angle={angle} deg')
+							scan_list.append((quality, Azimuth , distance))
+					print(f'\t\t - time= {time_tag} sec , total Azimuth ={Azimuth} deg, distance={distance}, Azimuith={altitude}')
 					yield scan_list
 
 def update_line(num, iterator, line):
