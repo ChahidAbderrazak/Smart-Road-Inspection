@@ -7,8 +7,9 @@ ox.config(log_console=True, use_cache=True)
 place_coord = (43.94593458427975, -78.89566960105887) # Ontario Tech University
 radius = 3000  # meters
 G = ox.graph_from_point(place_coord, dist=radius, network_type="drive")
-
-
+# Retrieve nodes and edges
+nodes, edges = ox.graph_to_gdfs(G)
+input(nodes)
 # def plot_road_conditions(G):
 available_colors = ['green', 'yellow', 'orange', 'red']
 # create Nroutes random routes

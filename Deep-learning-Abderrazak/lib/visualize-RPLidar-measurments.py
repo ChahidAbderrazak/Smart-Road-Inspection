@@ -7,7 +7,7 @@ import matplotlib.animation as animation
 
 
 class RPLidar_records(object):
-		'''Class for communicating with RPLidar rangefinder scanners'''
+		'''Class for communicating with RPLidar rangefinder scanners : sampling time = 5seconds'''
 
 		def __init__(self, filename, angle_step=1):
 				'''Initilize RPLidar object for communicating with the sensor.
@@ -115,7 +115,7 @@ def run_records():
 	# vizualise lidar image
 	lidar.plot_lidar()
 
-	# lidat animation
+	# lidar animation
 	fig = plt.figure()
 	ax = plt.subplot(111, projection='polar')
 	line = ax.scatter([0, 0], [0, 0], s=5, c=[IMIN, IMAX],
