@@ -14,24 +14,18 @@ except IndexError:
     pass
 
 import carla
-from lib.carla_utils import *
-from lib.firebase_utils import *
-
+from lib import carla_utils
+from lib import firebase_utils
+import syntax
 
 # input configurations
-config = {'Scenario': 'S1', 'Used_Case': 'UC1', 'duration': 1000}
-# print(config['Used_Case'])
-#
-#
-# # Run CARLA Simulation
-# simulation_parameters, dict_fr_list = utils_shashwat.run_carla_experiment(config)
-#
-#
-# # Push data to firebase
-# utils_shashwat.push_data_to_firebase(config, dict_fr_list, simulation_parameters)
+config = {'Scenario': 'S1', 'Used_Case': 'UC1', 'duration': 30}
 
-# Retrieve data from firebase
-dict_fr_list_retrieved = utils_shashwat.retreive_data_from_firebase(config)
+# Run CARLA Simulation
+simulation_parameters, dict_fr_list = carla_utils.run_carla_experiment(config)
 
+# push data to firebase
+firebase_utils.push_data_to_firebase(config, dict_fr_list, simulation_parameters)
 
-
+# retrieve data from firebase
+dict_fr_list_retrieved = firebase_utils.retreive_data_from_firebase(config)
