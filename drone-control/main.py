@@ -1,16 +1,21 @@
 
 import os
 import sys
+import time
 from lib import sensors_functions
 def main():
 	for k in range(10):
 		# get image
+		tic = time.perf_counter()
 		frame, err = sensors_functions.get_RGB_Camera()
-		print(frame)
-		# get sensor2
-		data2, err = sensors_functions.get_Lidar()
-		print(data2)
+		toc = time.perf_counter() - tic
+		print(f'\n the camera data: \n - frame ={frame}\n - time ={toc} ')
+		# get Lidar
+		tic = time.perf_counter()
+		data, err = sensors_functions.get_Lidar()
+		toc = time.perf_counter() - tic
+		print(f'\n the Lidar data: \n - data ={data}\n - time ={toc} ')
 		
 if __name__ == '__main__':
-    main()
+		main()
 
