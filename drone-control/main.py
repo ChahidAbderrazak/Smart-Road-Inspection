@@ -15,6 +15,14 @@ def main():
 		data, err = sensors_functions.get_Lidar()
 		toc = time.perf_counter() - tic
 		print(f'\n the Lidar data: \n - data ={data}\n - time ={toc} ')
+		# get Data from Drone
+		tic = time.perf_counter()
+		u=1
+		err = sensors_functions.set_drone_control(u)
+		data, err = sensors_functions.get_drone_data()
+		toc = time.perf_counter() - tic
+		print(f'\n the Drone data data: \n - data ={data}\n - time ={toc} ')
+
 		
 if __name__ == '__main__':
 		main()
