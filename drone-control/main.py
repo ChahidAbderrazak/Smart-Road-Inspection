@@ -23,7 +23,6 @@ def main():
 		toc = time.perf_counter() - tic
 		print(f'\n the Drone data data: \n - data ={data}\n - time ={toc} ')
 
-		
 if __name__ == '__main__':
 		main()
 
