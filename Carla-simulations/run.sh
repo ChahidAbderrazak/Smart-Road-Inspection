@@ -6,6 +6,6 @@ echo "Activating conda environment"
 # ########################   Ubuntu-CPU   ########################
 conda activate hais-env
 echo "Running python script"
-python main.py 
+python main_firebase.py
 
 conda deactivate 
