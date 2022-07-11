@@ -14,18 +14,12 @@ except IndexError:
     pass
 
 import carla
-from lib import carla_utils
+
 from lib import firebase_utils
 import syntax
 
 # input configurations
 config = {'Scenario': 'S1', 'Used_Case': 'UC1', 'duration': 30}
-
-# Run CARLA Simulation
-simulation_parameters, dict_fr_list = carla_utils.run_carla_experiment(config)
-
-# push data to firebase
-firebase_utils.push_data_to_firebase(config, dict_fr_list, simulation_parameters)
 
 # retrieve data from firebase
 dict_fr_list_retrieved = firebase_utils.retreive_data_from_firebase(config)
