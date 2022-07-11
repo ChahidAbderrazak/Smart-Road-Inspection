@@ -5,9 +5,9 @@ import time
 import random
 import pickle
 import pyrebase
-
-
 import numpy as np
+from lib import utils
+
 
 dict_frame = {}  # dictionary of sensor data corresponding to a single frame
 dict_fr_list = []  # list of individual dictionaries of sensors' data for all frames
@@ -94,18 +94,24 @@ def push_data_to_firebase(config, dict_fr_list_push, simulation_parameters):
 
 
 # Retrieve data from firebase
-def retreive_data_from_firebase(config):
+def retreive_data_from_firebase(config, data_root='./data'):
     global filenames_strg_list, flag, storage
     dict_fr_list_retrieved = []
+
+    # save reteived files in <filename>
     if flag == 1:
         filename_strg, dir_storage = get_file_names(config)
-        storage.child(config['Scenario']).child(config['Used_Case']).child(filename_strg).download(filename_strg)
-        dict_fr_list_retrieved = pkl_to_dict(filename_strg)
+        filename = os.path.join(data_root, dir_storage, filename_strg)
+        utils.create_new_folder(os.path.dirname(filename))
+        storage.child(config['Scenario']).child(config['Used_Case']).child(filename_strg).download(filename)
+        dict_fr_list_retrieved = pkl_to_dict(filename)
 
     elif flag == 0:
         filename_strg, dir_storage = get_file_names(config)
-        for filename in filenames_strg_list:
-            storage.child(config['Scenario']).child(config['Used_Case']).child(filename_strg).download(filename_strg)
+        for file in filenames_strg_list:
+            filename = os.path.join(data_root, dir_storage, file)
+            utils.create_new_folder(os.path.dirname(filename))
+            storage.child(config['Scenario']).child(config['Used_Case']).child(filename_strg).download(filename)
             dict_frame_retrieved = pkl_to_dict(filename)
             dict_fr_list_retrieved.append(dict_frame_retrieved)
 

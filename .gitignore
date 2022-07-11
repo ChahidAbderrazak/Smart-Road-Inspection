@@ -3,3 +3,4 @@ Deep-learning-Abderrazak/cash/*
 *.json
 *.csv
 *.pyc
+*.pkl

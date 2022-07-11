@@ -1,11 +1,18 @@
 #!/bin/bash
 clear
 eval "$($(which conda) 'shell.bash' 'hook')"
-echo "Activating conda environment"
+echo & echo "Activating conda environment"
 
-# ########################   Ubuntu-CPU   ########################
-conda activate hais-env
-echo "Running python script"
+
+# ###############################################
+# conda activate carla-env
+# echo & echo "Running Carla expereiment script"
+# python main_carla.py
+# conda deactivate 
+
+
+###############################################
+conda activate firebase-env
+echo & echo "Running Firebase Data retreival script"
 python main_firebase.py
-
 conda deactivate 
