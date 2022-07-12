@@ -146,7 +146,7 @@ class HAIS_bot:
 			scene_table = utils.load_json(scene_filename)
 			scene_token = utils.get_scene_token(config=self.config)
 			# print(f'\n\n  -> scene_token:\n{scene_token}')
-			scene_name = self.config['Scenario']+ '-' + self.config['Used_Case']
+			scene_name = self.config['Scenario']+ '-' + self.config['USE_CASE']
 			scene_ = utils.build_scene_table_entry(name=scene_name, token=scene_token,log_token=log_token,\
 																						scene_table=scene_data, config=self.config)
 			# print(f'\n\n  -> scene_:\n{scene_}')
@@ -160,7 +160,7 @@ class HAIS_bot:
 					# get sensor data
 					sensor_name=list(sample.keys())[1]
 					# print(f'\n\n  -> sensor = {sensor_name}')
-					token = utils.get_sample_token(sample, config=self.config)
+					sample_token = utils.get_sample_token(sample, config=self.config)
 					timestamp = sample[sensor_name]['Timestamp']
 					# get previous and next sample
 					try:
@@ -169,13 +169,27 @@ class HAIS_bot:
 						next_sample=''
 
 					# build sample table
-					sample_ = utils.build_sample_table_entry(token,timestamp,prev_sample, next_sample, scene_token)
+					sample_ = utils.build_sample_table_entry(token=sample_token,timestamp=timestamp,prev_sample=prev_sample, \
+																										next_sample=next_sample, scene_token=scene_token)
 					# print(f'\n\n  -> sample_:\n{sample_}')
 					sample_table = utils.load_json(sample_filename)
 					utils.update_table(sample_table, sample_, sample_filename)
 
 					# update sample data table + new entry
-					prev_sample=token
+					sample_data_filename = self.get_table_path('sample_data')
+					sample_data_table = utils.load_json(sample_data_filename)
+					calibrated_sensor_token='calib__' + sample_token
+					ego_pose_token='pos__' + sample_token
+					fileformat, sensor_filename, is_key_frame = 'pkl', 'data/dhjs.pkl', False
+					height, width = 0, 0
+					sample_data_ = utils.build_sample_data_table_entry(token=sample_token,timestamp=timestamp, sample_token=sample_token, ego_pose_token=ego_pose_token,\
+																calibrated_sensor_token=calibrated_sensor_token,fileformat=fileformat, is_key_frame=is_key_frame,\
+																	 prev_sample=prev_sample, next_sample=next_sample, filename=sensor_filename, height=height, width=width)
+
+					utils.update_table(sample_data_table, sample_data_, sample_data_filename)
+
+					# move to next sample
+					prev_sample=sample_token
 
 					sensor_list.append(sensor_name)
 			print(np.unique(sensor_list))

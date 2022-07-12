@@ -59,10 +59,10 @@ def dict_to_pkl(filename, dict):
 # get file name
 def get_file_names(config, fr=''):
     if fr == '':
-        filename_strg = config['Scenario'] + '_' + config['Used_Case'] + '_.pkl'
+        filename_strg = config['Scenario'] + '_' + config['USE_CASE'] + '_.pkl'
     else:
-        filename_strg = config['Scenario'] + '_' + config['Used_Case'] + '_Fr' + fr + '_.pkl'
-    dir_storage = os.path.join(config['Scenario'], config['Used_Case'])
+        filename_strg = config['Scenario'] + '_' + config['USE_CASE'] + '_Fr' + fr + '_.pkl'
+    dir_storage = os.path.join(config['Scenario'], config['USE_CASE'])
     return filename_strg, dir_storage
 
 
@@ -76,8 +76,8 @@ def push_data_to_firebase(config, dict_fr_list_push, simulation_parameters):
         filename_strg, dir_storage = get_file_names(config)
         dict_to_pkl(filename_strg, dict_fr_list_push)
         dict_to_pkl('simulation_parameters.pkl', simulation_parameters)
-        storage.child(config['Scenario']).child(config['Used_Case']).child(filename_strg).put(filename_strg)
-        storage.child(config['Scenario']).child(config['Used_Case']).child('simulation_parameters.pkl').put(
+        storage.child(config['Scenario']).child(config['USE_CASE']).child(filename_strg).put(filename_strg)
+        storage.child(config['Scenario']).child(config['USE_CASE']).child('simulation_parameters.pkl').put(
             'simulation_parameters.pkl')
         flag = 1
 
@@ -87,8 +87,8 @@ def push_data_to_firebase(config, dict_fr_list_push, simulation_parameters):
             dict_to_pkl(filename_strg, dict)
             dict_to_pkl('simulation_parameters.pkl', simulation_parameters)
             filenames_strg_list.append(filename_strg)
-            storage.child(config['Scenario']).child(config['Used_Case']).child(filename_strg).put(filename_strg)
-            storage.child(config['Scenario']).child(config['Used_Case']).child('simulation_parameters.pkl').put(
+            storage.child(config['Scenario']).child(config['USE_CASE']).child(filename_strg).put(filename_strg)
+            storage.child(config['Scenario']).child(config['USE_CASE']).child('simulation_parameters.pkl').put(
                 'simulation_parameters.pkl')
             flag = 0
 
@@ -103,7 +103,7 @@ def retreive_data_from_firebase(config, data_root='./data'):
         filename_strg, dir_storage = get_file_names(config)
         filename = os.path.join(data_root, dir_storage, filename_strg)
         utils.create_new_folder(os.path.dirname(filename))
-        storage.child(config['Scenario']).child(config['Used_Case']).child(filename_strg).download(filename)
+        storage.child(config['Scenario']).child(config['USE_CASE']).child(filename_strg).download(filename)
         dict_fr_list_retrieved = pkl_to_dict(filename)
 
     elif flag == 0:
@@ -111,7 +111,7 @@ def retreive_data_from_firebase(config, data_root='./data'):
         for file in filenames_strg_list:
             filename = os.path.join(data_root, dir_storage, file)
             utils.create_new_folder(os.path.dirname(filename))
-            storage.child(config['Scenario']).child(config['Used_Case']).child(filename_strg).download(filename)
+            storage.child(config['Scenario']).child(config['USE_CASE']).child(filename_strg).download(filename)
             dict_frame_retrieved = pkl_to_dict(filename)
             dict_fr_list_retrieved.append(dict_frame_retrieved)
 

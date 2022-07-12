@@ -19,7 +19,7 @@ from lib import firebase_utils
 import syntax
 
 # input configurations
-config = {'Scenario': 'S1', 'Used_Case': 'UC1', 'duration': 30}
+config = {'Scenario': 'S1', 'USE_CASE': 'UC1', 'duration': 30}
 
 # Run CARLA Simulation
 simulation_parameters, dict_fr_list = carla_utils.run_carla_experiment(config)

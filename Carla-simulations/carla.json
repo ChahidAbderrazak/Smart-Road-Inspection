@@ -1,0 +1,45 @@
+
+	
+config = {"Scenario": "S1", "USE_CASE": "UC1", "duration": 30, \
+	"vehicle":"car1", "location":"Ontario Tech University", \
+	"description": "low-safety index"}
+
+dict_fr_list = [{"frame": 37225, 
+		"description": "low-safety index",
+		"timestamp": 5424.9361754618585,
+		"sensor_name":"Semantic_Lidar_Sensor", 
+		"position":{"rotation": [ 0.57, -0.0, 0.013, -0.8], "translation": [ 40.04, 16, 0.0 ]}, 
+		"calibration": {"translation": [ 6, -4, 4 ], "rotation": [ 0.202, -4, 4, -4 ], "camera_intrinsic":  [ 7, 0.0, 5 ]}, 
+		"fileformat":"json", 
+		"filename":"./data/S1/UC1/bxbnb.json", 
+		"meta_data": {"Horizontal Angle": 2.532745599746704, "Channels": 32, "Number of points per channel captured this frame": 871635407}},
+	
+ },
+ {"frame": 37225, 
+	"description": "low-safety index",
+	"timestamp": 5424.9361754618585,
+	"sensor_name":"RBG_camera_Sensor", 
+	"position":{"rotation": [ 0.57, -0.0, 0.013, -0.8], "translation": [ 40.04, 16, 0.0 ]}, 
+	"calibration": {"translation": [ 6, -4, 4 ], "rotation": [ 0.202, -4, 4, -4 ], "camera_intrinsic":  [ 7, 0.0, 5 ]}, 
+	"fileformat":"json", 
+	"filename":"./S1/UC1/bxbnb.jpg", 
+	"meta_data": {"Horizontal Angle": 2.532745599746704, "Channels": 32, "Number of points per channel captured this frame": 871635407}},
+
+},
+{"frame": 37225, 
+	"description": "low-safety index",
+	"timestamp": 5424.9361754618585,
+	"sensor_name":"Semantic_Lidar_Sensor", 
+	"position":{"rotation": [ 0.57, -0.0, 0.013, -0.8], "translation": [ 40.04, 16, 0.0 ]}, 
+	"calibration": {"translation": [ 6, -4, 4 ], "rotation": [ 0.202, -4, 4, -4 ], "camera_intrinsic":  [ 7, 0.0, 5 ]}, 
+	"fileformat":"json", 
+	"filename":"./data/S1/UC1/bxbnb.json", 
+	"meta_data": {"Horizontal Angle": 2.532745599746704, "Channels": 32, "Number of points per channel captured this frame": 871635407}},
+}]
+
+
+
+{"fileformat":"json" or "jpg" or  "pcd" or "bin" etc}
+
+
+{"Accelerometer": [87404.609375, -142341.781250, -62497.945313]}

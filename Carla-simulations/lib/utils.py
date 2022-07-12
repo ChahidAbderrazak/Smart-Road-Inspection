@@ -29,7 +29,15 @@ def save_json(json_string, filename):
 	except:
 		return 1
 
-def get_time_tag(type=0):
+def get_sensor_filename(sensor_name, frame, config):
+	try:
+		scene_setup = '__' + config['Scenario']+ '-' + config['USE_CASE']
+	except:
+		scene_setup = '__Unknown'
+	time_tag =  str(get_time_tag(type=1))
+	return time_tag + scene_setup + '__' + sensor_name + '__' + str(frame)
+
+def get_time_tag(type=1):
 	from datetime import datetime
 	today = datetime.now()
 	if type==0:
@@ -48,7 +56,7 @@ def update_table(old_table, entry, filename):
 			msg = f'\n\n Error: The token <{e}> already exist in the table'
 			print(msg)
 			# raise ValueError(msg)
-	table = [entry] + old_table
+	table = old_table + [entry]
 	save_json(table, filename)
 
 def get_sample_token():
@@ -75,7 +83,7 @@ def build_log_table_entry(token,vehicle,location):
 #################	 SCENE TABLE	 ################# 
 def get_scene_token(config=''):
 	try:
-		scene_setup = '__' + config['Scenario']+ '-' + config['Used_Case']
+		scene_setup = '__' + config['Scenario']+ '-' + config['USE_CASE']
 	except:
 		scene_setup = ''
 	
@@ -100,7 +108,7 @@ def build_scene_table_entry(name,token,log_token,scene_table, config):
 #################	 SAMPLE TABLE	 ################# 
 def get_sample_token(scene_, config=''):
 	try:
-		scene_setup = '__' + config['Scenario']+ '-' + config['Used_Case']
+		scene_setup = '__' + config['Scenario']+ '-' + config['USE_CASE']
 	except:
 		scene_setup = '__Unknown'
 	time_tag = str(scene_['frame'])
@@ -119,24 +127,28 @@ def build_sample_table_entry(token,timestamp,prev_sample, next_sample, scene_tok
 #################	 SAMPLE TABLE	 ################# 
 def get_sample_data_token(scene_, config=''):
 	try:
-		scene_setup = '__' + config['Scenario']+ '-' + config['Used_Case']
+		scene_setup = '__' + config['Scenario']+ '-' + config['USE_CASE']
 	except:
 		scene_setup = '__Unknown'
 	time_tag = str(scene_['frame'])
 	return time_tag + scene_setup
 
-def build_sample_data_table_entry(token,timestamp,prev_sample, next_sample, scene_token):
+def build_sample_data_table_entry(token,timestamp, sample_token, ego_pose_token, calibrated_sensor_token, \
+	                               fileformat, is_key_frame, prev_sample, next_sample, filename, height=0, width=0):
 	entry = {
 	"token": token,
+	"sample_token": sample_token,
+	"ego_pose_token": ego_pose_token,
+	"calibrated_sensor_token": calibrated_sensor_token,
 	"timestamp": timestamp,
+	"fileformat": fileformat,
+	"is_key_frame": is_key_frame,
+	"height": height,
+	"width": width,
+	"filename": filename,
 	"prev": prev_sample,
 	"next": next_sample,
-	"scene_token": scene_token
 	}
 	return entry
 
-
 #################	 SENSOR TABLE	 ################# 
-	['Depth_Camera' 'GNSS_Sensor' 'IMU_Sensor' 'Lidar_Sensor'
- 'Obstacle_Sensor' 'RGB_Camera_Back' 'RGB_Camera_Front' 'Radar_Sensor'
- 'Semantic_Lidar_Sensor']
