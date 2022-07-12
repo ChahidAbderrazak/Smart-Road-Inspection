@@ -11,8 +11,16 @@ echo & echo "Activating conda environment"
 # conda deactivate 
 
 
+# ###############################################
+# conda activate firebase-env
+# echo & echo "Running Firebase Data retreival script"
+# python main_firebase.py
+
 ###############################################
 conda activate firebase-env
-echo & echo "Running Firebase Data retreival script"
-python main_firebase.py
+echo & echo "Converting the raw data into NuScenes-like data structure"
+python main_create_database.py
+
+###############################################
+
 conda deactivate 
