@@ -11,14 +11,15 @@ from lib import utils as utils_abd
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self,DATA_DIR, OUTPUT_DIR):
         super().__init__()
-
+        self.DATA_DIR=DATA_DIR
+        self.OUTPUT_DIR=OUTPUT_DIR
         self.setWindowIcon(QtGui.QIcon('files/icon.png'))
         self.setWindowTitle("HAIS Annotator using UltimateLabeler toolbox")
         
 
-        self.central_widget = CentralWidget()
+        self.central_widget = CentralWidget(DATA_DIR=self.DATA_DIR, OUTPUT_DIR=self.OUTPUT_DIR)
         self.central_widget.setFocusPolicy(Qt.StrongFocus)
         self.setFocusProxy(self.central_widget)
         self.central_widget.setFocus(True)
@@ -99,9 +100,11 @@ class MainWindow(QMainWindow):
 
 
 class CentralWidget(QWidget, StateListener):
-    def __init__(self,):
+    def __init__(self,DATA_DIR, OUTPUT_DIR):
         super().__init__()
-        self.state = State()
+        self.DATA_DIR=DATA_DIR
+        self.OUTPUT_DIR=OUTPUT_DIR
+        self.state = State(DATA_DIR=self.DATA_DIR, OUTPUT_DIR=self.OUTPUT_DIR)
         self.state.load_state()
         self.state.add_listener(self)
         self.keyboard_notifier = KeyboardNotifier()
@@ -180,12 +183,11 @@ def run_2D_annotator():
     app = QApplication([])
     app.setStyle("Fusion")
 
-    # # load config
-    # conf_dict = utils_abd.load_json('config/annotation_config.json')
-    # DATA_DIR = conf_dict['DATA_DIR']
-    # OUTPUT_DIR = conf_dict['DATA_DIR']
-    
-    main_window = MainWindow()
+    # load config
+    conf_dict = utils_abd.load_json('config/annotation_config.json')
+    DATA_DIR = conf_dict['DATA_DIR']
+    OUTPUT_DIR = conf_dict['DATA_DIR']
+    main_window = MainWindow(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
     app.exec()
 
 if __name__ == '__main__':

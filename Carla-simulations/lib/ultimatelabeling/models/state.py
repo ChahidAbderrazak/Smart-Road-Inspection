@@ -7,7 +7,7 @@ from lib.ultimatelabeling.styles import Theme
 from .ssh_credentials import SSHCredentials
 from .track_info import TrackInfo
 from lib.ultimatelabeling import utils
-from lib.ultimatelabeling.config import DATA_DIR, STATE_PATH
+# from lib.ultimatelabeling.config import DATA_DIR, self.STATE_PATH
 
 class FrameMode:
     MANUAL = "manual"  # for manually choosing the current frame
@@ -22,7 +22,10 @@ class RightClickOption:
 
 
 class State:
-    def __init__(self):
+    def __init__(self, DATA_DIR, OUTPUT_DIR):
+        self.DATA_DIR=DATA_DIR
+        self.OUTPUT_DIR=OUTPUT_DIR
+        self.STATE_PATH=os.path.join(os.path.dirname(self.OUTPUT_DIR), 'state.pkl')
         self.video_list = []
         self.current_video = None
         self.current_frame = 0
@@ -30,7 +33,7 @@ class State:
         self.file_names = []
         self.theme = Theme.DARK
         self.ssh_credentials = SSHCredentials()
-        self.track_info = TrackInfo()
+        self.track_info = TrackInfo(OUTPUT_DIR=self.OUTPUT_DIR)
         self.current_detection = None
         self.frame_mode = FrameMode.MANUAL
 
@@ -75,11 +78,11 @@ class State:
             yield self.get_file_name(frame)
 
     def find_videos(self):
-        return next(os.walk(DATA_DIR))[1]
+        return next(os.walk(self.DATA_DIR))[1]
 
     def check_raw_videos(self):
-        files = glob.glob(os.path.join(DATA_DIR, "*.mp4"))
-        files.extend(glob.glob(os.path.join(DATA_DIR, "*.mov")))
+        files = glob.glob(os.path.join(self.DATA_DIR, "*.mp4"))
+        files.extend(glob.glob(os.path.join(self.DATA_DIR, "*.mov")))
 
         for file in files:
             base = os.path.basename(file)
@@ -87,26 +90,28 @@ class State:
 
             if filename not in self.video_list:
                 print("Extracting video {}...".format(base))
-                utils.convert_video_to_frames(file, os.path.join(DATA_DIR, filename))
+                utils.convert_video_to_frames(file, os.path.join(self.DATA_DIR, filename))
         self.video_list = self.find_videos()
         
 
     def update_file_names(self):
         if self.current_video:
-            self.file_names = sorted(glob.glob(os.path.join(DATA_DIR, self.current_video, '*.jpg')), key = utils.natural_sort_key)
-            self.file_names.extend( sorted(glob.glob(os.path.join(DATA_DIR, self.current_video, '*.png')), key = utils.natural_sort_key) )
+            self.file_names = sorted(glob.glob(os.path.join(self.DATA_DIR, self.current_video, '*.jpg')), key = utils.natural_sort_key)
+            self.file_names.extend( sorted(glob.glob(os.path.join(self.DATA_DIR, self.current_video, '*.png')), key = utils.natural_sort_key) )
 
             self.nb_frames = len(self.file_names)
 
     def save_state(self):
-        with open(STATE_PATH, 'wb') as f:
+        
+        with open(self.STATE_PATH, 'wb') as f:
             state_dict = {k: v for k, v in self.__dict__.items() if k not in ["listeners", "track_info", "drawing",
                                                                               "img_viewer", "speed_player"]}
             pickle.dump(state_dict, f)
 
     def load_state(self):
-        if os.path.exists(STATE_PATH):
-            with open(STATE_PATH, 'rb') as f:
+        
+        if os.path.exists(self.STATE_PATH):
+            with open(self.STATE_PATH, 'rb') as f:
                 self.__dict__.update(pickle.load(f))
 
         # Reinitialize SSH connection info
@@ -124,7 +129,7 @@ class State:
             self.current_frame = 0
 
         self.update_file_names()
-        self.track_info = TrackInfo(self.current_video)
+        self.track_info = TrackInfo(self.current_video, OUTPUT_DIR=self.OUTPUT_DIR)
         self.track_info.load_detections(self.get_file_name())
         self.frame_mode = FrameMode.MANUAL
 
@@ -154,7 +159,7 @@ class State:
             self.current_video = video_name
             self.update_file_names()
             self.current_frame = 0
-            self.track_info = TrackInfo(self.current_video)
+            self.track_info = TrackInfo(self.current_video, OUTPUT_DIR=self.OUTPUT_DIR)
             self.track_info.load_detections(self.get_file_name())
             self.current_detection = None
             self.frame_mode = FrameMode.MANUAL

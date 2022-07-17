@@ -48,7 +48,7 @@ class Detection:
 
 
 class TrackInfo:
-    def __init__(self, video_name="", OUTPUT_DIR='./output'):
+    def __init__(self, video_name="", OUTPUT_DIR='/output'):
         self.video_name = video_name
         self.OUTPUT_DIR=OUTPUT_DIR
         dir_name = os.path.join(OUTPUT_DIR, self.video_name)
@@ -151,7 +151,6 @@ class TrackInfo:
 
     def write_info(self):
         json_file = os.path.join(self.OUTPUT_DIR, "{}/info.json".format(self.video_name))
-
         data = {
             "video_name": self.video_name,
             "nb_track_ids": self.nb_track_ids,
