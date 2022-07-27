@@ -257,22 +257,5 @@ def save_gps_data():
     print("gps done")
 
 
-def run_hais():
-    global data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, picam2, filename
 
-    filename_strg, dir_storage = utils.get_file_names(configuration)
-    filename = os.path.join(data_root, "sweeps", "Json_files", filename_strg)
-    save_json([{}], filename)
-    # set up folder to save data locally
-    utils.create_databse_folders()
-    pygame.init()
-    print("pygame initiated")
-    t1 = threading.Thread(target=utils.save_json_file)
-    t2 = threading.Thread(target=utils.save_image_data)
-    t3 = threading.Thread(target=utils.save_accelerometer_data)
-
-    t1.start()
-    t2.start()
-    t3.start()
-    pygame.quit()
 
