@@ -1,0 +1,9 @@
+numpy
+scikit-image
+opencv-python
+opencv-contrib-python==4.1.2.30
+torch
+pillow
+matplotlib
+pandas
+scipy

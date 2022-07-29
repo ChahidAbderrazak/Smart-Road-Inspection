@@ -19,7 +19,8 @@ class VideoListWidget(QListWidget, StateListener):
         self.state.add_listener(self)
         for video_name in self.state.video_list:
             self.addItem(video_name)
-        self.print_videos_list()
+        
+        # self.print_videos_list()
 
     def clearListWidget(self):
         self.clear()
