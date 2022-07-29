@@ -15,8 +15,10 @@ conda activate $env_name
 # python lib/visualize-road-inspection-on-Map.py
 
 
-# syntax
-python syntax.py
+# # syntax
+# python syntax.py
 
+# runthe main script
+python main.py
 
 conda deactivate 

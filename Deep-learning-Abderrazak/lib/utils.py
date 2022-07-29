@@ -22,7 +22,7 @@ def load_image(path):
     # print(' The selected image is :', path)
     filename, file_extension = os.path.splitext(path)
     try:
-        img = cv2.imread(path,0)
+        img = cv2.imread(path)
     except:
         msg = '\n Error: the image path ' + path + 'cannot be loaded!!!!'
         raise Exception(msg)
@@ -40,6 +40,51 @@ def save_image(img, filename):
 			msg = f'\n Cannot save [{filename}]. The format is unsupported!!! '
 			raise Exception(msg)
 
+def normalize_image(img):
+    img = img - img.min()
+    img= img / img.max()
+    return img
+
+def load_tif_as_jpg(img_path, scale=0.0, save=False):
+    from PIL import Image
+    cnt = 0
+    target_name ='data/temp.jpg'
+    if os.path.isfile(img_path):
+        img = Image.open(img_path)
+        img=img.point(lambda i:i*(1./256)).convert('L')
+    else:
+        # convert grey image, to 3-channel RGB
+        result = img_array_gray2rgb(img_path, scale=scale)
+        # Save result
+        img = Image.fromarray(result)
+    create_new_directory(os.path.dirname(target_name))
+    img.save(target_name, "JPEG")
+
+    return  cv2.imread(target_name)
+
+#%%######################   2D VISUALIZATIONS   ######################
+def show_image(img, img_title, cmap="cividis", figsize = (8,8)):
+    # show image
+    fig = plt.figure(figsize = figsize) # create a 5 x 5 figure 
+    ax3 = fig.add_subplot(111)
+    ax3.imshow(img, interpolation='none', cmap=cmap)
+    ax3.set_title(img_title)#, fontsize=40)
+    # plt.savefig('./residual_image.jpg')   
+    plt.axis("off")
+    plt.show()
+
+def show_input_images(img_input, img_ouput, msg='', cmap='gray'):
+    img_ouput_ = load_image(img_ouput)
+    img_input_ = load_image(img_input)
+    # display
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
+    ax1.imshow(img_input_, interpolation='none', cmap=cmap)
+    ax1.set_title('input image')
+    ax1.set_ylabel(msg)
+    ax2.imshow(img_ouput_, interpolation='none', cmap=cmap)
+    ax2.set_title('output image')
+    plt.show()
+
 def display_detection(img, img_box, mask,  msg='', cmap="cividis"):
     print(f'\n\n --> 2D inspection results.\n- image size ={img_box.shape}')
     if len(img_box.shape)==3 and img_box.shape[2]!=3:
@@ -54,7 +99,6 @@ def display_detection(img, img_box, mask,  msg='', cmap="cividis"):
     ax4.imshow(mask, cmap='Reds', interpolation='none', alpha=0.6)
     ax4.set_title(f'Road damage  segmentation ')
     plt.show()
-
 
 def create_new_directory(DIR):
   if not os.path.exists(DIR):
@@ -187,7 +231,6 @@ def create_object_annotation(root, voc_labels):
         ET.SubElement(bbox, "ymax").text = str(voc_label[4])
     return root
 
-
 #%%######################### labels from detections  ######################
 def get_box_coordinate(image_path, detection_boxes, w, h, defect_class, xml_list=[], disp=0):
     '''
@@ -219,6 +262,7 @@ def get_box_coordinate(image_path, detection_boxes, w, h, defect_class, xml_list
         print(f"\n\nThe annotation of image is complete! \n - image file: {image_path}  \n - xml file: {xml_filename}")
 
     return xml_list
+
 def save_xml_mask_annotations(img, mask, data_tag, annotation_directory,  label_boxes, img_class, with_masks=True,  \
     CLASS_MAPPING = ['defect-free', 'defective'], defect_label ='', img_ext = '.jpg', mask_ext = '.png', disp=0):
     '''
@@ -300,7 +344,6 @@ def save_xml_mask_annotations(img, mask, data_tag, annotation_directory,  label_
             print(msg_out)
         return msg_out
 
-
 def create_object_boxes(img_inpt0, mask, Min_box_area=0, factor=1.2, with_masks=True, data_tag='', annotation_directory='', disp=1):
     '''
     Create bouding boxes and segmentation masks for each detected fault
@@ -378,7 +421,7 @@ def create_object_boxes(img_inpt0, mask, Min_box_area=0, factor=1.2, with_masks=
                         if box_area >min_box_zoom_area:  
                             factor=1
                         cv2.rectangle(img_box, (int(prop.bbox[1]//factor), int(prop.bbox[0]//factor)), \
-                                               (int(prop.bbox[3]*factor), int(prop.bbox[2]*factor)), (255, 0, 0), 4)
+                                               (int(prop.bbox[3]*factor), int(prop.bbox[2]*factor)), (255, 0, 0), thickness=2)
                         nb_box+=1
                         # update th  mask
                         mask_out[prop.bbox[0]:prop.bbox[2],prop.bbox[1]:prop.bbox[3]] = mask[prop.bbox[0]:prop.bbox[2],prop.bbox[1]:prop.bbox[3]] 
@@ -454,9 +497,6 @@ def plot_cv_bbox(img, voc_box):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-
-
-
 #%%######################   DSP BASED ROAD INSPECTION  ######################
 
 def plot_dsp_detection(road_hole, image, mask, detection_list):
@@ -477,7 +517,7 @@ def plot_dsp_detection(road_hole, image, mask, detection_list):
 
     # highlight matched region
     for x,y, wcoin, hcoin in detection_list:
-        rect = plt.Rectangle((x, y), wcoin, hcoin, edgecolor='g', facecolor='none', linewidth=5)
+        rect = plt.Rectangle((x, y), wcoin, hcoin, edgecolor='g', facecolor='none', linewidth=3)
         ax2.add_patch(rect)
 
 
@@ -489,7 +529,7 @@ def plot_dsp_detection(road_hole, image, mask, detection_list):
     ax3.plot(x, y, '*', markeredgecolor='r', markerfacecolor='none', linewidth=5, markersize=30)
     plt.show()
 
-def DSP_road_inspection(img_path, road_hole, disp=True):
+def DSP_road_inspection(img_path, road_hole_RGB, detect_th=0.75, disp=True):
     '''
     DSP-based road inspection
     '''
@@ -500,12 +540,18 @@ def DSP_road_inspection(img_path, road_hole, disp=True):
 
     from skimage import data
     from skimage.feature import match_template
-    hcoin, wcoin = road_hole.shape
+    
     detection_list=[]
     # load the image
-    image = load_image(img_path)
+    image_RGB = load_image(img_path)
+    # convert to gray scale
+    from skimage import color
+    image = color.rgb2gray(image_RGB)
+    road_hole = color.rgb2gray(road_hole_RGB)
+    hcoin, wcoin = road_hole.shape
+    hcoin, wcoin = road_hole.shape
+    # patch matching
     result = match_template(image, road_hole)
-    result[result<0.75*np.max(result)]=0
     ij = np.unravel_index(np.argmax(result), result.shape)
     print(f'\n \n - hole {len(ij)} coordinate: \n {ij}')
     x, y = ij[::-1]
@@ -513,8 +559,344 @@ def DSP_road_inspection(img_path, road_hole, disp=True):
     detection_list.append([x,y, wcoin, hcoin])
     # final defect mask
     mask= np.pad(result, [((wcoin-1)//2, (hcoin-1)//2), ( (wcoin-1)//2,(hcoin-1)//2)], mode='constant')
+    mask[mask<detect_th*np.max(mask)]=0
     # plot the dsp detectino results
     if disp:
         plot_dsp_detection(road_hole, image, result, detection_list)
 
-    return image, mask
+    image_RGB=image_RGB[:mask.shape[0],:mask.shape[1],:]
+    return image, image_RGB, mask
+
+############ Segmentation from input image texture [DSP-segmentation]  ######################
+from skimage.filters import sobel
+from skimage.color import rgb2gray, gray2rgb
+from skimage.segmentation import felzenszwalb, slic, quickshift, watershed
+from skimage.segmentation import mark_boundaries
+from skimage.util import img_as_float
+import cv2 
+
+def create_circular_mask(h, w, center=None, radius=None):
+    # https://stackoverflow.com/questions/44865023/how-can-i-create-a-circular-mask-for-a-numpy-array
+    if center is None: # use the middle of the image
+        center = (int(w/2), int(h/2))
+    if radius is None: # use the smallest distance between the center and image walls
+        radius = min(center[0], center[1], w-center[0], h-center[1])
+
+    Y, X = np.ogrid[:h, :w]
+    dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
+
+    mask = dist_from_center <= radius
+    return mask
+
+def relax_mask(mask):
+    masked_img = mask.copy()
+    coords = np.argwhere(mask)
+    try:
+        x_min, y_min = coords.min(axis=0)
+        x_max, y_max = coords.max(axis=0)
+        cropped = mask[x_min:x_max+1, y_min:y_max+1]
+        cropped = cropped + np.flipud(cropped) + np.fliplr(cropped)
+        # circuler mask 
+        h, w = cropped.shape[:2]
+        mask_ = create_circular_mask(h, w)
+        masked_circle = cropped.copy()
+        masked_circle[~mask_] = 0
+        masked_circle[mask_] = 1
+        masked_img[x_min:x_max+1, y_min:y_max+1] = masked_circle
+        return masked_img
+    except:
+        print(f'\n warning: mask relaxation is skipped')
+        return masked_img
+
+def  mask_relaxation_cercle(mask_union, th=1):
+        mask_union[mask_union>th] = 1
+        #relax the mask to avoid removing parts from the tool
+        mask_union = relax_mask(mask_union)
+        return mask_union
+
+def background_removel(img, bs_level=1, disp=1):
+    '''
+    2D background subtruction/removal 
+    bs_level : backgound subtruction: 0) disabled 1) outer-backround removal 2) all background removal 
+    '''
+    if bs_level==1 :
+        mask = compute_outer_mask(img, disp=disp)
+    elif bs_level==2:
+        if len(img.shape)==3: 
+            img_gray=rgb2gray(img)
+        else:
+            img_gray = img
+        # create a binary thresholded image
+        _, binary = cv2.threshold(img_gray, 0.5*img_gray.max(), img_gray.max(), cv2.THRESH_BINARY_INV)
+        # masks further processing
+        mask = mask = invert_binary_mask(binary)
+    else:
+        mask = 1+np.copy(img)
+    
+    # sompute the masked image
+    img_=np.empty_like(img)
+    if len(img.shape)==3:
+        img_= np.multiply(img, gray2rgb(mask) )
+    else:
+        img_= np.multiply(img, mask )
+    return img_, mask
+
+def invert_binary_mask(arr):
+    '''
+    invert binary mask such that  1 <--> 0. 
+    arr: input binary 0/1 array 
+    '''
+    val=np.sort(np.unique(arr))
+    if len(val)==2:
+        where_0 = np.where(arr == val[0])
+        where_1 = np.where(arr == val[1])
+        arr[where_0] = 1
+        arr[where_1] = 0
+    else:
+        msg=f'Error: the input mask is not a binary mask. it contain {len(val)} different values {val}:  '
+        print(msg)
+        return arr
+        # raise Exception(msg)
+    return arr
+
+def backgroung_statistics(mask, img_gray):
+    idx_bckgnd = np.where(mask == 0)
+    mean_bckgnd = [np.mean(img_gray[idx_bckgnd])]
+    std_bckgnd = [np.std(img_gray[idx_bckgnd])]
+    return mean_bckgnd, std_bckgnd
+
+
+def compute_outer_mask(img_data, CANNY_THRESH_1 = 10, CANNY_THRESH_2 = 200, MASK_DILATE_ITER = 10, MASK_ERODE_ITER = 10, disp=1):
+    '''
+    Compute the outer mask using edges detection of the object in the image
+    img_data: the input image
+    CANNY_THRESH_1 : the thresold 1 of edge detection  using canny algorithm. default= 10
+    CANNY_THRESH_2 : the thresold 2 of edge detection  using canny algorithm. default= 200 [np.max(img_data)+1]
+    MASK_DILATE_ITER : Smoothing the mask default= 10 
+    MASK_ERODE_ITER : eroding parameter. default= 10
+    disp=1
+    '''
+    # == https://stackoverflow.com/questions/29313667/how-do-i-remove-the-background-from-this-kind-of-image
+    
+    import cv2
+    import numpy as np
+    from matplotlib import pyplot as plt
+    #== load the data =======================================================================
+    img = load_tif_as_jpg(img_data, scale=200)
+    CANNY_THRESH_1 = 10
+    CANNY_THRESH_2 = np.max(img)+1
+    #== Processing =======================================================================
+    # img_path = 'data/M3.jpg'#'data/person.jpg'
+    # img = cv2.imread(img_path)
+    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    #-- Edge detection -------------------------------------------------------------------
+    edges = cv2.Canny(gray, CANNY_THRESH_1, CANNY_THRESH_2)
+    edges = cv2.dilate(edges, None)
+    edges = cv2.erode(edges, None)
+    #-- Find contours in edges, sort by area ---------------------------------------------
+    contour_info = []
+    contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    for c in contours:
+        contour_info.append((
+            c,
+            cv2.isContourConvex(c),
+            cv2.contourArea(c),
+        ))
+    contour_info = sorted(contour_info, key=lambda c: c[2], reverse=True)
+    max_contour = contour_info[0]
+
+    #-- Create empty mask, draw filled polygon on it corresponding to largest contour ----
+    # Mask is black, polygon is white
+    mask = np.zeros(edges.shape)
+    cv2.fillConvexPoly(mask, max_contour[0], (255))
+
+    #-- Smooth mask, then blur it --------------------------------------------------------
+    mask = cv2.dilate(mask, None, iterations=MASK_DILATE_ITER)
+    mask = cv2.erode(mask, None, iterations=MASK_ERODE_ITER)
+
+    if disp>=2:
+        print('img= ', img.shape)
+        print('max pixel = ' , img.max())
+        print('edges= ', edges.shape)
+        show_input_images(img, edges, msg='edges')
+        show_input_images(edges, mask, msg='mask')
+    return mask
+
+def search_similar_segment(input_mean , input_std, mean_, std_, mean_th=0.2, std_th=0.2):
+    seg_new = -1
+    dm = np.inf; ds = np.inf
+    for cnt, (m, s) in enumerate(zip(mean_, std_)):
+        if m*(1-mean_th) <= input_mean <= m*(1+mean_th) :
+            if std_th==0.0 or  input_std <= std_th*s : #  input_std**2 <= (s**2)*(1+std_th) :# (s**2)*(1-std_th) <= 
+                if np.abs(input_std-m) < dm and np.abs(input_std-s) < ds:
+                    seg_new = cnt
+                    dm = np.abs(input_std-m)
+                    ds = np.abs(input_std-s)
+
+    # if no similar region is found
+    if seg_new == -1:
+        seg_new = len(mean_)
+        mean_.append(input_mean)
+        std_.append(input_std)
+
+    return seg_new, mean_, std_
+
+def refine_segment_statistic(segments, img, mean_th=0.2, std_th=0.2, nb_defect_segment=1, mean_=[], std_=[]):
+    print(f'\n--> Segments refininment : background statistics= mean={mean_}, std={std_}')
+    list_segments= np.unique(segments)
+    # print('list_segments=', list_segments)
+    segments_slic_refined=np.empty_like(segments)
+    for seg in list_segments:
+        idx = np.where(segments == seg)
+        vals= img[idx][:]
+        mean , st = vals.mean(), vals.std()
+        # print(f'segment{seg}, mean={mean}, std={st}')
+        seg_new, mean_, std_ = search_similar_segment(mean , st, mean_, std_, mean_th, std_th)
+
+        # assign new refined segment 
+        segments_slic_refined[idx] = seg_new
+
+    # get the defect 
+    detected_defect=np.empty_like(segments_slic_refined)
+    segments_label = np.unique(segments_slic_refined)
+    list_means = np.sort(mean_)
+    # input(f'FLAG: \n list_means={list_means} \n segments_label={segments_label} \n mean_={mean_} \n nb_defect_segment = {nb_defect_segment}')
+    idx=np.where( mean_ <=list_means[nb_defect_segment-1])
+
+    defect_list = segments_label[idx]
+    for defect in defect_list:
+        if defect!=0:
+            idx_defect = np.where(segments_slic_refined==defect)
+            detected_defect[idx_defect]=1.0#defect
+
+    return segments_slic_refined, detected_defect
+
+def segment_image_DSP(img0, n_segments=1000, compactness=10, mean_th=0.3, std_th=0.9, nb_defect_segment=3, disp=1):
+    # Adaptive Equalization
+    from skimage import exposure
+    img = exposure.equalize_adapthist(img0, clip_limit=0.03)
+    # Convert the image to grayscale
+    img_gray=rgb2gray(img)
+    # background removal
+    img_, mask = background_removel(img, bs_level=2, disp=disp)
+
+    mean_bckgnd, std_bckgnd = backgroung_statistics(mask, img_gray)
+
+    # fig, ax = plt.subplots(2, 2, figsize=(10, 10), sharex=True, sharey=True)
+    # ax[0, 0].imshow(np.multiply(img_gray, mask1 ))
+    # ax[0, 0].set_title('image*mask')
+    # ax[0, 1].imshow(mask1)
+    # ax[0, 1].set_title('mask')
+    # ax[1, 0].imshow(np.multiply(img_gray, mask ), cmap='jet')
+    # ax[1, 0].set_title('image* outer-mask')
+    # ax[1, 1].imshow(mask)#mark_boundaries(img, segments_slic_refined))
+    # ax[1, 1].set_title('outer-mask ')
+
+    ##https://scikit-image.org/docs/dev/auto_examples/segmentation/plot_segmentations.html
+    # segments_slic = slic(img, n_segments=n_segments, compactness=compactness, sigma=0.5, start_label=1) 
+
+    segments_slic_1 = slic(img, n_segments=n_segments, compactness=compactness, sigma=0.5, start_label=1) 
+
+    segments_slic_2 = np.multiply(segments_slic_1, mask)
+
+    segments_slic_refined, detected_defect = refine_segment_statistic(segments_slic_2, img_gray, mean_th=mean_th, std_th=std_th, \
+                                                                       nb_defect_segment=nb_defect_segment, mean_=mean_bckgnd, std_=std_bckgnd)
+    # display
+    if disp>=1:
+        print(f'img max={img.max()}, gray img max={img_gray.max()}')
+        # Figure of comparison 
+        fig, ax = plt.subplots(2, 2, figsize=(10, 10), sharex=True, sharey=True)
+        ax[0, 0].imshow(mark_boundaries(img, segments_slic_1))
+        ax[0, 0].set_title(f'SLIC segment Boundaries [{len(np.unique(segments_slic_1))} segments]')
+        ax[1, 0].imshow(img)#mark_boundaries(img, segments_slic_refined))
+        ax[1, 0].set_title('Original image')
+        ax[0, 1].imshow(segments_slic_refined, cmap='hot')
+        ax[0, 1].set_title(f'proposed SLIC segments refining [{len(np.unique(segments_slic_refined))} segments]')
+        ax[1, 1].imshow(img, interpolation='none', origin='lower')
+        # ax[1, 1].imshow(segments_slic_refined, cmap='hot', interpolation='none', alpha=0.4)
+        ax[1, 1].imshow(detected_defect, cmap='Reds', interpolation='none', alpha=0.4)
+        ax[1, 1].set_title(f'Defect detection [defect_th = {nb_defect_segment} segments] ')
+
+        for a in ax.ravel():
+            a.set_axis_off()
+
+        plt.tight_layout()
+        plt.show()
+
+    return segments_slic_refined
+
+def count_pixels(image):
+    """
+    Returns a count of pixels per a unique color
+    Args:
+        filename (str): the image to count the number of pixels of
+    Returns:
+        a key-value pairing of the rgb color value and the number of times the color was present in the image
+    """
+    color_count = {}
+    width, height = image.shape
+    # iterate through each pixel in the image and keep a count per unique color
+    frequent=0
+    max_count=0
+    for x in range(width):
+        for y in range(height):
+            rgb = image[x, y]
+            if rgb in color_count:
+                color_count[rgb] += 1
+            else:
+                color_count[rgb] = 1
+            # check the max
+            if max_count<color_count[rgb]:
+                frequent=rgb
+                max_count=color_count[rgb]
+
+    return color_count, frequent
+    
+def segmenting_road(img, disp=False):
+    from skimage import data, segmentation, color
+    from skimage.future import graph
+    from matplotlib import pyplot as plt
+
+    labels1 = segmentation.slic(img, compactness=10, n_segments=2000, start_label=1)
+    out1 = color.label2rgb(labels1, img, kind='avg', bg_label=0)
+
+    g = graph.rag_mean_color(img, labels1, mode='distance', connectivity=5)
+    labels2 = graph.cut_threshold(labels1, g, 10)
+    out2 = color.label2rgb(labels2, img, kind='avg', bg_label=0)
+    seg = color.rgb2gray(out2)
+    N,M=seg.shape
+    xmin,xmax = int(0.5*N), int(0.85*N)
+    ymin, ymax=int(0.40*M), int(0.60*M)
+    pavmt=seg[xmin:xmax, ymin:ymax]
+
+    dict_count, frequent=count_pixels(pavmt)
+    # get the road segment 
+    road_mask=0*np.empty_like(seg)
+    road_mask[seg==frequent]=1
+
+    # print(f'\n - img size={img.shape} - road_mask size={road_mask.shape}  ')
+    # print(f'\n pavmt: \n - size={pavmt.shape} \n counting= \n{dict_count} \n - frequent={frequent}')
+
+    
+    if disp:
+        fig, ax = plt.subplots(nrows=3, sharex=False, sharey=False,
+                        figsize=(6, 8))
+        ax[0].imshow(out1)
+        ax[1].imshow(seg)
+        ax[2].imshow(road_mask)
+        for a in ax:
+            a.axis('off')
+
+        plt.tight_layout()
+        plt.show()
+
+    return road_mask
+
+def DSP_segmentation(img_path, n_segments=200,compactness=10, mean_th=0.3, std_th=2.0, nb_defect_segment=2, disp=1):
+    from skimage.util import img_as_float
+    # Load the image
+    img =img_as_float( cv2.imread(img_path))
+    # DSP-base segmentation 
+    dsp_color_mask1 = segment_image_DSP(img, n_segments=n_segments, compactness=compactness, mean_th=mean_th, \
+        std_th=std_th, nb_defect_segment=nb_defect_segment, disp=disp)
+
