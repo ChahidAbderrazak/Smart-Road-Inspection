@@ -1,6 +1,10 @@
 Deep-learning-Abderrazak/Other/*
 Deep-learning-Abderrazak/cash/*
 Carla-simulations/data/*
+HAIS-software/data/*
+
 *.csv
 *.pyc
 *.pkl
+*.bin
+*.pcd

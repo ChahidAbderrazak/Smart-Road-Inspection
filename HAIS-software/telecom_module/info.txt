@@ -1,0 +1,19 @@
+This project sends the data to the firebase database.
+To connect this code with your firebase project, you  have to :
+
+1- change the Config. You have to go to your database -- the main page -- create a web app. Your configuration will show there.
+2- in the Config, there is a database URL you will find it in-- storage upper left corner .
+3- change the (row_data, root, download) path.
+4-download your own serviceAccountKey from your project sitting and rename it.
+
+This code was tested on ( files, .pcd, .txt,.json,.png,.jpg,.gif), and it works fine.
+
+******************** you have to adjust the way of downloading the file based on the application*************
+
+
+to send the file, run "send_data.py," and that will make the infinite loop to send the data each 0.5 sec
+to retrieve the data, run "read_data.py," which will download all the data in firebase to the download folder
+
+
+... I hope you will have a successful project ...
+if there is any question, reach me at: ahmad.mousa@ontariotechu.net
