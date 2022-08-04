@@ -2,6 +2,7 @@ Deep-learning-Abderrazak/Other/*
 Deep-learning-Abderrazak/cash/*
 Carla-simulations/data/*
 HAIS-software/data/*
+HAIS-software/cache/*
 
 *.csv
 *.pyc

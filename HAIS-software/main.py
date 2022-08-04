@@ -1,32 +1,36 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jul 24 10:04:01 2022
+from telecom_module.lib import utils_telecom
+from telecom_module.lib import utils_telecom
+from inspection_module.lib import utils
+from inspection_module.lib import hais_manager
 
-@author: 100840150
-"""
+def sync_data_to_firebase():
+    #  retreive the the inspection data from the cloud
+    utils_telecom.download_data()
 
-from lib.utils_telecom import *
+    # send the inspection data to the cloud
+    utils_telecom.upload_data()
 
-def download_data():
-    get_data()
-    
+def convert_measurment_to_database():
+	# collected data input
+	raw_data = hais_manager.HAIS_bot(config='config/config.json')
 
-def upload_data():
-        while True:
-            if chek_the_data():
-                rename()
-                send_data()
-                time.sleep(0.5)
-            else:
-                print('there is no data yet')
-                time.sleep(0.5)
+	# # create the database structure
+	# raw_data.create_database()
+
+	# annotate the a scene
+	scene_=raw_data.scene
+	print(f'\n\n - scene= {scene_}')
+	raw_data.annotate_database(scene=scene_[0])
+
 
 if __name__ == "__main__":
-    # send the inspection data to the cloud
-    upload_data()
 
-    #  retreive the the inspection data from the cloud
-    download_data()
+    # convert the sensors measurment to a structured HAIS-database
+    convert_measurment_to_database()
+
+    # synchorize (upload/download) sensors measurement
+    sync_data_to_firebase()
+
 
 
 

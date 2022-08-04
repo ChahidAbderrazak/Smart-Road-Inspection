@@ -11,26 +11,6 @@ import pyrebase
 import time
 import os 
 
-
-# ## Ahmad Moussa
-# Config = {
-#   "apiKey": "AIzaSyAsPbN83sOHMVcj6O7m7I2PZfse9LLT3J4",
-#   "authDomain": "testhas-f80bd.firebaseapp.com",
-#   "projectId": "testhas-f80bd",
-#   "databaseURL":"gs://testhas-f80bd.appspot.com",
-#   "storageBucket": "testhas-f80bd.appspot.com",
-#   "messagingSenderId": "428882133052",
-#   "appId": "1:428882133052:web:9b4962dc8923ea59448339",
-#   "measurementId": "G-5NZ08B2LC7",
-#   "serviceAccount":"/content/drive/MyDrive/HAIS project /serviceAccountKey.json"
-
-# }
-# root=r'C:\Users\100840150\Desktop\HAIS_DEMO\root'
-# row_data_path=r'C:\Users\100840150\Desktop\HAIS_DEMO\datareceiver'
-# download=r'C:\Users\100840150\Desktop\HAIS_DEMO\download'
-
-
-##abderraazak
 # firebase storage configuration
 Config = {'apiKey': "AIzaSyCBTp3caunMJ6JlXyNXlN0DERVLi8EJ6Ho",
         'authDomain': "hais-project-d9692.firebaseapp.com",
@@ -43,10 +23,9 @@ Config = {'apiKey': "AIzaSyCBTp3caunMJ6JlXyNXlN0DERVLi8EJ6Ho",
         "serviceAccount":"serviceAccountKey.json"
         
     }
-
-root=r'data/root'
-row_data_path=r'data/datareceiver'
-download=r'data/download'
+root=r'data/sensor-measurement/root'
+row_data_path=r'data/sensor-measurement/datareceiver'
+download=r'data/sensor-measurement/download'
 
 # firebase
 firebase= pyrebase.initialize_app(Config)
