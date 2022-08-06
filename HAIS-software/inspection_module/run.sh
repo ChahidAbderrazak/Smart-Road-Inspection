@@ -24,11 +24,8 @@ conda activate $env_name
 # echo & echo  "Build and generate structures hais-database "
 # python inspection_module/lib/hais_database.py
 
-# run DSP inspection
-python inspection_module/lib/inspection_algorithm.py
-
 #######################  INSPECTION MODULE ##########################
-
+python inspection_module/main_inspection.py
 
 # python main.py
 # python syntax.py

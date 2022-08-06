@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.animation as animation
 
-class RPLidar_records(object):
+class RPLidar(object):
 	'''Class for communicating with RPLidar rangefinder scanners : sampling time = 5seconds'''
 
 	def __init__(self, filename, angle_step=1,DMAX=100, IMIN=0, IMAX=50):
@@ -37,7 +37,7 @@ class RPLidar_records(object):
 		plt.show()
 
 	def plot_lidar(self, num_scans=100):
-		scans_dict_list= read_scan(self.filename)
+		scans_dict_list= self.read_scan(self.filename)
 		join_distance_list =[]
 		time_vec = []
 		for k,	scan in enumerate(scans_dict_list):
@@ -70,7 +70,7 @@ class RPLidar_records(object):
 		ax.grid(True)
 		
 		iterator = self.iter_scans()  
-		ani = animation.FuncAnimation(fig, update_line,
+		ani = animation.FuncAnimation(fig, self.update_line,
 				fargs=(iterator, line), interval=50)
 		plt.show()
 
@@ -90,7 +90,7 @@ class RPLidar_records(object):
 				format: (quality, Azimuth , distance). For values description please
 				refer to `iter_measures` method's documentation.
 		'''
-		scans_dict_list= read_scan(self.filename)
+		scans_dict_list= self.read_scan(self.filename)
 		altitude=0
 		quality = -1
 		scan_list = []
@@ -107,37 +107,37 @@ class RPLidar_records(object):
 				print(f'\n--> new Scan ID:{k} \t time= {time_tag} sec , total Azimuth ={Azimuth} deg, distance={distance}, Azimuith={altitude}')
 			yield scan_list
 
-def update_line(num, iterator, line):
-	scan = next(iterator)
-	offsets = np.array([(np.radians(meas[1]), meas[2]) for meas in scan])
-	line.set_offsets(offsets)
-	intens = np.array([meas[0] for meas in scan])
-	line.set_array(intens)
-	return line,
+	def update_line(self, num, iterator, line):
+		scan = next(iterator)
+		offsets = np.array([(np.radians(meas[1]), meas[2]) for meas in scan])
+		line.set_offsets(offsets)
+		intens = np.array([meas[0] for meas in scan])
+		line.set_array(intens)
+		return line,
 
-def read_scan(filename):
-	import json
-	# Using readlines()
-	file1 = open(filename, 'r')
-	Lines = file1.readlines()
-	count = 0
-	scans_dict_list=[]
-	# Strips the newline character
-	for line in Lines:
-			count += 1
-			# print("Line{}: {}".format(count, line.strip()))
-			scans_dict_list.append( json.loads(line.strip()) )
-	return scans_dict_list
+	def read_scan(self, filename):
+		import json
+		# Using readlines()
+		file1 = open(filename, 'r')
+		Lines = file1.readlines()
+		count = 0
+		scans_dict_list=[]
+		# Strips the newline character
+		for line in Lines:
+				count += 1
+				# print("Line{}: {}".format(count, line.strip()))
+				scans_dict_list.append( json.loads(line.strip()) )
+		return scans_dict_list
 
-def run_records():
+def run_Lidar_records():
 	DMAX = 100
 	IMIN = 0
 	IMAX = 50
 	filename='/media/abdo2020/DATA1/Datasets/numerical-dataset/RPLidar-data/catalog_0_A1_R5_465_1.catalog.txt'# catalog_0_A2_465_2.catalog.txt'#catalog_0_A1_R6_465_1.catalog.txt'#
-	lidar = RPLidar_records(filename, angle_step=2, DMAX=DMAX, IMIN=IMIN, IMAX=IMAX)
+	lidar = RPLidar(filename, angle_step=2, DMAX=DMAX, IMIN=IMIN, IMAX=IMAX)
 	# vizualise lidar image
 	lidar.plot_lidar()
 	lidar.plot_lidar_animation()
 
 if __name__ == '__main__':
-		run_records()
+		run_Lidar_records()

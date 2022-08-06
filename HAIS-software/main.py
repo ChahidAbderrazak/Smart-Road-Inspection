@@ -1,7 +1,6 @@
 from telecom_module.lib import utils_telecom
-from telecom_module.lib import utils_telecom
 from inspection_module.lib import utils
-from inspection_module.lib import hais_manager
+from inspection_module.lib import hais_database
 
 def sync_data_to_firebase():
     #  retreive the the inspection data from the cloud
@@ -12,7 +11,7 @@ def sync_data_to_firebase():
 
 def convert_measurment_to_database():
 	# collected data input
-	raw_data = hais_manager.HAIS_bot(config='config/config.json')
+	raw_data = hais_database.HAIS_bot(config='config/config.json')
 
 	# # create the database structure
 	# raw_data.create_database()

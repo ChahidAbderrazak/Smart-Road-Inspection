@@ -76,3 +76,11 @@ def upload_data():
         else:
             print('there is no data yet')
             time.sleep(0.5)
+
+if __name__ == "__main__":
+
+    #  retreive the the inspection data from the cloud
+    download_data()
+
+    # send the inspection data to the cloud
+    upload_data()
