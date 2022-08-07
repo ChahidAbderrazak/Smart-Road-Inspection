@@ -1,13 +1,41 @@
+import os
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui
 
 # os.chdir('./lib/ultimatelabeling' )
-from lib.ultimatelabeling.views import *
-from lib.ultimatelabeling.models import State, StateListener, KeyboardNotifier
-from lib.ultimatelabeling.styles import Theme
+from ultimatelabeling.views import *
+from ultimatelabeling.models import State, StateListener, KeyboardNotifier
+from ultimatelabeling.styles import Theme
 
-from lib import utils as utils_abd
+
+def load_json(filename):
+	try:
+		if os.path.exists(filename):
+			import json
+			f = open(filename,)
+			data = json.load(f)
+			f.close()
+		else:
+			data=[]
+		return data
+	except:
+		msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!  \
+			       \n --> a new Jason file will be created!!    '
+		print(msg)
+		# raise ValueError(msg)
+		return []
+
+def save_json(json_string, filename):
+	import json
+	try:
+		# Using a JSON string
+		with open(filename, 'w') as outfile:
+			json.dump(json_string, outfile,indent=2)
+			return 0
+	except:
+		print(f'\n\n - error in saving {filename}')
+		return 1
 
 
 class MainWindow(QMainWindow):
@@ -72,10 +100,9 @@ class MainWindow(QMainWindow):
         DATA_DIR = QFileDialog.getExistingDirectory(self, "Opening a new dataset", options=QFileDialog.Options())
         if DATA_DIR is None or DATA_DIR == "":
             return
-        from lib import utils as utils_abd
-        conf_dict = utils_abd.load_json('config/annotation_config.json')
+        conf_dict = load_json('config/annotation_config.json')
         conf_dict['DATA_DIR']=DATA_DIR
-        utils_abd.save_json(conf_dict, 'config/annotation_config.json')
+        save_json(conf_dict, 'config/annotation_config.json')
         self.central_widget.state=State(DATA_DIR=DATA_DIR, OUTPUT_DIR=DATA_DIR)
         # self.central_widget.state.update_dataset(DATA_DIR)
         self.central_widget.state.load_state()
@@ -178,19 +205,26 @@ class CentralWidget(QWidget, StateListener):
         app.setStyle("Fusion")
         app.setPalette(Theme.get_palette(self.state.theme))
 
-def run_2D_annotator():
+def run_2D_annotator(DATA_DIR, OUTPUT_DIR):
     import os
     app = QApplication([])
     app.setStyle("Fusion")
 
-    # load config
-    conf_dict = utils_abd.load_json('config/annotation_config.json')
-    DATA_DIR = conf_dict['DATA_DIR']
-    OUTPUT_DIR = conf_dict['DATA_DIR']
+
     main_window = MainWindow(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
     app.exec()
 
 if __name__ == '__main__':
-    run_2D_annotator()
+    # # Annotating using config file
+    # conf_dict = load_json('config/annotation_config.json')
+    # DATA_DIR = conf_dict['DATA_DIR']
+    # OUTPUT_DIR = conf_dict['DATA_DIR']
+    # run_2D_annotator(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
+
+    # Annotating using folder path
+    conf_dict = load_json('config/annotation_config.json')
+    DATA_DIR = '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/2022.08.05'
+    OUTPUT_DIR = DATA_DIR 
+    run_2D_annotator(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
 
 

@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QPushButton, QGroupBox, QVBoxLayout, QHBoxLayout, QStyle, QPlainTextEdit, QMessageBox
 from PyQt5.QtCore import QThread, pyqtSignal
-from lib.ultimatelabeling.models.tracker import SocketTracker, KCFTracker
-from lib.ultimatelabeling.models import Detection, FrameMode
-from lib.ultimatelabeling.models import KeyboardListener
+from ultimatelabeling.models.tracker import SocketTracker, KCFTracker
+from ultimatelabeling.models import Detection, FrameMode
+from ultimatelabeling.models import KeyboardListener
 
 PORTS = [0, 8787, 8788]
 

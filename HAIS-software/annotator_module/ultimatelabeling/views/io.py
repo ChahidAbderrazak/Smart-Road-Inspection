@@ -2,8 +2,8 @@ import glob
 import os
 import pandas as pd
 from PyQt5.QtWidgets import QWidget, QMessageBox, QFileDialog
-from lib.ultimatelabeling.models import State
-from lib.ultimatelabeling import utils
+from ultimatelabeling.models import State
+from ultimatelabeling import utils
 
 
 class IO:

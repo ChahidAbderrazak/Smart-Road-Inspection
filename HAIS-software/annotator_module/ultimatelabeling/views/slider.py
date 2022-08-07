@@ -2,8 +2,8 @@ import os
 from PyQt5.QtWidgets import QSlider, QWidget, QHBoxLayout, QLabel, QVBoxLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeyEvent
-from lib.ultimatelabeling.models import StateListener, KeyboardListener, FrameMode
-from lib.ultimatelabeling.config import RESOURCES_DIR
+from ultimatelabeling.models import StateListener, KeyboardListener, FrameMode
+from ultimatelabeling.config import RESOURCES_DIR
 
 
 class VideoSlider(QWidget, StateListener, KeyboardListener):

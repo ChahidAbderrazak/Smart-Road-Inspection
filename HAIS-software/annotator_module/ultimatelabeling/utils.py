@@ -15,6 +15,35 @@ COCO_PERSON_SKELETON = [
     [2, 4], [3, 5], [4, 6], [5, 7]]
 
 
+def load_json(filename):
+	try:
+		if os.path.exists(filename):
+			import json
+			f = open(filename,)
+			data = json.load(f)
+			f.close()
+		else:
+			data=[]
+		return data
+	except:
+		msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!  \
+			       \n --> a new Jason file will be created!!    '
+		print(msg)
+		# raise ValueError(msg)
+		return []
+
+def save_json(json_string, filename):
+	import json
+	try:
+		# Using a JSON string
+		with open(filename, 'w') as outfile:
+			json.dump(json_string, outfile,indent=2)
+			return 0
+	except:
+		print(f'\n\n - error in saving {filename}')
+		return 1
+
+
 def get_color(id):
     np.random.seed(id)
     return tuple(map(int, np.random.choice(range(256), size=3)))

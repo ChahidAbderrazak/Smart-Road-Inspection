@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import time
 from .polygon import Polygon, Bbox, Keypoints
-from lib.ultimatelabeling.class_names import DEFAULT_CLASS_NAMES
+from ultimatelabeling.class_names import DEFAULT_CLASS_NAMES
 from tqdm import tqdm
 
 

@@ -6,10 +6,10 @@ import socket
 import pickle
 import cv2
 import struct
-from lib.ultimatelabeling.siamMask.models.custom import Custom
-from lib.ultimatelabeling.siamMask.utils.load_helper import load_pretrain
-from lib.ultimatelabeling.siamMask.test import siamese_init, siamese_track, get_image_crop
-from lib.ultimatelabeling.config import RESOURCES_DIR
+from ultimatelabeling.siamMask.models.custom import Custom
+from ultimatelabeling.siamMask.utils.load_helper import load_pretrain
+from ultimatelabeling.siamMask.test import siamese_init, siamese_track, get_image_crop
+from ultimatelabeling.config import RESOURCES_DIR
 
 
 class Tracker:

@@ -3,11 +3,11 @@ import os
 import glob
 import re
 from PyQt5.QtCore import QThread, QMutex
-from lib.ultimatelabeling.styles import Theme
+from ultimatelabeling.styles import Theme
 from .ssh_credentials import SSHCredentials
 from .track_info import TrackInfo
-from lib.ultimatelabeling import utils
-# from lib.ultimatelabeling.config import DATA_DIR, self.STATE_PATH
+from ultimatelabeling import utils
+# from ultimatelabeling.config import DATA_DIR, self.STATE_PATH
 
 class FrameMode:
     MANUAL = "manual"  # for manually choosing the current frame
@@ -83,7 +83,7 @@ class State:
     def check_raw_videos(self):
         files = glob.glob(os.path.join(self.DATA_DIR, "*.mp4"))
         files.extend(glob.glob(os.path.join(self.DATA_DIR, "*.mov")))
-
+        files.extend(glob.glob(os.path.join(self.DATA_DIR, "*.MOV")))
         for file in files:
             base = os.path.basename(file)
             filename = os.path.splitext(base)[0]

@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QGroupBox, QVBoxLayout, QHBoxLayout, QPushButton, QCheckBox, QComboBox, QLabel
 from PyQt5.QtCore import Qt
-from lib.ultimatelabeling.models import KeyboardListener, StateListener
+from ultimatelabeling.models import KeyboardListener, StateListener
 from .class_editor import ClassEditor
 
 

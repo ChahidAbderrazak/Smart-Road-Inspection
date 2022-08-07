@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QGroupBox, QStyle, QWidget, QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import QThread
-from lib.ultimatelabeling.models import KeyboardListener, FrameMode
+from ultimatelabeling.models import KeyboardListener, FrameMode
 import time
 
 

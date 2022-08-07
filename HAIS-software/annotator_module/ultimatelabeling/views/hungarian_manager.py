@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QGroupBox, QHBoxLayout, QPushButton
 from PyQt5.QtCore import QThread
-from lib.ultimatelabeling.models.hungarian_tracker import track
+from ultimatelabeling.models.hungarian_tracker import track
 
 
 class HungarianManager(QGroupBox):

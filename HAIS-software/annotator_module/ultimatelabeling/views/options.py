@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QGroupBox, QHBoxLayout, QPushButton, QCheckBox, QComboBox, QLabel
 from PyQt5.QtCore import Qt
-from lib.ultimatelabeling.models import StateListener
-from lib.ultimatelabeling.styles import Theme
-from lib.ultimatelabeling.models.state import RightClickOption
+from ultimatelabeling.models import StateListener
+from ultimatelabeling.styles import Theme
+from ultimatelabeling.models.state import RightClickOption
 
 
 class Options(QGroupBox, StateListener):

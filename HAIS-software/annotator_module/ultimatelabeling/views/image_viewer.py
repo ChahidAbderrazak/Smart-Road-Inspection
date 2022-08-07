@@ -2,16 +2,16 @@ import cv2
 from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtCore import QPoint, Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QImage, QPainter
-from lib.ultimatelabeling.models import StateListener, FrameMode
-from lib.ultimatelabeling.utils import draw_detection
-from lib.ultimatelabeling.models import KeyboardListener
-from lib.ultimatelabeling.models.polygon import Bbox
-from lib.ultimatelabeling.models.track_info import Detection
-from lib.ultimatelabeling.styles import Theme
+from ultimatelabeling.models import StateListener, FrameMode
+from ultimatelabeling.utils import draw_detection
+from ultimatelabeling.models import KeyboardListener
+from ultimatelabeling.models.polygon import Bbox
+from ultimatelabeling.models.track_info import Detection
+from ultimatelabeling.styles import Theme
 import numpy as np
 import math
 import time
-from lib.ultimatelabeling import utils
+from ultimatelabeling import utils
 
 
 class Event:

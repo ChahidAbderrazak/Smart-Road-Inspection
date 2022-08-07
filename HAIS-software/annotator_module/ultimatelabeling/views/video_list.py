@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QListWidget
-from lib.ultimatelabeling.models import StateListener, State, FrameMode
+from ultimatelabeling.models import StateListener, State, FrameMode
 
 class VideoListWidget(QListWidget, StateListener):
     def __init__(self, state):

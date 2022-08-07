@@ -7,8 +7,8 @@ import socket
 
 from PyQt5.QtWidgets import QGroupBox, QLabel, QLineEdit, QFormLayout, QPushButton, QMessageBox
 from PyQt5.QtCore import QThread, pyqtSignal
-from lib.ultimatelabeling.models import StateListener, SSHCredentials
-from lib.ultimatelabeling.config import OUTPUT_DIR, SERVER_DIR
+from ultimatelabeling.models import StateListener, SSHCredentials
+from ultimatelabeling.config import OUTPUT_DIR, SERVER_DIR
 
 
 class SSHLogin(QGroupBox, StateListener):

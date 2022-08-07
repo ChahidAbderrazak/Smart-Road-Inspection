@@ -2,10 +2,10 @@ import os
 import datetime
 from PyQt5.QtWidgets import QGroupBox, QHBoxLayout, QPushButton, QMessageBox, QCheckBox, QComboBox, QFormLayout, QLabel, QVBoxLayout
 from PyQt5.QtCore import QThread, pyqtSignal
-from lib.ultimatelabeling.models import FrameMode, TrackInfo
-from lib.ultimatelabeling.models.detector import SocketDetector
-from lib.ultimatelabeling.models.polygon import Bbox
-from lib.ultimatelabeling.config import DATA_DIR
+from ultimatelabeling.models import FrameMode, TrackInfo
+from ultimatelabeling.models.detector import SocketDetector
+from ultimatelabeling.models.polygon import Bbox
+from ultimatelabeling.config import DATA_DIR
 
 
 class DetectionManager(QGroupBox):
