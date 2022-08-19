@@ -39,42 +39,80 @@ def plot_dsp_detection(road_hole, image, mask, detection_list):
     ax3.plot(x, y, '*', markeredgecolor='r', markerfacecolor='none', linewidth=5, markersize=30)
     plt.show()
 
-def DSP_road_inspection(img_path, road_hole_RGB, detect_th=0.75, disp=True):
-    '''
-    DSP-based road inspection
-    '''
-    print(f'\n ===>  DSP-based road inspection')
-    
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    from skimage import data
-    from skimage.feature import match_template
-    
-    detection_list=[]
-    # load the image
-    image_RGB = utils.load_image(img_path)
+def detect_road_damage_using_patch_matching(image_RGB, road_hole_RGB, disp=False):
     # convert to gray scale
     from skimage import color
+    from skimage import data
+    from skimage.feature import match_template
     image = color.rgb2gray(image_RGB)
     road_hole = color.rgb2gray(road_hole_RGB)
     hcoin, wcoin = road_hole.shape
     hcoin, wcoin = road_hole.shape
     # patch matching
     result = match_template(image, road_hole)
+    mask= np.pad(result, [((wcoin-1)//2, (hcoin-1)//2), ( (wcoin-1)//2,(hcoin-1)//2)], mode='constant')
     ij = np.unravel_index(np.argmax(result), result.shape)
     print(f'\n \n - hole {len(ij)} coordinate: \n {ij}')
     x, y = ij[::-1]
-    # update the detection
-    detection_list.append([x,y, wcoin, hcoin])
+    detection=[x,y, wcoin, hcoin]
+    # # plot the dsp detectino results
+    # if disp:
+    #     plot_dsp_detection(road_hole_RGB, image, result, [detection])
+
+    return  mask,result, detection
+
+def resize_image(src_image, size): 
+    if isinstance(src_image, np.ndarray):
+        from PIL import Image
+        src_image =  Image.fromarray(src_image)
+        src_image = src_image.point(lambda i:i*1).convert('L')
+    # resize the image so the longest dimension matches our target size
+    src_image.thumbnail(size, Image.ANTIALIAS )
+    # Create a new square background image
+    new_image = Image.new("RGB", size)
+    # Paste the resized image into the center of the square background
+    new_image.paste(src_image, (int((size[0] - src_image.size[0]) / 2), int((size[1] - src_image.size[1]) / 2)))
+    # return the resized image
+    return new_image
+
+def DSP_road_inspection(img_path, hole_patch_root, detect_th=0.75, disp=True):
+    '''
+    DSP-based road inspection
+    '''
+    print(f'\n ===>  DSP-based road inspection')
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from glob import glob
+    from skimage import color
+
+    patch_paths=glob(os.path.join(hole_patch_root,'*'))
+    detection_list=[]
+    # load the image
+    image_RGB = utils.load_image(img_path)
+    size=(128,128)
+    image_RGB=resize_image(image_RGB, size)
+    image_RGB = np.array(image_RGB)
+    image = color.rgb2gray(image_RGB)
+    # mask= 0*np.empty_like( image)
+    # result= 0*np.empty_like( image)
+    for patch_path in patch_paths[:1]:
+        road_hole_RGB = utils.load_image(patch_path)
+        # run the detection
+        mask_, result_, detection = detect_road_damage_using_patch_matching(image_RGB, road_hole_RGB)
+        # update the detection
+        detection_list.append(detection)
+        try:
+            mask+=mask_
+            result+=result_
+        except:
+            mask=mask_
+            result=result_
     # final defect mask
-    mask= np.pad(result, [((wcoin-1)//2, (hcoin-1)//2), ( (wcoin-1)//2,(hcoin-1)//2)], mode='constant')
     mask[mask<detect_th*np.max(mask)]=0
+    image_RGB=image_RGB[:mask.shape[0],:mask.shape[1],:]
     # plot the dsp detectino results
     if disp:
-        plot_dsp_detection(road_hole, image, result, detection_list)
-
-    image_RGB=image_RGB[:mask.shape[0],:mask.shape[1],:]
+        plot_dsp_detection(road_hole_RGB, image, result, detection_list)
     return image, image_RGB, mask
 
 def segmenting_road(img, disp=False):
@@ -126,9 +164,6 @@ def DSP_segmentation(img_path, n_segments=200,compactness=10, mean_th=0.3, std_t
     dsp_color_mask1 = utils.segment_image_DSP(img, n_segments=n_segments, compactness=compactness, mean_th=mean_th, \
         std_th=std_th, nb_defect_segment=nb_defect_segment, disp=disp)
 
-
-
-
 def main_DSP_segmentation():
 	
     from glob import glob
@@ -148,13 +183,14 @@ def main_DSP_road_inspection():
     from glob import glob
     import cv2
     # load template-image
-    hole_patch_path='bin/holes-patches/hole1.jpg' 
-    road_hole = utils.load_image(hole_patch_path)
+      
+    hole_patch_root='bin/holes-patches' 
+    
     # load image
     img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/hole/'#good-roads/'#cracks/'#
-    for img_path in glob(os.path.join(img_folder,'*')):#[1:2]:#
+    for img_path in glob(os.path.join(img_folder,'*'))[:1]:#
         # DSP-based road inspection
-        img,img_rgb, mask = DSP_road_inspection(img_path, road_hole, detect_th=detect_th, disp=False)
+        img,img_rgb, mask = DSP_road_inspection(img_path, hole_patch_root, detect_th=detect_th, disp=False)
         
         # # road mask extraction
         # road_mask=segmenting_road(img_rgb, disp=True)
@@ -174,3 +210,5 @@ if __name__ == '__main__':
 
     # # DSP-based road segmentation
     # main_DSP_segmentation()
+
+# %%

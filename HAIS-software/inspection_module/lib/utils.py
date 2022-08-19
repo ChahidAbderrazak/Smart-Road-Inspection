@@ -31,7 +31,7 @@ def save_json(json_string, filename):
 	try:
 		# Using a JSON string
 		with open(filename, 'w') as outfile:
-			json.dump(json_string, outfile,indent=2)
+			json.dump(json_string, outfile, indent=2)
 			return 0
 	except:
 		print(f'\n\n - error in saving {filename}')

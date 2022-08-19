@@ -22,8 +22,11 @@ $ conda create -n hais-node-env python=3.7 conda -y
 $ conda activate hais-node-env
 $ pip install -r setup-env/requirements.txt 
 ```
+2. **install additional pachages**
+-  [ffmpeg](https://ffmpeg.org/download.html)
 
-2. **Run road inspection system**
+
+3. **Run road inspection system**
 ```
 ./run.sh
 ```

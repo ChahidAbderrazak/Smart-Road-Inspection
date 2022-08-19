@@ -205,26 +205,30 @@ class CentralWidget(QWidget, StateListener):
         app.setStyle("Fusion")
         app.setPalette(Theme.get_palette(self.state.theme))
 
-def run_2D_annotator(DATA_DIR, OUTPUT_DIR):
+def run_2D_annotator(DATA_DIR, OUTPUT_DIR=''):
     import os
     app = QApplication([])
     app.setStyle("Fusion")
 
-
-    main_window = MainWindow(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
+    if OUTPUT_DIR=='':
+        main_window = MainWindow(DATA_DIR=DATA_DIR, OUTPUT_DIR=DATA_DIR)
+    else:
+        main_window = MainWindow(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
     app.exec()
 
+def get_data_root():
+    conf_dict = load_json('config/annotation_config.json')
+    DATA_DIR = conf_dict['DATA_DIR']
+    OUTPUT_DIR = conf_dict['DATA_DIR']
+    return DATA_DIR, OUTPUT_DIR
+
 if __name__ == '__main__':
-    # # Annotating using config file
-    # conf_dict = load_json('config/annotation_config.json')
-    # DATA_DIR = conf_dict['DATA_DIR']
-    # OUTPUT_DIR = conf_dict['DATA_DIR']
+    # ## Annotating using config file
+    # DATA_DIR, OUTPUT_DIR = get_data_root()
     # run_2D_annotator(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
 
-    # Annotating using folder path
-    conf_dict = load_json('config/annotation_config.json')
+    ## Annotating using folder path
     DATA_DIR = '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/2022.08.05'
-    OUTPUT_DIR = DATA_DIR 
-    run_2D_annotator(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
+    run_2D_annotator(DATA_DIR=DATA_DIR)
 
 
