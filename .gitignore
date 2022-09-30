@@ -1,5 +1,7 @@
 Carla-simulations/data/*
-HAIS-software/*
+HAIS-software/data/*
+HAIS-software/cache/*
+Other/*
 *.csv
 *.pyc
 *.pkl

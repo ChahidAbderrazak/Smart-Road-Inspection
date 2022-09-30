@@ -1,0 +1,51 @@
+{
+  "DATA_DIR": "/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/test",
+  "OUTPUT_DIR": "/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/test",
+  "road_accessibility": [
+    "private",
+    "public"
+  ],
+  "road_material": [
+    "Concrete",
+    "Asphalt",
+    "Gravel",
+    "Earthen",
+    "Murrum",
+    "Kankar",
+    "Bituminous"
+  ],
+  "road_infrastructure": [
+    "bridge",
+    "Bus_lane",
+    "Carpool_lane",
+    "Cycle_track"
+  ],
+  "road_visibility": [
+    "good",
+    "fair",
+    "poor"
+  ],
+  "road_condition": [
+    "holes",
+    "cracks"
+  ],
+  "road_lane_marking": [
+    "visible",
+    "barely_visible",
+    "not_visible"
+  ],
+  "road_safety_index": [
+    "high",
+    "medium",
+    "low"
+  ],
+  "road_snow": [
+    "bare",
+    "partly_covered",
+    "covered"
+  ],
+  "object_visibity": [
+    0,
+    100
+  ]
+}

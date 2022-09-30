@@ -1,0 +1,36 @@
+### Firebase packages
+pyrebase
+requests>=2.26
+numpy
+opencv-python
+scp
+pynput
+
+### Inspection packages
+matplotlib
+pandas
+scipy
+scikit-image
+imutils
+
+### Visualization packages
+osmnx==1.1.2
+scikit-learn 
+# geopandas
+
+### Deep learning packages
+tqdm
+torch
+pillow
+
+### Annotation packages
+# nuscens
+nuscenes-devkit==1.1.9
+#UltimateLabeling
+PyQt5
+opencv-contrib-python==4.1.2.30
+paramiko
+# folium
+
+### labelme Annotation packages
+video-cli
