@@ -9,11 +9,12 @@ except:
 
 #%%######################   DSP BASED ROAD INSPECTION  ######################
 
-def plot_dsp_detection(road_hole, image, mask, detection_list):
+def plot_dsp_detection(road_hole, image, matching_score, mask, detection_list):
     fig = plt.figure(figsize=(30, 8))
-    ax1 = plt.subplot(1, 3, 1)
-    ax2 = plt.subplot(1, 3, 2)
-    ax3 = plt.subplot(1, 3, 3)#, sharex=ax2, sharey=ax2)
+    ax1 = plt.subplot(1, 4, 1)
+    ax2 = plt.subplot(1, 4, 2)
+    ax3 = plt.subplot(1, 4, 3)#, sharex=ax2, sharey=ax2)
+    ax4 = plt.subplot(1, 4, 4)#, sharex=ax2, sharey=ax2)
 
     ax1.imshow(road_hole, cmap=plt.cm.gray)
     ax1.set_axis_off()
@@ -24,19 +25,25 @@ def plot_dsp_detection(road_hole, image, mask, detection_list):
     ax2.set_title('Image image')
     ax2.set_xlabel('Dtected Hole (Green)')
     
+    ax3.imshow(matching_score, cmap=plt.cm.gray)
+    ax3.set_axis_off()
+    ax3.set_title('matching score')
+    
 
     # highlight matched region
     for x,y, wcoin, hcoin in detection_list:
         rect = plt.Rectangle((x, y), wcoin, hcoin, edgecolor='g', facecolor='none', linewidth=3)
-        ax2.add_patch(rect)
+        ax3.add_patch(rect)
 
 
-    ax3.imshow(mask)
-    ax3.set_axis_off()
-    ax3.set_title('matching patch score')
+    ax4.imshow(mask)
+    ax4.set_axis_off()
+    ax4.set_title('matching patch score')
     # highlight matched region
-    # ax3.autoscale(False)
-    ax3.plot(x, y, '*', markeredgecolor='r', markerfacecolor='none', linewidth=5, markersize=30)
+    # ax4.autoscale(False)
+    ax4.plot(x, y, '*', markeredgecolor='r', markerfacecolor='none', linewidth=5, markersize=30)
+    
+    
     plt.show()
 
 def detect_road_damage_using_patch_matching(image_RGB, road_hole_RGB, disp=False):
@@ -52,7 +59,7 @@ def detect_road_damage_using_patch_matching(image_RGB, road_hole_RGB, disp=False
     result = match_template(image, road_hole)
     mask= np.pad(result, [((wcoin-1)//2, (hcoin-1)//2), ( (wcoin-1)//2,(hcoin-1)//2)], mode='constant')
     ij = np.unravel_index(np.argmax(result), result.shape)
-    print(f'\n \n - hole {len(ij)} coordinate: \n {ij}')
+    # print(f'\n \n - hole {len(ij)} coordinate: \n {ij}')
     x, y = ij[::-1]
     detection=[x,y, wcoin, hcoin]
     # # plot the dsp detectino results
@@ -75,7 +82,7 @@ def resize_image(src_image, size):
     # return the resized image
     return new_image
 
-def DSP_road_inspection(img_path, hole_patch_root, detect_th=0.75, disp=True):
+def DSP_road_inspection(img_path, hole_patch_root, patch_size=(256,256), detect_th=0.75, disp=True):
     '''
     DSP-based road inspection
     '''
@@ -89,31 +96,35 @@ def DSP_road_inspection(img_path, hole_patch_root, detect_th=0.75, disp=True):
     detection_list=[]
     # load the image
     image_RGB = utils.load_image(img_path)
-    size=(128,128)
-    image_RGB=resize_image(image_RGB, size)
+    # size=(128,128)
+    # image_RGB=resize_image(image_RGB, size)
     image_RGB = np.array(image_RGB)
     image = color.rgb2gray(image_RGB)
     # mask= 0*np.empty_like( image)
     # result= 0*np.empty_like( image)
-    for patch_path in patch_paths[:1]:
+    # print(f'flag: seg_image={np.unique(image_RGB)}')
+    for patch_path in patch_paths:
         road_hole_RGB = utils.load_image(patch_path)
+        # input(f'flag: seg_hole={np.unique(road_hole_RGB)}, size={len(np.unique(road_hole_RGB))}')
+        if len(np.unique(road_hole_RGB))==1:
+            continue
         # run the detection
         mask_, result_, detection = detect_road_damage_using_patch_matching(image_RGB, road_hole_RGB)
         # update the detection
         detection_list.append(detection)
         try:
             mask+=mask_
-            result+=result_
+            matching_score+=result_
         except:
             mask=mask_
-            result=result_
+            matching_score=result_
     # final defect mask
     mask[mask<detect_th*np.max(mask)]=0
     image_RGB=image_RGB[:mask.shape[0],:mask.shape[1],:]
     # plot the dsp detectino results
     if disp:
-        plot_dsp_detection(road_hole_RGB, image, result, detection_list)
-    return image, image_RGB, mask
+        plot_dsp_detection(road_hole_RGB, image, matching_score, mask, detection_list)
+    return image, image_RGB, matching_score, mask
 
 def segmenting_road(img, disp=False):
     from skimage import data, segmentation, color
@@ -179,27 +190,36 @@ def main_DSP_segmentation():
 
 def main_DSP_road_inspection():
 
-    detect_th=0.8
+    detect_th=0.95
+    factor=1
+    Min_box_area=100
     from glob import glob
     import cv2
     # load template-image
       
     hole_patch_root='bin/holes-patches' 
-    
+    # hole_patch_root='bin/holes-patches/test' 
+
     # load image
-    img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/hole/'#good-roads/'#cracks/'#
-    for img_path in glob(os.path.join(img_folder,'*'))[:1]:#
+    # img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/hole/'#good-roads/'#cracks/'#
+    img_folder='/media/abdo2020/DATA1/running/workspace/OBJ-manually-labeled-obj_HAIS-dash-CAM-dev/data/train' 
+
+    for img_path in glob(os.path.join(img_folder,'*'))[2:10]:#
         # DSP-based road inspection
-        img,img_rgb, mask = DSP_road_inspection(img_path, hole_patch_root, detect_th=detect_th, disp=False)
-        
+        img,img_rgb, matching_score, mask = DSP_road_inspection(img_path, hole_patch_root, detect_th=detect_th, disp=False)
+
+        # try:
+        #     img,img_rgb, matching_score, mask = DSP_road_inspection(img_path, hole_patch_root, detect_th=detect_th, disp=False)
+        # except:
+        #     continue
         # # road mask extraction
         # road_mask=segmenting_road(img_rgb, disp=True)
         # # mask=np.multiply(road_mask,mask)
 
         # creat ebouding boxes
-        img_box, mask_out, nb_box, label_boxes, img_class= utils.create_object_boxes(img, mask, Min_box_area=0, factor=1.2, disp=0)
+        img_box, mask_out, nb_box, label_boxes, img_class= utils.create_object_boxes(img, mask, Min_box_area=Min_box_area, factor=factor, disp=0)
         # display the detection 
-        utils.display_detection(img, img_box, mask_out, msg='Bouding boxes', cmap="gray")
+        utils.display_detection(img_rgb, img_box, matching_score, mask_out, msg='Bouding boxes', cmap="gray")
 
 
 if __name__ == '__main__':

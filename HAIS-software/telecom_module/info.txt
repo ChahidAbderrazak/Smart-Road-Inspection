@@ -1,6 +1,13 @@
 This project sends the data to the firebase database.
 To connect this code with your firebase project, you  have to :
-
+*********************************************************** depandancy ****************************************************
+import pyrebase
+import time
+import os 
+import shutil
+import tarfile
+uptodate 20/9/2022
+********************************************************************************************************
 1- change the Config. You have to go to your database -- the main page -- create a web app. Your configuration will show there.
 2- in the Config, there is a database URL you will find it in-- storage upper left corner .
 3- change the (row_data, root, download) path.
@@ -17,3 +24,10 @@ to retrieve the data, run "read_data.py," which will download all the data in fi
 
 ... I hope you will have a successful project ...
 if there is any question, reach me at: ahmad.mousa@ontariotechu.net
+
+
+*************************************** Update ******************************
+1- add a compreetion part 
+2-remove the dependancy between the tasks
+3-you can run each componant paralle 
+

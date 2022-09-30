@@ -1,0 +1,13 @@
+### Firebase packages
+pyrebase
+requests>=2.26
+numpy
+
+# RPI senesors packages
+pigpio
+rplidar
+pygame
+smbus
+
+### Inspection packages
+matplotlib

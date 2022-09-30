@@ -1,6 +1,6 @@
 {
-  "DATA_DIR": "/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/2022.08.05",
-  "OUTPUT_DIR": "/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/2022.08.05",
+  "DATA_DIR": "/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/test",
+  "OUTPUT_DIR": "/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/test",
   "road_accessibility": [
     "private",
     "public"

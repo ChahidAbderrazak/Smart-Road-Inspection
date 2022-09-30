@@ -72,13 +72,13 @@ def load_image(path):
     import numpy as np
     import cv2
     # print(' The selected image is :', path)
-    filename, file_extension = os.path.splitext(path)
+    # filename, file_extension = os.path.splitext(path)
     try:
         img = cv2.imread(path)
     except:
         msg = '\n Error: the image path ' + path + 'cannot be loaded!!!!'
         raise Exception(msg)
-    print(f' The selected image file is [{path}] of size {img.shape}')
+    # print(f' The selected image file is [{path}] of size {img.shape}')
     return img
 
 def save_image(img, filename):
@@ -137,19 +137,34 @@ def show_input_images(img_input, img_ouput, msg='', cmap='gray'):
     ax2.set_title('output image')
     plt.show()
 
-def display_detection(img, img_box, mask,  msg='', cmap="cividis"):
+def display_detection(img, img_box, matching_score, mask,  msg='', cmap="cividis"):
+    ij = np.unravel_index(np.argmax(matching_score), matching_score.shape)
+    x, y = ij[::-1]
     print(f'\n\n --> 2D inspection results.\n- image size ={img_box.shape}')
     if len(img_box.shape)==3 and img_box.shape[2]!=3:
         import random 
         idx = random.randint(1,img_box.shape[0])
         img_box = img_box[idx]
     # display
-    fig, (ax3, ax4) = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(30, 8))
-    ax3.imshow(img_box, interpolation='none', cmap=cmap)
-    ax3.set_title('Road damage localization ')
-    ax4.imshow(img, cmap='gray', interpolation='none', origin='lower')
-    ax4.imshow(mask, cmap='Reds', interpolation='none', alpha=0.6)
-    ax4.set_title(f'Road damage  segmentation ')
+    fig, (ax1,ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=True, figsize=(30, 8))
+
+    ax1.imshow(img)
+    ax1.set_title('CAM')
+
+    # ax1.imshow(matching_score)
+    # ax1.set_title('Pixel matching score ')
+    # ax1.plot(x, y, '*', markeredgecolor='r', markerfacecolor='none', linewidth=10, markersize=30)
+    ax1.set_axis_off()
+
+    ax2.imshow(img_box)#, interpolation='none', cmap=cmap)
+    ax2.set_title('Road damage localization ')
+    ax2.set_axis_off()
+
+
+    ax3.imshow(img, cmap='gray', interpolation='none', origin='lower')
+    ax3.imshow(mask, cmap='Reds', interpolation='none', alpha=0.6)
+    ax3.set_title(f'Road damage  segmentation ')
+    ax3.set_axis_off()
     plt.show()
 
 def create_new_directory(DIR):

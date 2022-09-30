@@ -228,7 +228,7 @@ if __name__ == '__main__':
     # run_2D_annotator(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
 
     ## Annotating using folder path
-    DATA_DIR = '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/2022.08.05'
+    DATA_DIR = '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/test' #2022.08.05'
     run_2D_annotator(DATA_DIR=DATA_DIR)
 
 
