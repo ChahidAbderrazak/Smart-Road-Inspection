@@ -4,7 +4,8 @@ from lib.utils import get_file_names
 configuration = {"Scenario": "S1", "USE_CASE": "UC1", "duration": 10,
 					"vehicle": "car1", "location": "Ontario Tech University",
 					"description": "low-safety index"}
-data_root = "HAIS_DATABASE"  # storage path on local device
+#data_root = "HAIS_DATABASE"  # storage path on local device
+data_root = "/media/hais/355A-55FB/HAIS_DATABASE" # storage path on HHD device
 stop_threads = False
 dict_frame = {}  # dictionary of sensor data corresponding to a single frame
 dict_fr_list = [{}]  # list of individual dictionaries of sensors" data for all frames

@@ -14,7 +14,7 @@ print()
 for i in range(0, 10):
     try:
         time.sleep(rdIntrvl)
-        err, lat, lng, alt = Gps.gpsDt()
+        lat, lng, alt = Gps.gpsDt()
         #gpsDt()
         print("Latitude:  ", lat)
         print("Longitude: ", lng)

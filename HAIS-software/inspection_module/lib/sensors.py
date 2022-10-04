@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.animation as animation
 
-class RPLidar(object):
-	'''Class for communicating with RPLidar rangefinder scanners : sampling time = 5seconds'''
+class RPLidar_sim(object):
+	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
 
 	def __init__(self, filename, angle_step=1,DMAX=100, IMIN=0, IMAX=50):
-		'''Initilize RPLidar object for communicating with the sensor.
+		'''Initilize RPLidar_sim object for communicating with the sensor.
 
 		Parameters
 		----------
@@ -133,8 +133,8 @@ def run_Lidar_records():
 	DMAX = 100
 	IMIN = 0
 	IMAX = 50
-	filename='/media/abdo2020/DATA1/Datasets/numerical-dataset/RPLidar-data/catalog_0_A1_R5_465_1.catalog.txt'# catalog_0_A2_465_2.catalog.txt'#catalog_0_A1_R6_465_1.catalog.txt'#
-	lidar = RPLidar(filename, angle_step=2, DMAX=DMAX, IMIN=IMIN, IMAX=IMAX)
+	filename='/media/abdo2020/DATA1/Datasets/numerical-dataset/RPLidar_sim-data/catalog_0_A1_R5_465_1.catalog.txt'# catalog_0_A2_465_2.catalog.txt'#catalog_0_A1_R6_465_1.catalog.txt'#
+	lidar = RPLidar_sim(filename, angle_step=2, DMAX=DMAX, IMIN=IMIN, IMAX=IMAX)
 	# vizualise lidar image
 	lidar.plot_lidar()
 	lidar.plot_lidar_animation()

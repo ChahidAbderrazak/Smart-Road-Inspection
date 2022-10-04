@@ -6,48 +6,48 @@ import threading
 from lib.config_parameters import *
 from lib.utils import *
 from lib import Imu, Gps
-from rplidar import RPLidar
+from lib.lidar_sensor import *
+# from rplidar import RPLidar
        
 ################################################## SENSOR FUNCTIONS #################################################
 
 def save_lidar_data():
-    global img_size,  data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, car_location
-
-    while True:
-        '''Main function'''
-        lidar = RPLidar(PORT_NAME)
-        data = []
-        try:
-            print('Recording measurments... Press Crl+C to stop.')
-            for scan in lidar.iter_scans():
-                lidar_d = np.array(scan)
-                filename_strg = str(get_sensor_filename("LIDAR", sensor_frame, configuration)) + ".pcd"
-                save_pcd_path = os.path.join(data_root, "sweeps", "LIDAR_pcd", filename_strg)
-                write_lidar_pcd(lidar_d, save_pcd_path)
-
+    global img_size, data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, vid, lidar_device,  car_location
+    scan_data = [0]*360
+    try:
+        while (True):
+            for scan in lidar_device.lidar.iter_scans():
+                Intensity_=[]
+                for (intensity, angle, distance) in scan:
+                    scan_data[min([359, floor(angle)])] = distance
+                    Intensity_.append(intensity)
+                lidar_d=lidar_device.process_lidar_data(scan_data)
+                filename_strg = str(get_sensor_filename("LIDAR", sensor_frame, configuration)) + ".json"
+                save_json_path = os.path.join(data_root, "sweeps", "LIDAR", filename_strg)
+                save_json([{"points": lidar_d, "intensity": Intensity_}], save_json_path)
+                
+                if disp:
+                    print(f'\n - Lidar data={lidar_d}')
                 # update outputs
                 dict_frame = add_data_to_pipeline(sensor_frame)
                 sensor_frame = sensor_frame + 1
                 dict_frame["description"] = configuration["description"]
                 dict_frame["timestamp"] = get_timestamp()
                 dict_frame["sensor_name"] = "LIDAR"
-                dict_frame["position"] = {"Translation": "",
-                                          "Rotation": ""}
+                dict_frame["position"] = {"Translation": car_location,
+                                        "Rotation": ""}
                 dict_frame["calibration"] = {"Translation": "", "Rotation": "", "Camera_intrinsic": ""}
-                dict_frame["fileformat"] = "pcd"
-                dict_frame["filename"] = str(os.path.join("sweeps", "LIDAR_pcd", filename_strg))
+                dict_frame["fileformat"] = "json"
+                dict_frame["filename"] = str(os.path.join("sweeps", "LIDAR", filename_strg))
                 dict_frame["meta_data"] = ""
 
-        except KeyboardInterrupt:
-            print('Stopping.')
-        lidar.stop()
-        lidar.stop_motor()
-        lidar.reset()
-        lidar.disconnect()
+    except KeyboardInterrupt:
+        print('Stopping.')
+        lidar_device.lidar.stop()
+        lidar_device.lidar.stop_motor()
+        lidar_device.lidar.reset()
+        lidar_device.lidar.disconnect()
 
-        if stop_threads:
-            break
-        
 def save_json_file():
     global img_size, dict_fr_list, filename
     while True:
@@ -55,14 +55,14 @@ def save_json_file():
             old_dict = load_json(filename)
             combined_dict = old_dict + dict_fr_list
             save_json(combined_dict, filename)
-            print(f"\n - Saving {str(len(combined_dict))}  frames in {filename}" )
+            #print(f"\n - Saving {str(len(combined_dict))}  frames in {filename}" )
             dict_fr_list = []
 
 def save_image_data():
-    global img_size, data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, vid, car_location
+    global img_size, data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, vid,  car_location
     while True:
         # save image file locally
-        filename_strg = str(get_sensor_filename("CSI_Camera", sensor_frame, configuration)) + ".jpg"
+        filename_strg = str(get_sensor_filename("CSI_CAMERA", sensor_frame, configuration)) + ".jpg"
         image_save_path = os.path.join(data_root, "sweeps", "CSI_CAMERA", filename_strg)
         ret, frame = vid.read()
         frame_resized = cv2.resize(frame, img_size) 
@@ -108,10 +108,12 @@ def save_accelerometer_data():
 def save_gps_data():
     global img_size,  data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, car_location
 
-    while pygame.time.get_ticks() < configuration["duration"] * 1000:
-        print(pygame.time.get_ticks())
+    while True:
+        #(pygame.time.get_ticks())
         err, lat, lng, alt = Gps.gpsDt()
         car_location=[lat, lng, alt]
+        print(f"\n - car_location ={car_location}")
+
         # update outputs
         dict_frame = add_data_to_pipeline(sensor_frame)
         sensor_frame = sensor_frame + 1
@@ -124,12 +126,10 @@ def save_gps_data():
         dict_frame["fileformat"] = ""
         dict_frame["filename"] = ""
         dict_frame["meta_data"] = ""
-    print("gps done")
 
 # function to add data to main sensor data dictionary based on corresponding frame
 def add_data_to_pipeline(frame):
     global img_size,  dict_fr_list, dict_frame
-
     if dict_frame == {}:
         dict_frame["frame"] = frame
 
@@ -138,11 +138,12 @@ def add_data_to_pipeline(frame):
         #print(dict_fr_list)
         dict_frame = {}  # individual frame
         dict_frame["frame"] = frame
-
     return dict_frame
 
 def run_data_collection():
-    global car_location, sensor_frame
+    global car_location, sensor_frame, disp
+    disp=False
+    dict_fr_list = []
     # get the car position
     err, lat, lng, alt = Gps.gpsDt()
     car_location=[lat, lng, alt]
@@ -158,7 +159,6 @@ def run_data_collection():
     print(f"configuration={configuration}")
     print(f"filename={filename}")
     print(f"sensor_frame={sensor_frame}")
-    # input(f"\n - dict_fr_list= {dict_fr_list}" )
     # initialise pygame
     pygame.init()
     print("pygame initiated")
@@ -170,8 +170,13 @@ def run_data_collection():
     t4 = threading.Thread(target=save_image_data)
     t5 = threading.Thread(target=save_lidar_data)
     # start the threads
-    t1.start(); t2.start(); t3.start(); t4.start(); t5.start()
+    t1.start(); t2.start(); t3.start(); t4.start()
+    t5.start()
 
+    # start the lidar data
+    # save_lidar_data()
+        
+    # Quit pygame
     pygame.quit()
 
 if __name__ == "__main__":

@@ -3,7 +3,6 @@ import sys
 import time
 import cv2
 import pygame
-# from lib.config_parameters import *
 from datetime import datetime
 import numpy as np
 
@@ -15,12 +14,13 @@ def load_json(filename):
     if os.path.exists(filename):
         import json
         f = open(filename)
-        print(filename)
         data = json.load(f)
         f.close()
+        # if len(data)%500==1:
+        print(f"- Previous data has {len(data)} sensors recodrs")
     else:
         data = []
-    print(f"\n Previous data has {len(data)} frames: {data} sensor records")
+    
     return data
     
 def save_json(json_string, filename):
@@ -54,21 +54,21 @@ def create_new_folder(DIR):
 
 def create_databse_folders(data_root):
     json_path = os.path.join(data_root,"sweeps","Json_files")
-    lidar_data_path = os.path.join(data_root,"sweeps","LIDAR_pcd")
+    lidar_data_path = os.path.join(data_root,"sweeps","LIDAR")
     image_data_path = os.path.join(data_root,"sweeps","CSI_CAMERA")
     create_new_folder(json_path)
     create_new_folder(lidar_data_path)
     create_new_folder(image_data_path)
 
-def write_lidar_pcd(points, save_pcd_path):
-    n = len(points)
-    lines = []
-    for i in range(n):
-        x, y, z, intensity = points[i]
-        lines.append('{} {} {} {}'.format(x, y, z, intensity))
-    with open(save_pcd_path, 'w') as f:
-        f.write(HEADER.format(n, n))
-        f.write('\n'.join(lines))
+# def write_lidar_pcd(points, save_pcd_path):
+#     n = len(points)
+#     lines = []
+#     for i in range(n):
+#         x, y, z, intensity = points[i]
+#         lines.append('{} {} {} {}'.format(x, y, z, intensity))
+#     with open(save_pcd_path, 'w') as f:
+#         f.write(HEADER.format(n, n))
+#         f.write('\n'.join(lines))
 
 def get_time_tag(type=1):
     from datetime import datetime
@@ -89,12 +89,9 @@ def get_sensor_filename(sensor_name, frame, config):
 def get_timestamp():
     # Getting the current date and time
     dt = datetime.now()
-
     # getting the timestamp
     ts = datetime.timestamp(dt)
     return ts
-
-
 
 
 
