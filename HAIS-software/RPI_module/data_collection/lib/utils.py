@@ -87,8 +87,10 @@ def get_sensor_filename(sensor_name, frame, config):
     return time_tag + scene_setup + "__" + sensor_name + "__" + str(frame)
 
 def get_timestamp():
+    from datetime import datetime
     # Getting the current date and time
     dt = datetime.now()
+
     # getting the timestamp
     ts = datetime.timestamp(dt)
     return ts

@@ -1,11 +1,7 @@
 #!/bin/bash
-clear
-eval "$($(which conda) 'shell.bash' 'hook')"
-echo  "Activating conda environment"
-env_name=hais-node-env
-conda activate $env_name
-
-# run the scripts
 cd data_collection
-python start_data_collection.py
+echo "# Start the data collection"
+python start_data_collection_serial.py
 
+echo "# Stop the Lidar"
+python stop_lidar.py

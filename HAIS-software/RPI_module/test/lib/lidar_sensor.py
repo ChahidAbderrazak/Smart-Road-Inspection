@@ -3,6 +3,9 @@ import numpy as np
 from math import cos, sin, pi, floor
 import pygame
 
+
+
+
 class RPLidar_Sensor(object):
     '''Class for communicating with RPLidar rangefinder scanners : sampling time = 5seconds'''
 
@@ -98,11 +101,11 @@ class RPLidar_Sensor(object):
 def get_image(coor_list):
     N=np.max(np.abs(coor_list))
     print(N)
-    arr=np.zeros((N,N))
-    for x, y in coor_list:
-        print(x,y)
-        arr[x,y]=1
-    print(arr)
+    max_distance=5000
+    x=500
+    point=x / max_distance * 119
+    print(f'\n point={point}')
+
 
 
 if __name__ == "__main__":

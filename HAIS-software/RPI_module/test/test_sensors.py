@@ -1,21 +1,43 @@
 import os, sys
-# from lib.lidar_sensor import *
-from ..data_collection.lib.lidar_sensor import *
+from lib.lidar_sensor import *
+#from ..data_collection.lib.lidar_sensor import *
+def get_timestamp():
+    from datetime import datetime
+    # Getting the current date and time
+    dt = datetime.now()
 
+    # getting the timestamp
+    ts = datetime.timestamp(dt)
+    return ts
+
+def get_time_tag(type=1):
+    from datetime import datetime
+    today = datetime.now()
+    if type == 0:
+        return today.strftime("__%Y-%m-%d")
+    else:
+        return today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
+
+    
 def test_lidar():
 	lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',visualize=True)
+	
 	scan_data = [0]*360
 	try:
+			
 			for scan in lidar_device.lidar.iter_scans():
 					for (_, angle, distance) in scan:
 							scan_data[min([359, floor(angle)])] = distance
 					lidar_d=lidar_device.process_lidar_data(scan_data)
 					lidar_device.obj_coord_list=lidar_d
+					print(str(get_time_tag(type=1)))
 
 	except KeyboardInterrupt:
 			print('Stoping.')
 			lidar_device.lidar.stop()
+			lidar_device.lidar.stop_motor()
 			lidar_device.lidar.disconnect()
+			print('Lidar stopped!!.')
 
 def test_camera():
 	# import the opencv library

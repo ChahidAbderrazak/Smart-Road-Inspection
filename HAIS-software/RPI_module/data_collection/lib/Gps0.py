@@ -35,14 +35,13 @@ def gpsDt():
         while True:
             c = BUS.read_byte(address)
             if c == 255:
-                print(f'\n GPS error: C={c}')
+ 
                 err=True
                 lat, lng, alt= -1, -1, -1
                 return err, lat, lng, alt
 
             elif c == 10:
-                print (f'\n error 4: C={c}')
-                break
+             break
             else:
                 response.append(c)
 
@@ -106,19 +105,12 @@ def gpsDt():
                                 print(alt, "\n")
                                 err=False
                                 return err, lat, lng, alt
-  
-    except IOErrora as e:
-        print (f'\n error 2: {e}')
+
+    except IOError:
         connectBus()
-        err=True
-        lat, lng, alt= -2, -2, -2
-        return err, lat, lng, alt
 
     except Exception as e:
-        print (f'\n error 3: {e}')
-        err=True
-        lat, lng, alt= -3, -3, -3
-        return err, lat, lng, alt
+        print (e)
 
 
 connectBus()
