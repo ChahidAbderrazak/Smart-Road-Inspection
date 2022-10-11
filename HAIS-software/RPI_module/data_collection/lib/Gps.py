@@ -20,12 +20,21 @@ def connectBus():
     global BUS
     BUS = smbus.SMBus(1)
                      
-def handle_ctrl_c(signal, frame):
-        sys.exit(130)
+#def handle_ctrl_c(signal, frame):
+        #sys.exit(130)
 
-signal.signal(signal.SIGINT, handle_ctrl_c)
-
+#signal.signal(signal.SIGINT, handle_ctrl_c)
 def gpsDt():
+    try:
+        err=True
+        while(err):
+            err, lat, lng, alt = update_gps()
+        return lat, lng, alt
+    except Exception as e:
+        print('\n - GPS error: Please connect the GPS  antenna and make sure you are in an open-air area')
+        sys.exit(0)
+
+def update_gps():
     lat = 190
     lng = 190
     alt = -1000
@@ -35,14 +44,10 @@ def gpsDt():
         while True:
             c = BUS.read_byte(address)
             if c == 255:
-                print(f'\n GPS error: C={c}')
-                err=True
-                lat, lng, alt= -1, -1, -1
-                return err, lat, lng, alt
+                return True, -1,-1,-1
 
             elif c == 10:
-                print (f'\n error 4: C={c}')
-                break
+             break
             else:
                 response.append(c)
 
@@ -81,8 +86,7 @@ def gpsDt():
                                 latD = line1[:1]
                                 if latD == 'S':
                                     lat = lat * (-1)
-                                print(lat)
-                                print(latD)
+
                                 line1 = line1[2:]
                                 d = line1.find(',')
  
@@ -92,8 +96,6 @@ def gpsDt():
                                 lngD = line1[:1]
                                 if lngD == 'W':
                                     lng = lng * (-1)
-                                print(lng)
-                                print(lngD)
 
                                 line1 = line1[2:]
                                 for i in range(0, 3):
@@ -103,22 +105,32 @@ def gpsDt():
 
                                 d = line1.find(',')
                                 alt = float(line1[:d])
-                                print(alt, "\n")
-                                err=False
-                                return err, lat, lng, alt
-  
-    except IOErrora as e:
-        print (f'\n error 2: {e}')
+                                
+                                return False, lat, lng, alt
+                            
+                            else:
+                                #print (f'\n - Error: GPS buffer summation of chkVal flag is incorrect:  {chkVal}!= {int(chkSum, 16)}')
+                                return True, -1,-1,-1
+                        else:
+                            #print (f'\n - Error: GPS buffer flag 5 incoeerect. {line1[:5]}!= GNGGA')
+                            return True, -1,-1,-1
+                    else:
+                        #print (f'\n - Error: GPS buffer does not contain the flag <txbuf>. \n buffer={gpsChars}')
+                        return True, -1,-1,-1
+                else:
+                    #print (f'\n - Error: number of buffer error flags ={CharError}.')
+                    return True, -1,-1,-1
+    
+            else:
+                #print (f'\n - Error: GPS buffer size >= 84 . size = {len(response)} ')
+                return True, -1,-1,-1
+    
+        else:
+            #print (f'\n - Error: GPS buffer incorrect {response.count(36)}!= 1')
+            return True, -1,-1,-1
+    except IOError:
         connectBus()
-        err=True
-        lat, lng, alt= -2, -2, -2
-        return err, lat, lng, alt
-
-    except Exception as e:
-        print (f'\n error 3: {e}')
-        err=True
-        lat, lng, alt= -3, -3, -3
-        return err, lat, lng, alt
+        print ('\n - Error: bus error')
 
 
 connectBus()

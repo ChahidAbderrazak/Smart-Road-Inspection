@@ -1,11 +1,12 @@
 import os
 import sys
 import time
+import signal
 import pygame
 import threading
 from lib.config_parameters import *
 from lib.utils import *
-from lib import Imu, Gps
+from lib import Gps, Imu
 from lib.lidar_sensor import *
 # from rplidar import RPLidar
        
@@ -34,11 +35,11 @@ def save_lidar_data(lidar_d):
                 
 def save_json_file():
     global img_size, dict_fr_list, filename
-    if len(dict_fr_list)>50:       
+    if len(dict_fr_list)>5:    
         old_dict = load_json(filename)
         combined_dict = old_dict + dict_fr_list
         save_json(combined_dict, filename)
-        #print(f"\n - Saving {str(len(combined_dict))}  frames in {filename}" )
+        print(f"\n - Saving {str(len(combined_dict))}  frames in {filename}" )
         dict_fr_list = []
 
 def save_image_data():
@@ -86,13 +87,10 @@ def save_accelerometer_data():
 
 def save_gps_data():
     global img_size,  data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, car_location
-    try:
-        err, lat, lng, alt = Gps.gpsDt()
-        car_location=[lat, lng, alt]
-        print(f"\n - car_location ={car_location}")
-    except:
-        car_location=[-1, -1, -1]
-        print(f"\n - Error with the GPS signal")
+    lat, lng, alt = Gps.gpsDt()
+    car_location=[lat, lng, alt]
+    print(f"\n - car_location ={car_location}")
+    
 
     # update outputs
     dict_frame = add_data_to_pipeline(sensor_frame)
@@ -120,41 +118,14 @@ def add_data_to_pipeline(frame):
         dict_frame["frame"] = frame
     return dict_frame
 
-                
-def run():
-    global img_size, data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, vid, lidar_device,  car_location
-    scan_data = [0]*360
-    # initialize the lidar device
-    lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',visualize=False)
-    lidar_device.lidar.reset()
-    
-    while (True):
-        for scan in lidar_device.lidar.iter_scans():
-            # get lidar data
-            Intensity_=[]
-            for (intensity, angle, distance) in scan:
-                scan_data[min([359, floor(angle)])] = distance
-                Intensity_.append(intensity)
-            lidar_d=lidar_device.process_lidar_data(scan_data)
-            save_lidar_data(lidar_d)
-            # get camera data
-            save_image_data()
-            # get IMU data
-            save_accelerometer_data()
-            # get lidar data
-            save_gps_data()
-            # get lidar data
-            save_lidar_data()
-                
-
-
-
 def init():
     global car_location, sensor_frame, disp
     disp=False
     dict_fr_list = []
     # get the car position
-    err, lat, lng, alt = Gps.gpsDt()
+    
+    lat, lng, alt = Gps.gpsDt()
+    
     car_location=[lat, lng, alt]
 
     # define the log file
@@ -194,18 +165,32 @@ def collect_node_data():
             # get camera data
             save_image_data()
             
-            # get IMU data
+            ## get IMU data
             save_accelerometer_data()
             
             # get lidar data
             save_gps_data()
             
     except KeyboardInterrupt:
-        print('Stopping.')
-        lidar_device.lidar.stop()
-        lidar_device.lidar.stop_motor()
-        lidar_device.lidar.disconnect()
-        print('Lidar stopped!!.')
+        self.strop_lidar() 
+        sys.exit(0)
+    except Exception as e:
+        self.strop_lidar()
+        print(f'\n\n {e}') 
+        sys.exit(0)
+
+def handle_ctrl_c(signal, frame):
+    lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',visualize=False)
+    print('Stoping.')
+    lidar_device.lidar.stop()
+    lidar_device.lidar.stop_motor()
+    lidar_device.lidar.disconnect()
+    print('Lidar stopped!!.')
+
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, handle_ctrl_c)
+
 if __name__ == "__main__":
 
     collect_node_data()

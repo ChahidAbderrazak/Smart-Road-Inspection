@@ -3,9 +3,6 @@ import numpy as np
 from math import cos, sin, pi, floor
 import pygame
 
-
-
-
 class RPLidar_Sensor(object):
     '''Class for communicating with RPLidar rangefinder scanners : sampling time = 5seconds'''
 
@@ -59,6 +56,13 @@ class RPLidar_Sensor(object):
                 break
             except:
                  print(f' \n - Lidar connection Error to {self.PORT_NAME} ...')
+                 
+    def strop_lidar(self):
+            print('Stoping.')
+            self.lidar.stop()
+            self.lidar.stop_motor()
+            self.lidar.disconnect()
+            print('Lidar stopped!!.')
 
     def process_lidar_data(self, data):
         points_list=[]
@@ -67,15 +71,16 @@ class RPLidar_Sensor(object):
         for angle in range(360):
             distance = data[angle]
             # ignore initially ungathered data points + ignore points out of the FOV
-            if distance > 0 and  angle> int(self.FOV/2) and angle< 180 - int(self.FOV/2) : # :#               
+            if distance >0 and ((angle> int(self.FOV/2) and angle< 180 - int(self.FOV/2)) or self.FOV==360 ): # :#               
                 self.max_distance = max([min([5000, distance]), self.max_distance])
                 radians = angle * pi / 180.0
                 x = distance * cos(radians)
                 y = distance * sin(radians)
-                point = (160 + int(x / self.max_distance * 119), 120 + int(y / self.max_distance * 119))
+                point = (int(x),int(y))#,  
                 points_list.append(point)
                 if self.visualize:
-                    self.lcd.set_at(point, pygame.Color(255, 255, 255))
+                    normalize_point=(160 + int(x / self.max_distance * 119), 120 + int(y / self.max_distance * 119))
+                    self.lcd.set_at(normalize_point, pygame.Color(255, 0, 0))
         if self.visualize:
             pygame.display.update()
         
@@ -84,30 +89,34 @@ class RPLidar_Sensor(object):
     def get_lidar_shot(self):
         scan_data = [0]*360
         try:
-            for scan in self.lidar.iter_scans():
-                for (_, angle, distance) in scan:
+                                
+            #for scan in lidar_device.lidar.iter_scans():
+            scan = next(self.lidar.iter_scans())    
+            for (_, angle, distance) in scan:
                     scan_data[min([359, floor(angle)])] = distance
-                lidar_d=self.process_lidar_data(scan_data)
-                self.obj_coord_list=lidar_d
-            
+            lidar_d=self.process_lidar_data(scan_data)
+            self.obj_coord_list=lidar_d
+            if lidar_d!=[]:
+                print(f'- Lidar max distance= {np.max(lidar_d)}')
+            return lidar_d
+
         except KeyboardInterrupt:
-            print('Stoping.')
-            self.lidar.stop()
-            self.lidar.disconnect()
+                self.strop_lidar() 
+                sys.exit(0)
 
-    def get_image(self, coor_list):
-        s=2
 
-def get_image(coor_list):
-    N=np.max(np.abs(coor_list))
-    print(N)
-    max_distance=5000
-    x=500
-    point=x / max_distance * 119
-    print(f'\n point={point}')
+def test_lidar():
+        lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',FOV=140,visualize=True)
+
+        scan_data = [0]*360
+        while(True):
+                lidar_device.get_lidar_shot()
+                
+  
+
 
 
 
 if __name__ == "__main__":
-    coor_list=[[2,3], [24,-67]]
-    get_image(coor_list)
+        test_lidar()
+

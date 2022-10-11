@@ -6,6 +6,8 @@ def stop_lidar():
 	print('Stoping.')
 	lidar_device.lidar.stop()
 	lidar_device.lidar.stop_motor()
+	lidar_device.lidar.disconnect()
+	print('Lidar stopped!!.')
 
 
 if __name__ == "__main__":

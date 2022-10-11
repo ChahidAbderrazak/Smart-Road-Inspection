@@ -16,36 +16,39 @@ def save_lidar_data():
     scan_data = [0]*360
     try:
         while (True):
-            for scan in lidar_device.lidar.iter_scans():
-                Intensity_=[]
-                for (intensity, angle, distance) in scan:
-                    scan_data[min([359, floor(angle)])] = distance
-                    Intensity_.append(intensity)
-                lidar_d=lidar_device.process_lidar_data(scan_data)
-                filename_strg = str(get_sensor_filename("LIDAR", sensor_frame, configuration)) + ".json"
-                save_json_path = os.path.join(data_root, "sweeps", "LIDAR", filename_strg)
-                save_json([{"points": lidar_d, "intensity": Intensity_}], save_json_path)
-                
-                if disp:
-                    print(f'\n - Lidar data={lidar_d}')
-                # update outputs
-                dict_frame = add_data_to_pipeline(sensor_frame)
-                sensor_frame = sensor_frame + 1
-                dict_frame["description"] = configuration["description"]
-                dict_frame["timestamp"] = get_timestamp()
-                dict_frame["sensor_name"] = "LIDAR"
-                dict_frame["position"] = {"Translation": car_location,
-                                        "Rotation": ""}
-                dict_frame["calibration"] = {"Translation": "", "Rotation": "", "Camera_intrinsic": ""}
-                dict_frame["fileformat"] = "json"
-                dict_frame["filename"] = str(os.path.join("sweeps", "LIDAR", filename_strg))
-                dict_frame["meta_data"] = ""
+            # initialize the lidar device
+            lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',visualize=False)
+            lidar_device.lidar.reset()
+            scan = next(lidar_device.lidar.iter_scans())
+
+            Intensity_=[]
+            for (intensity, angle, distance) in scan:
+                scan_data[min([359, floor(angle)])] = distance
+                Intensity_.append(intensity)
+            lidar_d=lidar_device.process_lidar_data(scan_data)
+            filename_strg = str(get_sensor_filename("LIDAR", sensor_frame, configuration)) + ".json"
+            save_json_path = os.path.join(data_root, "sweeps", "LIDAR", filename_strg)
+            save_json([{"points": lidar_d, "intensity": Intensity_}], save_json_path)
+            
+            #if disp:
+            #    print(f'\n - Lidar data={lidar_d}')
+            # update outputs
+            dict_frame = add_data_to_pipeline(sensor_frame)
+            sensor_frame = sensor_frame + 1
+            dict_frame["description"] = configuration["description"]
+            dict_frame["timestamp"] = get_timestamp()
+            dict_frame["sensor_name"] = "LIDAR"
+            dict_frame["position"] = {"Translation": car_location,
+                                    "Rotation": ""}
+            dict_frame["calibration"] = {"Translation": "", "Rotation": "", "Camera_intrinsic": ""}
+            dict_frame["fileformat"] = "json"
+            dict_frame["filename"] = str(os.path.join("sweeps", "LIDAR", filename_strg))
+            dict_frame["meta_data"] = ""
 
     except KeyboardInterrupt:
         print('Stopping.')
         lidar_device.lidar.stop()
         lidar_device.lidar.stop_motor()
-        lidar_device.lidar.reset()
         lidar_device.lidar.disconnect()
 
 def save_json_file():
@@ -65,8 +68,8 @@ def save_image_data():
         filename_strg = str(get_sensor_filename("CSI_CAMERA", sensor_frame, configuration)) + ".jpg"
         image_save_path = os.path.join(data_root, "sweeps", "CSI_CAMERA", filename_strg)
         ret, frame = vid.read()
-        frame_resized = cv2.resize(frame, img_size) 
-        cv2.imwrite(image_save_path, frame_resized)
+        #frame = cv2.resize(frame, img_size) 
+        cv2.imwrite(image_save_path, frame)
         # update outputs
         dict_frame = add_data_to_pipeline(sensor_frame)
         sensor_frame = sensor_frame + 1
@@ -169,12 +172,11 @@ def run_data_collection():
     t3 = threading.Thread(target=save_accelerometer_data)
     t4 = threading.Thread(target=save_image_data)
     t5 = threading.Thread(target=save_lidar_data)
+    
     # start the threads
     t1.start(); t2.start(); t3.start(); t4.start()
     t5.start()
 
-    # start the lidar data
-    # save_lidar_data()
         
     # Quit pygame
     pygame.quit()
