@@ -123,9 +123,7 @@ def init():
     disp=False
     dict_fr_list = []
     # get the car position
-    
     lat, lng, alt = Gps.gpsDt()
-    
     car_location=[lat, lng, alt]
 
     # define the log file
@@ -170,6 +168,9 @@ def collect_node_data():
             
             # get lidar data
             save_gps_data()
+            
+            # update the json file 
+            save_json_file()
             
     except KeyboardInterrupt:
         self.strop_lidar() 

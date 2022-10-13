@@ -24,14 +24,14 @@ conda activate $env_name
 # echo & echo  "Build and generate structures hais-database "
 # python inspection_module/lib/hais_database.py
 
-# run DSP inspection
-python inspection_module/lib/inspection_algorithm.py
+# # run DSP inspection
+# python inspection_module/lib/inspection_algorithm.py
 
 #######################  IMAGE ANNOTATION MODULE ##########################
 # cd annotator_module
 # python ultimatlabeling_manager.py
 
-# python main.py
+python main.py
 # python syntax.py
 
 conda deactivate 

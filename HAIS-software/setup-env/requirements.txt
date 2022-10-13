@@ -12,6 +12,7 @@ pandas
 scipy
 scikit-image
 imutils
+glob
 
 ### Visualization packages
 osmnx==1.1.2
