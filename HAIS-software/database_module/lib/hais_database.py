@@ -9,12 +9,12 @@ import json
 import pickle
 import os.path as osp
 import numpy as np
+from glob import glob
 
-class HAIS_database:
+class HAIS_node:
 	"""
 	Database class for HAIS-bot to store compatible data structue with the nuScenes database structure.
 	"""
-
 	def __init__(self,
 								config: str = 'config.json',
 								version: str = 'v0.1',
@@ -33,15 +33,23 @@ class HAIS_database:
 			if self.config["version"]!="":
 				self.version = self.config["version"]
 			else:
-				self.version = version
-			self.dataroot = dataroot
+				self.version = self.config["version"]#version
+			if self.config["raw_data"]!="":
+				self.dataroot = self.config["raw_data"]
+			else:
+				self.dataroot = dataroot
+
 			self.verbose = verbose
 			self.table_names = ['category', 'attribute', 'visibility', 'instance', 'sensor', 'calibrated_sensor',
 													'ego_pose', 'log', 'scene', 'sample', 'sample_data', 'sample_annotation', 'map', 'labels_config']
 			self.sensor_data_filename = os.path.join(self.config["raw_data"], self.config["json_filename"])
+			# concatenate the json files
+			self.conactenate_all_sensors_json()
+
+			# building the json tables
 			start_time = time.time()
 			if verbose:
-					print(f"======\nLoading HAIS-bot tables...  \n - dataset= {self.version}")
+					print(f"======\nLoading HAIS-bot tables...  \n - dataset= {self.version} \n - root= {self.dataroot}")
 
 			# Explicitly assign tables to help the IDE determine valid class members.
 			self.category = self.__load_table__('category')
@@ -101,6 +109,7 @@ class HAIS_database:
 	def __load_table__(self, table_name) -> dict:
 			""" Loads a table. """
 			filename=osp.join(self.table_root, '{}.json'.format(table_name)) 
+			print(f'\n flag : filename={filename}')
 			if not osp.exists(filename):
 				# create an empty json file
 				self.create_new_folder(osp.dirname(filename))
@@ -110,6 +119,21 @@ class HAIS_database:
 			with open(filename) as f:
 					table = json.load(f)
 			return table
+
+
+	def conactenate_all_sensors_json(self):
+		sensors_file_pattern=osp.join(self.config["raw_data"], 'sweeps','Json_files', '*.json')
+		list_json_files=glob(sensors_file_pattern)
+		print(f'\n\n #### {len(list_json_files)} data collections where found!')
+
+		table=[]
+		for file in list_json_files:
+			with open(file) as f:
+					new_tble = json.load(f)
+			table+=new_tble
+		# save the concatenated files
+		self.save_json(table, self.sensor_data_filename)
+
 
 	def pkl_to_dict(self, filename):
 		open_file = open(filename, "rb")
