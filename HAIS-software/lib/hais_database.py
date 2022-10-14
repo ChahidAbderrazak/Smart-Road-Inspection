@@ -607,7 +607,7 @@ if __name__ == '__main__':
 	# # sntax
 	#  syntax()
 	# collected data input
-	data = HAIS_database(config='config/config.json')
+	data = HAIS_node(config='config/config.json')
 
 	# create the database structure
 	data.create_database()

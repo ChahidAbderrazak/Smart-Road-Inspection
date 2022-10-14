@@ -2,9 +2,9 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 try:
-    from inspection_module.lib import utils
+    from lib import utils
 except:
-    from . import utils
+    import utils
 
 
 #%%######################   DSP BASED ROAD INSPECTION  ######################

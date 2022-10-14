@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 '''Animates distances and measurment quality'''
+import os, sys
 import matplotlib.pyplot as plt
+from matplotlib.transforms import offset_copy
 import numpy as np
+from glob import glob
 import matplotlib.animation as animation
+
+try:
+    from lib import utils
+except:
+    import utils
 
 class RPLidar_sim(object):
 	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
@@ -129,15 +137,102 @@ class RPLidar_sim(object):
 				scans_dict_list.append( json.loads(line.strip()) )
 		return scans_dict_list
 
-def run_Lidar_records():
+class RPLidar_HAIS(object):
+	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
+
+	def __init__(self, root, angle_step=1,DMAX=100, IMIN=0, IMAX=50):
+		'''Initilize RPLidar_sim object for communicating with the sensor.
+
+		Parameters
+		----------
+		port : str
+				Serial port name to which sensor is connected
+		baudrate : int, optional
+				Baudrate for serial connection (the default is 115200)
+		timeout : float, optional
+				Serial port connection timeout in seconds (the default is 1)
+		logger : logging.Logger instance, optional
+				Logger instance, if none is provided new instance is created
+		'''
+		self.root=root
+		self.files_list=glob(os.path.join(root,'*.json'))
+		self.angle_step=angle_step
+		self.DMAX=DMAX
+		self.IMIN=IMIN
+		self.IMAX=IMAX
+
+	def plot_lidar(self, num_scans=100):
+		scans_dict_list= self.read_scan()
+		join_distance_list =[]
+		time_vec = []
+
+		x = []
+		y = []
+
+		plt.ion()
+		fig = plt.figure()
+
+		for k,	scan in enumerate(scans_dict_list):
+			detect_obj = scan['points']
+			if len(detect_obj)<2:
+				continue
+			arr=np.array(detect_obj)
+			x,y=arr[:,0]/1000,arr[:,1]
+			# remove the offset_copy
+			y-= np.min(y)+1
+			N,M=np.max(x), np.max(y)
+			print(f'\n\n x={x} \n y={y}')
+			# input(f'\n  N={N}, M={M}')
+			join_distance_list.append(detect_obj)
+			time_vec.append(k)
+
+			# plot
+			plt.clf()
+			ax = fig.add_subplot(111)
+			ax.set_title(f'measurement={k}')
+			ax.set_ylabel(' distance in (cm)')
+			ax.set_xlabel(f'lane width (m)')
+			line1, = ax.plot(x, y, 'b-')
+			line1.set_ydata(y)
+			fig.canvas.draw()
+			fig.canvas.flush_events()
+			input(f'flag')
+			if k==num_scans:
+				break
+
+	def read_scan(self):
+		import json
+		scans_dict_list=[]
+		# Strips the newline character
+		for filename in self.files_list:
+			# load the json file
+			new_scan=utils.load_json(filename)
+			scans_dict_list+=new_scan 
+			#input(f'\n flag: new_scan={new_scan}') 
+		return scans_dict_list
+
+def run_Lidar_sim():
 	DMAX = 100
 	IMIN = 0
 	IMAX = 50
-	filename='/media/abdo2020/DATA1/Datasets/numerical-dataset/RPLidar_sim-data/catalog_0_A1_R5_465_1.catalog.txt'# catalog_0_A2_465_2.catalog.txt'#catalog_0_A1_R6_465_1.catalog.txt'#
+	filename='/media/abdo2020/DATA1/Datasets/numerical-dataset/RPLidar-data/catalog_0_A1_R5_465_1.catalog.txt'# catalog_0_A2_465_2.catalog.txt'#catalog_0_A1_R6_465_1.catalog.txt'#
 	lidar = RPLidar_sim(filename, angle_step=2, DMAX=DMAX, IMIN=IMIN, IMAX=IMAX)
 	# vizualise lidar image
 	lidar.plot_lidar()
 	lidar.plot_lidar_animation()
 
+def run_Lidar_HAIS():
+	DMAX = 100
+	IMIN = 0
+	IMAX = 50
+	root= "/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-12/Oshawa-roads/mission3/sweeps/LIDAR"
+	lidar = RPLidar_HAIS(root)
+	# vizualise lidar image
+	lidar.plot_lidar()
+
 if __name__ == '__main__':
-		run_Lidar_records()
+	# # run the lidar simulator using online dataset format
+	# 	run_Lidar_sim()
+
+	# run the lidar simulator using HAIS dataset format
+		run_Lidar_HAIS()

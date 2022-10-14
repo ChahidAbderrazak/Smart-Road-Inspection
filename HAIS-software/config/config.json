@@ -1,4 +1,4 @@
-{ "raw_data":"/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/HAIS-node-data/2022-10-11-UOIT-parking-Abderrazak", 
+{ "raw_data":"/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak", 
   "json_filename":"SENSOR_DATA.json",
   "Scenario": "S1", "USE_CASE": "UC1", "description": "Mission-name", 
   "vehicle":"car1", "location":"Ontario Tech University",

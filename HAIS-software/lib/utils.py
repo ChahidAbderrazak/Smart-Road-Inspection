@@ -660,7 +660,6 @@ def backgroung_statistics(mask, img_gray):
     std_bckgnd = [np.std(img_gray[idx_bckgnd])]
     return mean_bckgnd, std_bckgnd
 
-
 def compute_outer_mask(img_data, CANNY_THRESH_1 = 10, CANNY_THRESH_2 = 200, MASK_DILATE_ITER = 10, MASK_ERODE_ITER = 10, disp=1):
     '''
     Compute the outer mask using edges detection of the object in the image

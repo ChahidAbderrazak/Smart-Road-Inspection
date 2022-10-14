@@ -1,4 +1,26 @@
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+L=100
+x = np.linspace(0, 10*np.pi, L)
+y = np.sin(x)
+  
+plt.ion()
+fig = plt.figure()
+ax = fig.add_subplot(111)
+line1, = ax.plot(x, y, 'b-')
+
+print(f'\n y={y.shape}')
+for k, phase in enumerate(np.linspace(0, 10*np.pi, 100)):
+	y=np.sin(0.5 * x + phase)
+	print(f'\n y={y.shape}')
+	if k%4==0:
+		L+=50
+		x = np.linspace(0, 10*np.pi, L)
+		y=np.sin(0.5 * x + phase)
+	
+	
 
 # # import argparse
 # import imutils

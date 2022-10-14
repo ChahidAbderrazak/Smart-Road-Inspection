@@ -1,5 +1,5 @@
 
-from database_module.lib import hais_database
+from lib import hais_database
 
 # from telecom_module.lib import utils_telecom
 # def sync_data_to_firebase():
