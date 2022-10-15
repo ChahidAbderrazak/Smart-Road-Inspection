@@ -87,7 +87,7 @@ def save_accelerometer_data():
 
 def save_gps_data():
     global img_size,  data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, car_location
-    lat, lng, alt = Gps.gpsDt()
+    lat, lng, alt = [-1,-1,-1]# Gps.gpsDt()
     car_location=[lat, lng, alt]
     print(f"\n - car_location ={car_location}")
     
@@ -123,7 +123,7 @@ def init():
     disp=False
     dict_fr_list = []
     # get the car position
-    lat, lng, alt = Gps.gpsDt()
+    lat, lng, alt = [-1,-1,-1]# Gps.gpsDt()
     car_location=[lat, lng, alt]
 
     # define the log file
@@ -145,24 +145,25 @@ def collect_node_data():
     # initialization 
     init()
     # initialize the sensors
-    lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',visualize=False)
+    lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',FOV=140,visualize=True)
     scan_data = [0]*360
+
     try:
         while(True):
             lidar_device.lidar.start()
             #for scan in lidar_device.lidar.iter_scans():
-            scan = next(lidar_device.lidar.iter_scans())    
+            scan = next(lidar_device.lidar.iter_scans()) 
+            lidar_device.lidar.stop()   
             for (_, angle, distance) in scan:
                     scan_data[min([359, floor(angle)])] = distance
             lidar_d=lidar_device.process_lidar_data(scan_data)
             lidar_device.obj_coord_list=lidar_d
             print(f' {len(lidar_d)} objects -> {lidar_d}')
             # save lidar data
-            lidar_device.lidar.stop()
             save_lidar_data(lidar_d)           
             
-            # get camera data
-            save_image_data()
+            ## get camera data
+            #save_image_data()
             
             ## get IMU data
             save_accelerometer_data()
@@ -182,7 +183,7 @@ def collect_node_data():
         sys.exit(0)
 
 def handle_ctrl_c(signal, frame):
-    lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',visualize=False)
+    lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',FOV=140, visualize=False)
     print('Stoping.')
     lidar_device.lidar.stop()
     lidar_device.lidar.stop_motor()

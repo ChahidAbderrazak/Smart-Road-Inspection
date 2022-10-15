@@ -7,9 +7,9 @@ conda activate $env_name
 
 #######################  SENSORS FUNCTIONS ##########################
 
-# # RPLidar_sim sensor.
-# echo & echo  "Visualize RPLidar measurments"
-# python lib/sensors.py
+# RPLidar_sim sensor.
+echo & echo  "Visualize RPLidar measurments"
+python lib/sensors.py
 
 #######################  INSPECTION MODULE ##########################
 

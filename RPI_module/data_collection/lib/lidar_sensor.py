@@ -71,17 +71,19 @@ class RPLidar_Sensor(object):
         for angle in range(360):
             distance = data[angle]
             # ignore initially ungathered data points + ignore points out of the FOV
-            if distance >0 and ((angle> int(self.FOV/2) and angle< 180 - int(self.FOV/2)) or self.FOV==360 ): # :#               
+            
+            if distance >0 and ((angle> 90-int(self.FOV/2) and angle< 90+int(self.FOV/2)) or self.FOV==360 ): # :#    
                 self.max_distance = max([min([5000, distance]), self.max_distance])
                 radians = angle * pi / 180.0
                 x = distance * cos(radians)
                 y = distance * sin(radians)
-                point = (int(x),int(y))#,  
+                point = (int(x),int(y))   
                 points_list.append(point)
                 if self.visualize:
                     normalize_point=(160 + int(x / self.max_distance * 119), 120 + int(y / self.max_distance * 119))
                     self.lcd.set_at(normalize_point, pygame.Color(255, 0, 0))
         if self.visualize:
+            print(f' {len(points_list)} objects -> {points_list}')
             pygame.display.update()
         
         return points_list

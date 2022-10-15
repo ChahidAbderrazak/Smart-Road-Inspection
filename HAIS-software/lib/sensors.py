@@ -140,7 +140,7 @@ class RPLidar_sim(object):
 class RPLidar_HAIS(object):
 	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
 
-	def __init__(self, root, angle_step=1,DMAX=100, IMIN=0, IMAX=50):
+	def __init__(self, root, angle_step=1,DMAX=200, IMIN=0, IMAX=50):
 		'''Initilize RPLidar_sim object for communicating with the sensor.
 
 		Parameters
@@ -156,6 +156,7 @@ class RPLidar_HAIS(object):
 		'''
 		self.root=root
 		self.files_list=glob(os.path.join(root,'*.json'))
+		print(f'\n - {len(self.files_list)} Lidar files are found in : {root}')
 		self.angle_step=angle_step
 		self.DMAX=DMAX
 		self.IMIN=IMIN
@@ -177,21 +178,23 @@ class RPLidar_HAIS(object):
 			if len(detect_obj)<2:
 				continue
 			arr=np.array(detect_obj)
-			x,y=arr[:,0]/1000,arr[:,1]
+			x,y=arr[:,0]/10,arr[:,1]/10
+			# sort y wrt x 
+			x, y = zip(*sorted(zip(x, y)))
 			# remove the offset_copy
-			y-= np.min(y)+1
+			# y-= np.min(y)-1
 			N,M=np.max(x), np.max(y)
-			print(f'\n\n x={x} \n y={y}')
+			print(f'\n\n x={x} \n y={y}\n size={len(y)}\n')
 			# input(f'\n  N={N}, M={M}')
 			join_distance_list.append(detect_obj)
 			time_vec.append(k)
-
 			# plot
 			plt.clf()
 			ax = fig.add_subplot(111)
 			ax.set_title(f'measurement={k}')
 			ax.set_ylabel(' distance in (cm)')
-			ax.set_xlabel(f'lane width (m)')
+			ax.set_ylim(0,self.DMAX)
+			ax.set_xlabel(f'lane width (cm)')
 			line1, = ax.plot(x, y, 'b-')
 			line1.set_ydata(y)
 			fig.canvas.draw()
@@ -225,7 +228,7 @@ def run_Lidar_HAIS():
 	DMAX = 100
 	IMIN = 0
 	IMAX = 50
-	root= "/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-12/Oshawa-roads/mission3/sweeps/LIDAR"
+	root= "/media/abdo2020/DATA1/Datasets/data-demo/demo_LIDAR"
 	lidar = RPLidar_HAIS(root)
 	# vizualise lidar image
 	lidar.plot_lidar()
