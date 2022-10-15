@@ -1,26 +1,20 @@
+from nuscenes.nuscenes import NuScenes
 
-import matplotlib.pyplot as plt
-import numpy as np
+dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/NuScience/nuScenes'
+version='v1.0-mini'
 
-L=100
-x = np.linspace(0, 10*np.pi, L)
-y = np.sin(x)
-  
-plt.ion()
-fig = plt.figure()
-ax = fig.add_subplot(111)
-line1, = ax.plot(x, y, 'b-')
+dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak' 
+version='v1.0'
 
-print(f'\n y={y.shape}')
-for k, phase in enumerate(np.linspace(0, 10*np.pi, 100)):
-	y=np.sin(0.5 * x + phase)
-	print(f'\n y={y.shape}')
-	if k%4==0:
-		L+=50
-		x = np.linspace(0, 10*np.pi, L)
-		y=np.sin(0.5 * x + phase)
-	
-	
+dataroot='/home/abdo2020/Desktop/demo-hais-data' 
+version='v1.0'
+
+nusc_dataloder = NuScenes(version=version, dataroot=dataroot, verbose=True)
+
+recs = [(nusc_dataloder.get('sample', record['first_sample_token'])['timestamp'], record) for record in
+                nusc_dataloder.scene]
+
+print(nusc_dataloder.list_scenes())
 
 # # import argparse
 # import imutils
@@ -112,3 +106,15 @@ for k, phase in enumerate(np.linspace(0, 10*np.pi, 100)):
 
 
 
+	# def conactenate_all_sensors_json(self):
+	# 	sensors_file_pattern=osp.join(self.config["raw_data"], 'sweeps','Json_files', '*.json')
+	# 	self.list_json_files=glob(sensors_file_pattern)
+	# 	print(f'\n\n #### {len(list_json_files)} data collections where found!')
+
+	# 	table=[]
+	# 	for file in self.list_json_files:
+	# 		with open(file) as f:
+	# 				new_tble = json.load(f)
+	# 		table+=new_tble
+		# # save the concatenated files
+		# self.save_json(table, self.scenes_path)

@@ -3,9 +3,10 @@
 # NB: some part/structure are inspired/used from nuScenes
 # code source: https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/nuscenes/nuscenes.py
 
-import os
+import os, sys
 import time
 import json
+from tqdm import tqdm
 import pickle
 import os.path as osp
 import numpy as np
@@ -15,12 +16,9 @@ class HAIS_node:
 	"""
 	Database class for HAIS-bot to store compatible data structue with the nuScenes database structure.
 	"""
-	def __init__(self,
-								config: str = 'config.json',
-								version: str = 'v0.1',
-								dataroot: str = './data/',
-								verbose: bool = True,
-								map_resolution: float = 0.1):
+	def __init__(self,dataroot: str = 'data/',
+										version: str = 'data/',
+										verbose: bool = True):
 			"""
 			Loads/Collected data and saved the json tables and filder/files strucutre 
 			:param config: Collected data setup configuration: inspection node, desctiption,etc.
@@ -29,23 +27,19 @@ class HAIS_node:
 			:param verbose: Whether to print status messages during load.
 			:param map_resolution: Resolution of maps (meters).
 			"""
-			self.config=self.load_json(config)
-			if self.config["version"]!="":
-				self.version = self.config["version"]
-			else:
-				self.version = self.config["version"]#version
-			if self.config["raw_data"]!="":
-				self.dataroot = self.config["raw_data"]
-			else:
-				self.dataroot = dataroot
-
+			self.dataroot=dataroot
+			self.config_file=os.path.join(self.dataroot, 'info.json')
+			try:
+				self.config=self.load_json(self.config_file)
+			except Exception as e:
+				print(f'\n\n {e}')
+				sys.exit(0)
+			self.version = version
 			self.verbose = verbose
 			self.table_names = ['category', 'attribute', 'visibility', 'instance', 'sensor', 'calibrated_sensor',
 													'ego_pose', 'log', 'scene', 'sample', 'sample_data', 'sample_annotation', 'map', 'labels_config']
-			self.sensor_data_filename = os.path.join(self.config["raw_data"], self.config["json_filename"])
-			# concatenate the json files
-			self.conactenate_all_sensors_json()
-
+			self.scenes_path = os.path.join(self.dataroot, "missions")
+		
 			# building the json tables
 			start_time = time.time()
 			if verbose:
@@ -105,7 +99,6 @@ class HAIS_node:
 			""" Returns the folder where the tables are stored for the relevant version. """
 			return osp.join(self.dataroot, self.version)
 
-	
 	def __load_table__(self, table_name) -> dict:
 			""" Loads a table. """
 			filename=osp.join(self.table_root, '{}.json'.format(table_name)) 
@@ -120,19 +113,6 @@ class HAIS_node:
 					table = json.load(f)
 			return table
 
-
-	def conactenate_all_sensors_json(self):
-		sensors_file_pattern=osp.join(self.config["raw_data"], 'sweeps','Json_files', '*.json')
-		list_json_files=glob(sensors_file_pattern)
-		print(f'\n\n #### {len(list_json_files)} data collections where found!')
-
-		table=[]
-		for file in list_json_files:
-			with open(file) as f:
-					new_tble = json.load(f)
-			table+=new_tble
-		# save the concatenated files
-		self.save_json(table, self.sensor_data_filename)
 
 
 	def pkl_to_dict(self, filename):
@@ -157,10 +137,10 @@ class HAIS_node:
 	def create_database(self):
 		print(f'\n########################################################')
 		print(f'\n##            Updating the HAIS database              ##')
-		print(f'\n## - Sensor file={self.sensor_data_filename}                                   ')
+		print(f'\n## - Sensor file={self.scenes_path}                                   ')
 		print(  f'########################################################')
-		if not os.path.exists(self.sensor_data_filename):
-			msg=f'\n\n - The sensors data file [{self.sensor_data_filename}] does not  exist!! \
+		if not os.path.exists(self.scenes_path):
+			msg=f'\n\n - The sensors data file [{self.scenes_path}] does not  exist!! \
 				\n Please check the confif/config.json file. '
 			raise Exception(msg)
 		# initialization
@@ -171,115 +151,115 @@ class HAIS_node:
 		log_token = self.get_log_token(self.config)
 		log_ = self.build_log_table_entry(token=log_token,vehicle=self.config['vehicle'], location=self.config['location'])
 		self.update_table(log_table, log_, log_filename)
+		scene_files_list=glob(os.path.join(self.scenes_path, "*.json"))
+		for scene_id, scene_file in enumerate(scene_files_list):
 
-		# prepaer Scene table + new entry 
-		scene_data = self.load_json(self.sensor_data_filename)
-		# print(f'\n\n  -> scene_data :\n{scene_data}')
-		scene_filename = self.get_table_path('scene')
-		scene_table = self.load_json(scene_filename)
-		scene_token = self.get_scene_token(config=self.config)
-		# print(f'\n\n  -> scene_token:\n{scene_token}')
-		scene_name = self.config['Scenario']+ '-' + self.config['USE_CASE']
+			# prepaer Scene table + new entry 
+			scene_data = self.load_json(scene_file)
+			scene_filename = self.get_table_path('scene')
+			scene_table = self.load_json(scene_filename)
+			scene_token = self.get_scene_token(scene_file )
+			scene_name = os.path.basename(scene_file)[:-5]
+			##Build sample related tables + new entry
+			print(f'\n - Building the database stucture of scene ({scene_name}) [{scene_id+1}/{len(scene_files_list)}]. Please wait ...')
+	
+			sample_filename = self.get_table_path('sample') 
+			prev_sample=''
+			for id, sample in enumerate(tqdm(scene_data)):
+				if sample!={}:
+					# get sensor data
+					sensor_name= sample["sensor_name"] # list(sample.keys())[1]
+					if not sensor_name in list_sensors.keys():
+						list_sensors.update({sensor_name:0})
+						init_sensors.update({sensor_name:0})
+					# get the timestamp data
+					timestamp = sample['timestamp']
 
-		##Build sample related tables + new entry 
-		sample_filename = self.get_table_path('sample') 
-		prev_sample=''
-		sensor_list=[]
-		for id , sample in enumerate(scene_data):
-			if sample!={}:
-				# get sensor data
-				sensor_name= sample["sensor_name"] # list(sample.keys())[1]
-				if not sensor_name in list_sensors.keys():
-					list_sensors.update({sensor_name:0})
-					init_sensors.update({sensor_name:0})
-				# get the timestamp data
-				timestamp = sample['timestamp']
+					# confirm sensor sample update 
+					list_sensors[sensor_name]=list_sensors[sensor_name]+1
+					#  check  if the sample is the last?
+					try:
+						next_sample = self.get_sample_token(scene_data[id+1])
+					except:
+						next_sample=''
+					#  check  if the sample is the first?
+					if prev_sample=='':
+						sample_token = self.get_sample_token(sample)
+						first_sample_token = sample_token
+					# update sample data table + new entry
+					sample_data_filename = self.get_table_path('sample_data')
+					sample_data_table = self.load_json(sample_data_filename)
+					calibrated_sensor_token=self.get_calib_token(sample_token)
+					ego_pose_token=self.get_ego_pose_token(sample_token) 
+					if list_sensors[sensor_name]<=1:
+						is_key_frame = False #True 
+					else:
+						is_key_frame = False
+					sample_data_token= self.get_sample_data_token(sample_token=sample_token, list_sensors=list_sensors) 
+					prev_sample_data = self.get_sample_data_token(sample_token=prev_sample, list_sensors=list_sensors)
+					next_sample_data = self.get_sample_data_token(sample_token=next_sample, list_sensors=list_sensors)
+					sensor_channel= sensor_name
+					sensor_modality, fileformat = self.get_sensor_modality(sensor_name)
+					sensor_filename= os.path.join('sweeps', sensor_channel, sample_token+'.'+fileformat)
+					height, width = 0, 0
+					# create data folder
+					self.create_new_folder( os.path.dirname(os.path.join(self.dataroot,sensor_filename)) )
+					sample_data_ = self.build_sample_data_table_entry(token=sample_data_token,timestamp=timestamp, sample_token=sample_token, ego_pose_token=ego_pose_token,\
+																calibrated_sensor_token=calibrated_sensor_token,fileformat=fileformat, is_key_frame=is_key_frame,\
+																		prev_sample=prev_sample_data, next_sample=next_sample_data, filename=sensor_filename, height=height, width=width)
 
-				# confirm sensor sample update 
-				list_sensors[sensor_name]=list_sensors[sensor_name]+1
-				#  check  if the sample is the last?
-				try:
-					next_sample = self.get_sample_token(scene_data[id+1], config=self.config)
-				except:
-					next_sample=''
-				#  check  if the sample is the first?
-				if prev_sample=='':
-					sample_token = self.get_sample_token(sample, config=self.config)
-					first_sample_token = sample_token
-				# update sample data table + new entry
-				sample_data_filename = self.get_table_path('sample_data')
-				sample_data_table = self.load_json(sample_data_filename)
-				calibrated_sensor_token=self.get_calib_token(sample_token)
-				ego_pose_token=self.get_ego_pose_token(sample_token) 
-				if list_sensors[sensor_name]<=1:
-					is_key_frame = False #True 
-				else:
-					is_key_frame = False
-				sample_data_token= self.get_sample_data_token(sample_token=sample_token, list_sensors=list_sensors) 
-				prev_sample_data = self.get_sample_data_token(sample_token=prev_sample, list_sensors=list_sensors)
-				next_sample_data = self.get_sample_data_token(sample_token=next_sample, list_sensors=list_sensors)
-				sensor_channel= sensor_name
-				sensor_modality, fileformat = self.get_sensor_modality(sensor_name)
-				sensor_filename= os.path.join('sweeps', sensor_channel, sample_token+'.'+fileformat)
-				height, width = 0, 0
-				# create data folder
-				print(os.path.dirname(os.path.join(self.dataroot,sensor_filename)) )
-				self.create_new_folder( os.path.dirname(os.path.join(self.dataroot,sensor_filename)) )
-				sample_data_ = self.build_sample_data_table_entry(token=sample_data_token,timestamp=timestamp, sample_token=sample_token, ego_pose_token=ego_pose_token,\
-															calibrated_sensor_token=calibrated_sensor_token,fileformat=fileformat, is_key_frame=is_key_frame,\
-																	prev_sample=prev_sample_data, next_sample=next_sample_data, filename=sensor_filename, height=height, width=width)
+					self.update_table(sample_data_table, sample_data_, sample_data_filename)
 
-				self.update_table(sample_data_table, sample_data_, sample_data_filename)
+					# Update the ego-pos table
+					rotation, translation = [], []
+					ego_pose_filename = self.get_table_path('ego_pose')
+					ego_pose_table = self.load_json(ego_pose_filename)
+					ego_pose_ = self.build_ego_pose_table_entry(token=ego_pose_token, timestamp=timestamp, rotation=rotation, translation=translation)
+					self.update_table(ego_pose_table, ego_pose_, ego_pose_filename)
+					
+					# Update the sensor table
+					sensor_token = self.get_sensor_token(sensor_name, self.config)
+					sensor_filename = self.get_table_path('sensor')
+					sensor_table = self.load_json(sensor_filename)
+					sensor_ = self.build_sensor_table_entry(token=sensor_token, channel=sensor_channel, modality=sensor_modality)
+					self.update_table(sensor_table, sensor_, sensor_filename)
+					
+					# Update the calibrated sensor table
+					rotation_calib, translation_calib, camera_intrinsic = [], [], []
+					calib_filename = self.get_table_path('calibrated_sensor')
+					calib_table = self.load_json(calib_filename)
+					calib_ = self.build_calib_table_entry(token=calibrated_sensor_token, sensor_token=sensor_token,  translation=translation_calib, \
+																								rotation=rotation_calib, camera_intrinsic=camera_intrinsic)
+					self.update_table(calib_table, calib_, calib_filename)
+					
+					#  check  if a new sample of measurment is presented?
+					new_sample_flag = all([list_sensors[v]>0 for v in list_sensors])
+					if prev_sample=='' or next_sample=='' or new_sample_flag:
+						# build sample table
+						# input(f'\n flag: \n - prev_sample={prev_sample}\n - sample_token={sample_token}\n - next_sample={next_sample}')
+						sample_ = self.build_sample_table_entry(token=sample_token,timestamp=timestamp,prev_sample=prev_sample, \
+																											next_sample=next_sample, scene_token=scene_token)
+						sample_table = self.load_json(sample_filename)
+						self.update_table(sample_table, sample_, sample_filename)
 
-				# Update the ego-pos table
-				rotation, translation = [], []
-				ego_pose_filename = self.get_table_path('ego_pose')
-				ego_pose_table = self.load_json(ego_pose_filename)
-				ego_pose_ = self.build_ego_pose_table_entry(token=ego_pose_token, timestamp=timestamp, rotation=rotation, translation=translation)
-				self.update_table(ego_pose_table, ego_pose_, ego_pose_filename)
-				
-				# Update the sensor table
-				sensor_token = self.get_sensor_token(sensor_name, self.config)
-				sensor_filename = self.get_table_path('sensor')
-				sensor_table = self.load_json(sensor_filename)
-				sensor_ = self.build_sensor_table_entry(token=sensor_token, channel=sensor_channel, modality=sensor_modality)
-				self.update_table(sensor_table, sensor_, sensor_filename)
-				
-				# Update the calibrated sensor table
-				rotation_calib, translation_calib, camera_intrinsic = [], [], []
-				calib_filename = self.get_table_path('calibrated_sensor')
-				calib_table = self.load_json(calib_filename)
-				calib_ = self.build_calib_table_entry(token=calibrated_sensor_token, sensor_token=sensor_token,  translation=translation_calib, \
-																							rotation=rotation_calib, camera_intrinsic=camera_intrinsic)
-				self.update_table(calib_table, calib_, calib_filename)
-				
-				#  check  if a new sample of measurment is presented?
-				new_sample_flag = all([list_sensors[v]>0 for v in list_sensors])
-				if prev_sample=='' or next_sample=='' or new_sample_flag:
-					# build sample table
-					# input(f'\n flag: \n - prev_sample={prev_sample}\n - sample_token={sample_token}\n - next_sample={next_sample}')
-					sample_ = self.build_sample_table_entry(token=sample_token,timestamp=timestamp,prev_sample=prev_sample, \
-																										next_sample=next_sample, scene_token=scene_token)
-					sample_table = self.load_json(sample_filename)
-					self.update_table(sample_table, sample_, sample_filename)
+						# moving to next sample
+						prev_sample=sample_token
+						sample_token=next_sample
+						list_sensors = init_sensors.copy()
+					
+			# 		sensor_list.append(sensor_name)
+			# print(np.unique(sensor_list))
 
-					# moving to next sample
-					prev_sample=sample_token
-					sample_token=next_sample
-					list_sensors = init_sensors.copy()
-				
-		# 		sensor_list.append(sensor_name)
-		# print(np.unique(sensor_list))
-
-		# Build Scene table + new entry 
-		last_sample_token = prev_sample
-		scene_ = self.build_scene_table_entry(name=scene_name, token=scene_token,log_token=log_token,\
-																						scene_table=scene_data, first_sample_token=first_sample_token,\
-																						last_sample_token=last_sample_token, description=self.config['description'])
-		# print(f'\n\n  -> scene_:\n{scene_}')
-		self.update_table(scene_table, scene_, scene_filename)
+			# Build Scene table + new entry 
+			last_sample_token = prev_sample
+			scene_ = self.build_scene_table_entry(name=scene_name, token=scene_token,log_token=log_token,\
+																							scene_table=scene_data, first_sample_token=first_sample_token,\
+																							last_sample_token=last_sample_token, description=self.config['description'])
+			# print(f'\n\n  -> scene_:\n{scene_}')
+			self.update_table(scene_table, scene_, scene_filename)
+			
 		# display
-		print(f'\n\n  # The Generatd table are saved the follwing directory: \n {self.dataroot}')
+		print(f'\n\n  # The Generatd table are saved the follwing directory: \n {self.table_root}')
 
 	def annotate_database(self,scene):
 		'''
@@ -376,13 +356,9 @@ class HAIS_node:
 		open_file.close()
 		return dict
 
-	def get_sensor_filename(self, sensor_name, frame, config):
-		try:
-			scene_setup = '__' + config['Scenario']+ '-' + config['USE_CASE']
-		except:
-			scene_setup = '__Unknown'
+	def get_sensor_filename(self, sensor_name, frame):
 		time_tag =  str(self.get_time_tag(type=1))
-		return time_tag + scene_setup + '__' + sensor_name + '__' + str(frame)
+		return time_tag + '__' + sensor_name + '__' + str(frame)
 
 	def get_time_tag(self, type=1):
 		from datetime import datetime
@@ -402,18 +378,15 @@ class HAIS_node:
 		for ID in old_table:
 			if ID['token']==entry['token']:
 				msg = f'\n\n Error: The token <{e}> already exist in the table'
-				print(msg)
+				#print(msg)
 				# raise ValueError(msg)
 				return 1
 		table = old_table + [entry]
 		self.save_json(table, filename)
 
-	def get_sample_token(self):
-		return 0
-
 	#################	 LOG TABLE	################# 
 	def get_log_token(self, config):
-		return config['vehicle'] +'__'+  config['location'] +'__'+ config['Scenario']
+		return config['vehicle'] +'__'+  config['location']
 
 	def build_log_table_entry(self, token,vehicle,location):
 			from datetime import datetime
@@ -430,14 +403,8 @@ class HAIS_node:
 			return entry
 
 	#################	 SCENE TABLE	 ################# 
-	def get_scene_token(self, config=''):
-		try:
-			scene_setup = '__' + config['Scenario']+ '-' + config['USE_CASE']
-		except:
-			scene_setup = ''
-		
-		time_tag = self.get_time_tag(type=1)
-		return time_tag + scene_setup
+	def get_scene_token(self, scene_file):
+		return os.path.basename(scene_file)[:-5]
 
 	def build_scene_table_entry(self, name,token,log_token,scene_table, first_sample_token, last_sample_token, description):
 		nbr_samples = len(scene_table)
@@ -453,13 +420,10 @@ class HAIS_node:
 		return entry
 
 	#################	 SAMPLE TABLE	 ################# 
-	def get_sample_token(self, scene_, config=''):
-		try:
-			scene_setup = '__' + config['Scenario']+ '-' + config['USE_CASE']
-		except:
-			scene_setup = '__Unknown'
-		time_tag = str(scene_['frame'])
-		return time_tag + scene_setup
+	def get_sample_token(self, scene_):
+		scene_tag = str(scene_['frame'])
+		time_tag =  str(self.get_time_tag(type=1))
+		return time_tag + '__' +  scene_tag
 
 	def build_sample_table_entry(self, token,timestamp,prev_sample, next_sample, scene_token):
 		entry = {
@@ -538,15 +502,19 @@ class HAIS_node:
 
 		elif re.search('LIDAR', sensor_name, re.IGNORECASE):  
 			modality ="lidar"
-			fileformat="bin"
+			fileformat="json"
 
 		elif re.search('RADAR', sensor_name, re.IGNORECASE):
 			modality ="radar"
 			fileformat="pcd"
 
-		elif re.search('GNSS', sensor_name, re.IGNORECASE):
-			modality ="other"
-			fileformat="pkl"
+		elif re.search('IMU', sensor_name, re.IGNORECASE):
+			modality ="imu"
+			fileformat=""
+
+		elif re.search('GPS', sensor_name, re.IGNORECASE):
+			modality ="gps"
+			fileformat=""
 		else:
 			print(f'\n Error: The sensor name <{sensor_name}> is not defined!!!')
 			modality ="Undefined"
@@ -604,15 +572,15 @@ class HAIS_node:
 		return entry
 
 if __name__ == '__main__':
-	# # sntax
-	#  syntax()
-	# collected data input
-	data = HAIS_node(config='config/config.json')
+	# raw-data folder
+	dataroot="/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak"
+	# Loaf the collected inspection sensors dataset
+	raw_data = HAIS_node(dataroot=dataroot)
 
 	# create the database structure
-	data.create_database()
+	raw_data.create_database()
 
 	# # annotate the a scene
-	# scene_=data.scene
+	# scene_=raw_data.scene
 	# print(f'\n\n - scene= {scene_}')
-	# data.annotate_database(scene=scene_[0])	
+	# raw_data.annotate_database(scene=scene_[0])	

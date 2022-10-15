@@ -87,8 +87,8 @@ def save_accelerometer_data():
 
 def save_gps_data():
     global img_size,  data_root, dict_fr_list, dict_frame, configuration, sensor_frame, stop_threads, car_location
-    lat, lng, alt = Gps.gpsDt()
-    car_location=[lat, lng, alt]
+    car_location = Gps.gpsDt()
+    #car_location=[lat, lng, alt]
     print(f"\n - car_location ={car_location}")
     
 
@@ -123,8 +123,8 @@ def init():
     disp=False
     dict_fr_list = []
     # get the car position
-    lat, lng, alt = Gps.gpsDt()
-    car_location=[lat, lng, alt]
+    car_location= Gps.gpsDt()
+    # car_location=[lat, lng, alt]
 
     # define the log file
     data_log = load_json(filename)
@@ -133,6 +133,11 @@ def init():
         save_json([{}], filename)
     # set up folder to save data locally
     create_databse_folders(data_root)
+
+    # create the mission info
+    info_file_path=os.path.join(data_root, 'info.json')
+    save_json(configuration, info_file_path)
+
     # display
     print(f"configuration={configuration}")
     print(f"filename={filename}")

@@ -137,7 +137,7 @@ class RPLidar_sim(object):
 				scans_dict_list.append( json.loads(line.strip()) )
 		return scans_dict_list
 
-class RPLidar_HAIS(object):
+class RPLidar_sensor(object):
 	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
 
 	def __init__(self, root, angle_step=1,DMAX=200, IMIN=0, IMAX=50):
@@ -214,6 +214,7 @@ class RPLidar_HAIS(object):
 			#input(f'\n flag: new_scan={new_scan}') 
 		return scans_dict_list
 
+##################  TEST SENSORS  ##################
 def run_Lidar_sim():
 	DMAX = 100
 	IMIN = 0
@@ -229,7 +230,7 @@ def run_Lidar_HAIS():
 	IMIN = 0
 	IMAX = 50
 	root= "/media/abdo2020/DATA1/Datasets/data-demo/demo_LIDAR"
-	lidar = RPLidar_HAIS(root)
+	lidar = RPLidar_sensor(root)
 	# vizualise lidar image
 	lidar.plot_lidar()
 

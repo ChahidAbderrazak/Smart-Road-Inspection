@@ -24,15 +24,22 @@ def connectBus():
         #sys.exit(130)
 
 #signal.signal(signal.SIGINT, handle_ctrl_c)
-def gpsDt():
+def gpsDt(repeat_gps=20):
+    ''' outputs [lat, lng, alt] '''
     try:
         err=True
+        cnt=0
         while(err):
             err, lat, lng, alt = update_gps()
+            cnt+=1
+            if cnt==repeat_gps:
+                print(f'\n - GPS error 1: the GPS sesor could not get the satelite signal within {repeat_gps} trials.')
+                return []
         return lat, lng, alt
     except Exception as e:
-        print('\n - GPS error: Please connect the GPS  antenna and make sure you are in an open-air area')
-        sys.exit(0)
+        print('\n - GPS error 2: Please connect the GPS  antenna and make sure you are in an open-air area')
+        #sys.exit(0)
+        return []
 
 def update_gps():
     lat = 190

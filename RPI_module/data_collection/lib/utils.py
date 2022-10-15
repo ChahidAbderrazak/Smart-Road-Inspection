@@ -41,11 +41,11 @@ def save_json(json_string, filename):
 def get_file_names(config, fr=''):
     if fr == '':
         time_tag = str(get_time_tag(type=1))
-        filename_strg = config['Scenario'] + '_' + config['USE_CASE'] + '_' + time_tag + '_.json'
+        filename_strg =  time_tag + '_.json'
     else:
         time_tag = str(get_time_tag(type=1))
-        filename_strg = config['Scenario'] + '_' + config['USE_CASE'] + '_Fr' + fr + '_' + time_tag + '_.json'
-    dir_storage = os.path.join(config['Scenario'], config['USE_CASE'])
+        filename_strg = 'Fr' + fr + '_' + time_tag + '_.json'
+    dir_storage = ""
     return filename_strg, dir_storage
 
 def create_new_folder(DIR):
@@ -53,7 +53,7 @@ def create_new_folder(DIR):
     os.makedirs(DIR)
 
 def create_databse_folders(data_root):
-    json_path = os.path.join(data_root,"sweeps","Json_files")
+    json_path = os.path.join(data_root,"missions")
     lidar_data_path = os.path.join(data_root,"sweeps","LIDAR")
     image_data_path = os.path.join(data_root,"sweeps","CSI_CAMERA")
     create_new_folder(json_path)

@@ -10,8 +10,11 @@ from lib import hais_database
 #     utils_telecom.upload_data()
 
 def convert_measurment_to_database():
-	# collected data input
-	raw_data = hais_database.HAIS_node(config='config/config.json')
+	dataroot="/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak"
+	dataroot='/home/abdo2020/Desktop/demo-hais-data' 
+	version='v1.0'
+	# Loaf the collected inspection sensors dataset
+	raw_data = hais_database.HAIS_node(dataroot=dataroot, version=version)
 
 	# create the database structure
 	raw_data.create_database()
