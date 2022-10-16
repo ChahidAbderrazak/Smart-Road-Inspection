@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 '''Animates distances and measurment quality'''
-import os, sys
+from cProfile import label
+import os, sys, time
 import matplotlib.pyplot as plt
 from matplotlib.transforms import offset_copy
 import numpy as np
@@ -11,7 +12,8 @@ try:
     from lib import utils
 except:
     import utils
-
+import matplotlib.colors as mcolors
+colors_list=['#0051a2', '#97964a', '#ffd44f', '#f4777f', '#93003a',"#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442"]
 class RPLidar_sim(object):
 	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
 
@@ -155,7 +157,7 @@ class RPLidar_sensor(object):
 				Logger instance, if none is provided new instance is created
 		'''
 		self.root=root
-		self.files_list=glob(os.path.join(root,'*.json'))
+		self.files_list=glob(os.path.join(root, 'missions', '*.json'))
 		print(f'\n - {len(self.files_list)} Lidar files are found in : {root}')
 		self.angle_step=angle_step
 		self.DMAX=DMAX
@@ -214,6 +216,150 @@ class RPLidar_sensor(object):
 			#input(f'\n flag: new_scan={new_scan}') 
 		return scans_dict_list
 
+class HAIS_visualizer(object):
+	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
+
+	def __init__(self, root, DMAX=100, refresh=30):
+		
+		self.root=root
+		self.files_list=glob(os.path.join(root, 'missions', '*.json'))
+		self.DMAX=DMAX
+		self.refresh=refresh
+		# plot
+		plt.ion()
+		self.fig = plt.figure()
+	def get_full_path(self, filename):
+		return os.path.join(self.root, filename) 
+
+	def visualize(self):
+		scans_dict_list= self.read_scan()	
+		Kinematics_list=[]	
+		for k,	scan in enumerate(scans_dict_list[20:]):
+			if k%self.refresh==0:
+					plt.clf()
+			if scan!={}:
+				# LIDAR
+				filename=self.get_full_path(scan['filename'])
+				car_loc_list=[]
+				if scan['sensor_name']=='LIDAR':
+					new_=utils.load_json(filename)
+					if len(new_)==0:
+						continue
+					detect_obj = new_[0]['points']
+					self.plot_lidar_data(detect_obj)
+
+				elif scan['sensor_name']=='CSI_CAMERA':
+					import cv2 
+					img=cv2.imread(filename)
+					try:
+						self.update_plot_camera(img)
+					except:
+						print(f'\n error with the image: {img} of file {filename}')
+						continue
+
+				elif scan['sensor_name']=='IMU_SENSOR':
+					new_=scan['meta_data']
+					[lat, lng, alt]=scan['position']['Translation']
+					car_location=lat/100, lng/100, alt/100,
+					car_loc_list+=[(car_location[0], car_location[1]),1]
+					print(car_loc_list)
+					# self.update_map(car_location)
+
+					# Kinemetics
+					AccXangle, AccYangle=new_['ACCX Angle'], new_['ACCY Angle']
+					gyroXangle, gyroYangle, gyroZangle=new_['GRYX Angle'], new_['GYRY Angle'], new_['GYRZ Angle']
+					CFangleX, CFangleY = new_['CFangleX Angle'], 0 #new_['CFangleY Angle'],
+					heading, tiltCompensatedHeading = new_['HEADING'], new_['tiltCompensatedHeading']
+					kalmanX, kalmanY= new_['kalmanX'], new_['kalmanY']
+					Kinematics_list.append([AccXangle, AccYangle, gyroXangle, gyroYangle, gyroZangle, CFangleX, CFangleY, heading, tiltCompensatedHeading, kalmanX, kalmanY])
+					self.plot_Kinemetics(Kinematics_list[-20:])
+					
+				else:
+					continue
+				# update the plot
+				self.fig.canvas.draw()
+				self.fig.canvas.flush_events()
+			  # # sleep 3 seconds
+				# time.sleep(3)
+
+
+	def update_plot_camera(self, img):
+		# plt.clf()
+		## LIDAR
+		ax1 = self.fig.add_subplot(223)
+		ax1.clear()
+		ax1.set_title(f'ROAD PICTURE [CAM]')
+		ax1.imshow(img)
+		ax1.set_axis_off()
+
+	def plot_lidar_data(self, detect_obj):
+		if len(detect_obj)<2:
+			return True
+		# print(f'\n  lidar scan={detect_obj}')
+		arr=np.array(detect_obj)
+		x,y=arr[:,0]/10,arr[:,1]/10
+		# sort y wrt x 
+		x, y = zip(*sorted(zip(x, y)))
+		# remove the offset_copy
+		y-= np.min(y)-1
+		N,M=np.max(x), np.max(y)
+		# plot
+		self.update_plot_lidar(x, y)
+
+	def update_plot_lidar(self, liday_X, lidar_Y):
+		# plt.clf()
+		## LIDAR
+		ax2 = self.fig.add_subplot(224)
+		ax2.clear()
+		ax2.set_title(f'ROAD SURFACE [LIDAR]')
+		ax2.set_ylabel(' distance in (cm)')
+		ax2.set_ylim(0, 1.2*np.max(lidar_Y))#self.DMAX)
+		# ax2.set_xlabel(f'lane width (cm)')
+		line1, = ax2.plot(liday_X, lidar_Y, 'b-')
+		line1.set_ydata(lidar_Y)
+		plt.xticks([])
+
+	def plot_Kinemetics(self, Kinematics_list):
+		if len(Kinematics_list)==0:
+			return True
+		# print(f'\n  Kinemtics scan={Kinematics_list}')
+		arr=np.array(Kinematics_list)
+		AccXangle, AccYangle, gyroXangle, gyroYangle, gyroZangle, CFangleX, CFangleY, heading, tiltCompensatedHeading, kalmanX, kalmanY=\
+		arr[:,0],arr[:,1],arr[:,2],arr[:,3],arr[:,4],arr[:,5],arr[:,6],arr[:,7],arr[:,8],arr[:,9],arr[:,10]
+		X=[k for k in range(arr.shape[0]-1)]
+		## Kinematics
+		ax3 = self.fig.add_subplot(211)
+		ax3.clear()
+		ax3.set_title(f'VEHICULE KINEMATICS [IMU/GYRO/GPS]')
+		# add plot
+		# list_metrics=[AccXangle, AccYangle, gyroXangle, gyroYangle, gyroZangle, CFangleX, CFangleY, heading, tiltCompensatedHeading, kalmanX, kalmanY]
+		from numpy import diff
+		list_metrics=[diff(AccXangle), diff(AccYangle), diff(gyroXangle), diff(gyroYangle), diff(gyroZangle), diff(CFangleX), diff(CFangleY), diff(heading), diff(tiltCompensatedHeading), diff(kalmanX), diff(kalmanY)]
+		list_label=['AccXangle', 'AccYangle', 'gyroXangle', 'gyroYangle', 'gyroZangle', 'CFangleX', 'CFangleY', 'heading', 'tiltCompensatedHeading', 'kalmanX', 'kalmanY']
+		linestyles=["-", "-", "--", "--", "--", "-.","-.", "-", "-", ":", ":"]
+		linewidth_list=[2.0, 2.0, 1.5, 1.5, 1.5, 1.5, 1.2, 1.2, 1.0,1.0, 0.8, 0.8]
+		for var, label, color, linestyle, linewidth in zip(list_metrics, list_label, colors_list[:len(list_metrics)], linestyles, linewidth_list):
+			line, = ax3.plot(X, var, linestyle=linestyle, linewidth=1.5, color=color,  label=label)
+			line.set_ydata(var)
+
+		plt.legend(loc="upper left")
+		plt.xticks([])
+
+	def update_map(self, car_location):
+		e=0
+		# ax2 = self.fig.add_subplot(23)
+
+	def read_scan(self):
+		import json
+		scans_dict_list=[]
+		# Strips the newline character
+		for filename in self.files_list:
+			# load the json file
+			new_scan=utils.load_json(filename)
+			scans_dict_list+=new_scan 
+			#input(f'\n flag: new_scan={new_scan}') 
+		return scans_dict_list
+
 ##################  TEST SENSORS  ##################
 def run_Lidar_sim():
 	DMAX = 100
@@ -222,6 +368,7 @@ def run_Lidar_sim():
 	filename='/media/abdo2020/DATA1/Datasets/numerical-dataset/RPLidar-data/catalog_0_A1_R5_465_1.catalog.txt'# catalog_0_A2_465_2.catalog.txt'#catalog_0_A1_R6_465_1.catalog.txt'#
 	lidar = RPLidar_sim(filename, angle_step=2, DMAX=DMAX, IMIN=IMIN, IMAX=IMAX)
 	# vizualise lidar image
+	print('Visualize RPLidar simulation measurment')
 	lidar.plot_lidar()
 	lidar.plot_lidar_animation()
 
@@ -232,11 +379,28 @@ def run_Lidar_HAIS():
 	root= "/media/abdo2020/DATA1/Datasets/data-demo/demo_LIDAR"
 	lidar = RPLidar_sensor(root)
 	# vizualise lidar image
+	print('Visualize HAIS Node')
 	lidar.plot_lidar()
+
+def run_HAIS_visualizer():
+	DMAX = 100
+	IMIN = 0
+	IMAX = 50
+	root= "/media/abdo2020/DATA1/Datasets/data-demo/demo-hais-data"
+	root= '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak'
+	root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-12/Oshawa-roads/mission2'
+	lidar = HAIS_visualizer(root)
+	# vizualise lidar image
+	print('Visualize RPLidar measurment')
+	lidar.visualize()
 
 if __name__ == '__main__':
 	# # run the lidar simulator using online dataset format
-	# 	run_Lidar_sim()
+	# run_Lidar_sim()
 
-	# run the lidar simulator using HAIS dataset format
-		run_Lidar_HAIS()
+	# # run the lidar sensor of the HAIS dataset format
+	# run_Lidar_HAIS()
+
+	# run the IMU sensor of the HAIS dataset format
+	run_HAIS_visualizer()
+

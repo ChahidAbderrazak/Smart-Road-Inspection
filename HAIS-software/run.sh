@@ -7,9 +7,7 @@ conda activate $env_name
 
 #######################  SENSORS FUNCTIONS ##########################
 
-# # RPLidar_sim sensor.
-# echo & echo  "Visualize RPLidar measurments"
-# python lib/sensors.py
+python lib/sensors.py
 
 #######################  INSPECTION MODULE ##########################
 
@@ -31,6 +29,6 @@ conda activate $env_name
 
 #######################  HAIS SOFTWARE ##########################
 # python main.py
-python syntax.py
+# python syntax.py
 
 conda deactivate 
