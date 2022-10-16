@@ -1,24 +1,7 @@
 import os, sys
 from lib.lidar_sensor import *
-#from ..data_collection.lib.lidar_sensor import *
-def get_timestamp():
-    from datetime import datetime
-    # Getting the current date and time
-    dt = datetime.now()
+from data_collection.lib.utils import get_timestamp, get_time_tag
 
-    # getting the timestamp
-    ts = datetime.timestamp(dt)
-    return ts
-
-def get_time_tag(type=1):
-    from datetime import datetime
-    today = datetime.now()
-    if type == 0:
-        return today.strftime("__%Y-%m-%d")
-    else:
-        return today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
-
-    
 def test_lidar():
 	lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',visualize=True)
 	

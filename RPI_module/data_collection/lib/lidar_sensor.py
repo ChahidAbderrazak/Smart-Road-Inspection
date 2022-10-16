@@ -57,7 +57,7 @@ class RPLidar_Sensor(object):
             except:
                  print(f' \n - Lidar connection Error to {self.PORT_NAME} ...')
                  
-    def strop_lidar(self):
+    def stop_lidar(self):
             print('Stoping.')
             self.lidar.stop()
             self.lidar.stop_motor()
@@ -103,7 +103,7 @@ class RPLidar_Sensor(object):
             return lidar_d
 
         except KeyboardInterrupt:
-                self.strop_lidar() 
+                self.stop_lidar() 
                 sys.exit(0)
 
 

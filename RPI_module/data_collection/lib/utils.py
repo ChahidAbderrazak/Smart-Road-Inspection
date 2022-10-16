@@ -60,16 +60,6 @@ def create_databse_folders(data_root):
     create_new_folder(lidar_data_path)
     create_new_folder(image_data_path)
 
-# def write_lidar_pcd(points, save_pcd_path):
-#     n = len(points)
-#     lines = []
-#     for i in range(n):
-#         x, y, z, intensity = points[i]
-#         lines.append('{} {} {} {}'.format(x, y, z, intensity))
-#     with open(save_pcd_path, 'w') as f:
-#         f.write(HEADER.format(n, n))
-#         f.write('\n'.join(lines))
-
 def get_time_tag(type=1):
     from datetime import datetime
     today = datetime.now()
@@ -78,24 +68,23 @@ def get_time_tag(type=1):
     else:
         return today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
 
-def get_sensor_filename(sensor_name, frame, config):
-    try:
-        scene_setup = "__" + config["Scenario"] + "-" + config["USE_CASE"]
-    except:
-        scene_setup = "__Unknown"
+def get_sensor_filename(sensor_name, frame):
     time_tag = str(get_time_tag(type=1))
-    return time_tag + scene_setup + "__" + sensor_name + "__" + str(frame)
+    return time_tag  + "__" + sensor_name + "__" + str(frame)
 
 def get_timestamp():
     from datetime import datetime
     # Getting the current date and time
     dt = datetime.now()
-
     # getting the timestamp
     ts = datetime.timestamp(dt)
     return ts
 
 
 
+if __name__ == "__main__":
+    for k in range(10):
+        print(get_timestamp())
+    
 
 

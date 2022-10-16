@@ -93,7 +93,6 @@ class HAIS_node:
 							print("{} {},".format(len(getattr(self, table)), table))
 					print("Done loading in {:.3f} seconds.\n======".format(time.time() - start_time))
 
-
 	@property
 	def table_root(self) -> str:
 			""" Returns the folder where the tables are stored for the relevant version. """
@@ -112,8 +111,6 @@ class HAIS_node:
 			with open(filename) as f:
 					table = json.load(f)
 			return table
-
-
 
 	def pkl_to_dict(self, filename):
 		open_file = open(filename, "rb")
@@ -152,57 +149,69 @@ class HAIS_node:
 		log_ = self.build_log_table_entry(token=log_token,vehicle=self.config['vehicle'], location=self.config['location'])
 		self.update_table(log_table, log_, log_filename)
 		scene_files_list=glob(os.path.join(self.scenes_path, "*.json"))
-		for scene_id, scene_file in enumerate(scene_files_list):
-
+		for scene_id, scene_file in enumerate(scene_files_list[:1]):
 			# prepaer Scene table + new entry 
 			scene_data = self.load_json(scene_file)
+			scene_data=[k for k in scene_data if k != {}]
 			scene_filename = self.get_table_path('scene')
 			scene_table = self.load_json(scene_filename)
 			scene_token = self.get_scene_token(scene_file )
-			scene_name = os.path.basename(scene_file)[:-5]
+			scene_name = f"Mission date: {os.path.basename(scene_file)[:-5]}"
 			##Build sample related tables + new entry
 			print(f'\n - Building the database stucture of scene ({scene_name}) [{scene_id+1}/{len(scene_files_list)}]. Please wait ...')
 	
 			sample_filename = self.get_table_path('sample') 
 			prev_sample=''
+			old_scene=2
 			for id, sample in enumerate(tqdm(scene_data)):
 				if sample!={}:
 					# get sensor data
 					sensor_name= sample["sensor_name"] # list(sample.keys())[1]
-					if not sensor_name in list_sensors.keys():
-						list_sensors.update({sensor_name:0})
-						init_sensors.update({sensor_name:0})
-					# get the timestamp data
-					timestamp = sample['timestamp']
-
-					# confirm sensor sample update 
-					list_sensors[sensor_name]=list_sensors[sensor_name]+1
+					current_scene=sample["scene"]
+					timestamp = int(sample['timestamp']*1000000)
+					rotation, translation =sample["position"]["Rotation"], sample["position"]["Translation"]
+					is_key_frame = True
+					sensor_channel= sensor_name
+					sensor_modality, fileformat = self.get_sensor_modality(sensor_name), sample['fileformat'] #
+					sensor_filename= sample['filename'] #os.path.join('sweeps', sensor_channel, sample_token+'.'+fileformat)
+					height, width = 0, 0
+					# input(f'\n flag: sensor_filename={sensor_filename} , current_scene={current_scene}')
+					
+					if old_scene==current_scene:
+						new_sample_recorded=True
+						old_scene+1
+					else:
+						new_sample_recorded=False
+					# sample details
+					sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
 					#  check  if the sample is the last?
 					try:
-						next_sample = self.get_sample_token(scene_data[id+1])
+						scene_data[id+1] # check if there still one extr smple data
+						next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=1)
 					except:
 						next_sample=''
+						#input(f'\n [ {id} samples] next_sample={next_sample}')
 					#  check  if the sample is the first?
 					if prev_sample=='':
-						sample_token = self.get_sample_token(sample)
 						first_sample_token = sample_token
+
 					# update sample data table + new entry
 					sample_data_filename = self.get_table_path('sample_data')
 					sample_data_table = self.load_json(sample_data_filename)
-					calibrated_sensor_token=self.get_calib_token(sample_token)
-					ego_pose_token=self.get_ego_pose_token(sample_token) 
-					if list_sensors[sensor_name]<=1:
-						is_key_frame = False #True 
+					sample_data_token= self.get_sample_data_token(sample_token=sample_token, frame_count=id)
+
+					if next_sample!='': 
+						next_sample_data = self.get_sample_data_token(sample_token=sample_token, frame_count=id+1)
 					else:
-						is_key_frame = False
-					sample_data_token= self.get_sample_data_token(sample_token=sample_token, list_sensors=list_sensors) 
-					prev_sample_data = self.get_sample_data_token(sample_token=prev_sample, list_sensors=list_sensors)
-					next_sample_data = self.get_sample_data_token(sample_token=next_sample, list_sensors=list_sensors)
-					sensor_channel= sensor_name
-					sensor_modality, fileformat = self.get_sensor_modality(sensor_name)
-					sensor_filename= os.path.join('sweeps', sensor_channel, sample_token+'.'+fileformat)
-					height, width = 0, 0
-					# create data folder
+						next_sample_data = self.get_sample_data_token(sample_token='')
+					if prev_sample!='':
+						prev_sample_data = self.get_sample_data_token(sample_token=sample_token, frame_count=id-1)
+					else:
+						prev_sample_data = self.get_sample_data_token(sample_token='')
+
+					# create sample data table
+					calibrated_sensor_token=self.get_calib_token(sample_data_token)
+					ego_pose_token=sample_data_token#elf.get_ego_pose_token(sample_token) 
 					self.create_new_folder( os.path.dirname(os.path.join(self.dataroot,sensor_filename)) )
 					sample_data_ = self.build_sample_data_table_entry(token=sample_data_token,timestamp=timestamp, sample_token=sample_token, ego_pose_token=ego_pose_token,\
 																calibrated_sensor_token=calibrated_sensor_token,fileformat=fileformat, is_key_frame=is_key_frame,\
@@ -211,7 +220,6 @@ class HAIS_node:
 					self.update_table(sample_data_table, sample_data_, sample_data_filename)
 
 					# Update the ego-pos table
-					rotation, translation = [], []
 					ego_pose_filename = self.get_table_path('ego_pose')
 					ego_pose_table = self.load_json(ego_pose_filename)
 					ego_pose_ = self.build_ego_pose_table_entry(token=ego_pose_token, timestamp=timestamp, rotation=rotation, translation=translation)
@@ -233,10 +241,20 @@ class HAIS_node:
 					self.update_table(calib_table, calib_, calib_filename)
 					
 					#  check  if a new sample of measurment is presented?
-					new_sample_flag = all([list_sensors[v]>0 for v in list_sensors])
-					if prev_sample=='' or next_sample=='' or new_sample_flag:
-						# build sample table
-						# input(f'\n flag: \n - prev_sample={prev_sample}\n - sample_token={sample_token}\n - next_sample={next_sample}')
+					if prev_sample=='' or next_sample=='' or new_sample_recorded:
+						if next_sample=='':
+							sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
+							next_sample = self.get_sample_token(scene_name='', scene_nb=current_scene, step=0)
+						else:
+							if prev_sample!='':
+								sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=-1)
+								next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
+							else:
+								sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
+								next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=1)
+
+						
+						print(f'\n flag: \n - prev_sample={prev_sample}\n - sample_token={sample_token}\n - next_sample={next_sample}')
 						sample_ = self.build_sample_table_entry(token=sample_token,timestamp=timestamp,prev_sample=prev_sample, \
 																											next_sample=next_sample, scene_token=scene_token)
 						sample_table = self.load_json(sample_filename)
@@ -245,10 +263,7 @@ class HAIS_node:
 						# moving to next sample
 						prev_sample=sample_token
 						sample_token=next_sample
-						list_sensors = init_sensors.copy()
-					
-			# 		sensor_list.append(sensor_name)
-			# print(np.unique(sensor_list))
+						old_scene+=1
 
 			# Build Scene table + new entry 
 			last_sample_token = prev_sample
@@ -321,6 +336,22 @@ class HAIS_node:
 			current_sample = next_sample
 
 	#################	 BASIC FUNCTIONS	#################
+	def get_table_size(self, filename):
+		try:
+			if os.path.exists(filename):
+				import json
+				f = open(filename,)
+				data = json.load(f)
+				f.close()
+			else:
+				data=[]
+
+			return len(data)+1
+		except:
+			msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!! '
+			print(msg)
+			return 0
+
 	def load_json(self, filename):
 		try:
 			if os.path.exists(filename):
@@ -377,7 +408,7 @@ class HAIS_node:
 		e=entry['token']
 		for ID in old_table:
 			if ID['token']==entry['token']:
-				msg = f'\n\n Error: The token <{e}> already exist in the table'
+				msg = f'\n\n Error: The token <{e}> already exist in the table < {os.path.basename(filename)[:-5]} >'
 				#print(msg)
 				# raise ValueError(msg)
 				return 1
@@ -420,10 +451,11 @@ class HAIS_node:
 		return entry
 
 	#################	 SAMPLE TABLE	 ################# 
-	def get_sample_token(self, scene_):
-		scene_tag = str(scene_['frame'])
-		time_tag =  str(self.get_time_tag(type=1))
-		return time_tag + '__' +  scene_tag
+	def get_sample_token(self, scene_name, scene_nb, step=0):
+		if scene_name=='':
+			return ''
+		scene_tag = 's'+str(scene_nb+step)
+		return scene_name + '_' +  scene_tag
 
 	def build_sample_table_entry(self, token,timestamp,prev_sample, next_sample, scene_token):
 		entry = {
@@ -436,13 +468,10 @@ class HAIS_node:
 		return entry
 
 	#################	 SAMPLE TABLE	 ################# 
-	def get_sample_data_token(self, sample_token, list_sensors):
-		if sample_token=='':
-			return ''
-		else:
-			frame_tag = 'sdata__' + sample_token
-			sensor_tag = '__sensors' + str(np.sum([list_sensors[v]>0 for v in list_sensors]))
-			return frame_tag + sensor_tag
+	def get_sample_data_token(self, sample_token, frame_count=0):
+		if sample_token=="":
+			return ""
+		return sample_token+'_f'+str(frame_count)
 
 	def build_sample_data_table_entry(self, token,timestamp, sample_token, ego_pose_token, calibrated_sensor_token, \
 																	fileformat, is_key_frame, prev_sample, next_sample, filename, height=0, width=0):
@@ -463,9 +492,6 @@ class HAIS_node:
 		return entry
 
 	#################	 EGO-POS TABLE	 ################# 
-	def get_ego_pose_token(self, sample_token):
-		return 'pos__' + sample_token
-
 	def build_ego_pose_table_entry(self, token, timestamp, rotation=[], translation=[]):
 		entry ={
 		"token": token,
@@ -476,8 +502,8 @@ class HAIS_node:
 		return entry
 
 	#################	 CLIBRATIO TABLE	 ################# 
-	def get_calib_token(self, sample_token):
-		return 'calib__' + sample_token
+	def get_calib_token(self, sample_data_token):
+		return 'calib__' + sample_data_token
 
 	def build_calib_table_entry(self, token, sensor_token,  translation=[], rotation=[], camera_intrinsic=[]):
 		entry ={
@@ -489,7 +515,6 @@ class HAIS_node:
 		}
 		return entry
 
-
 	#################	 SENSOR TABLE	 ################# 
 	def get_sensor_token(self, sensor_name, config):
 		return config['vehicle'] + '__' + sensor_name
@@ -498,29 +523,23 @@ class HAIS_node:
 		import re
 		if re.search('CAM', sensor_name, re.IGNORECASE):
 			modality ="camera"
-			fileformat="jpg"
 
 		elif re.search('LIDAR', sensor_name, re.IGNORECASE):  
 			modality ="lidar"
-			fileformat="json"
 
 		elif re.search('RADAR', sensor_name, re.IGNORECASE):
 			modality ="radar"
-			fileformat="pcd"
 
 		elif re.search('IMU', sensor_name, re.IGNORECASE):
 			modality ="imu"
-			fileformat=""
 
 		elif re.search('GPS', sensor_name, re.IGNORECASE):
 			modality ="gps"
-			fileformat=""
 		else:
 			print(f'\n Error: The sensor name <{sensor_name}> is not defined!!!')
 			modality ="Undefined"
-			fileformat=""
 		
-		return  modality, fileformat
+		return  modality
 
 	def build_sensor_table_entry(self, token, channel, modality):
 		entry ={
