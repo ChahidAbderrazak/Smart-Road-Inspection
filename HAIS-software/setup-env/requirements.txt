@@ -20,7 +20,7 @@ imutils
 
 ### Visualization packages
 osmnx==1.1.2
-ipyleaflet
+folium
 scikit-learn 
 # geopandas
 

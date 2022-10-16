@@ -1,0 +1,26 @@
+coords=[  [-78.8977848,43.9455189],
+          [-78.8980208,43.9461678],
+          [-78.8992868,43.9462296],
+          [-78.8996731,43.9472801],
+          [-78.8961326,43.9480217],
+          [-78.892592,43.9454571],
+          [-78.8914548,43.9446692],
+          [-78.8877212,43.9420581],
+          [-78.8840948,43.9395551],
+												]
+import numpy as np
+import random
+arr=np.array(coords)
+A=[]; B=[]; M=[]
+for a,b in coords:
+	road_metric = random.randint(0, 3)
+	M.append(road_metric)
+	A.append(a)
+	B.append(b)
+
+
+inspection_dict={'lon': A, 
+								'lat': B, 
+								'metric' : M}
+
+print(f'inspection_dict={inspection_dict}')

@@ -5,9 +5,13 @@ echo  "Activating conda environment"
 env_name=hais-node-env
 conda activate $env_name
 
+#######################        SYNTAX      ##########################
+
+python syntax.py
+
 #######################  SENSORS FUNCTIONS ##########################
 
-python lib/sensors.py
+# python lib/sensors.py
 
 #######################  INSPECTION MODULE ##########################
 
@@ -29,6 +33,5 @@ python lib/sensors.py
 
 #######################  HAIS SOFTWARE ##########################
 # python main.py
-# python syntax.py
 
 conda deactivate 
