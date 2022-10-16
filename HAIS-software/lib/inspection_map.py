@@ -182,7 +182,7 @@ from matplotlib import cm
 import folium
 from IPython.display import HTML, display
 
-def draw_polylines(points, metrics, map, horison=3):
+def draw_polylines(points, metrics, map, horison=2):
 		available_colors = ['red', 'coral', 'orange', 'aquamarine2', 'green']
 		inspect_status = ['Bad roard', '', 'Meduim roard', '', 'Good roard']
 		# add ledend
@@ -205,10 +205,10 @@ def draw_polylines(points, metrics, map, horison=3):
 			points_list=points[i:i+horison]
 			avg_metric=int( np.mean(metrics_list) )
 			curr=available_colors[avg_metric]
-			print(f'\n - points_list={points_list} ,  metrics_list={metrics_list} ---> {avg_metric}')
+			# print(f'\n - points_list={points_list} ,  metrics_list={metrics_list} ---> {avg_metric}')
 			line = folium.PolyLine(points_list, color=curr, weight=10.5, opacity=1)
 			line.add_to(map)
-			i+=horison
+			i+=horison-1
 
 
 
@@ -225,7 +225,7 @@ def visualize_map(inspection_dict, map_path):
 	ave_lg = sum(df['lon'])/len(df)
 	points = zip(df['lat'], df['lon'])
 	points = list(points)
-	myMap = folium.Map(location=[ave_lt, ave_lg], zoom_start=14) 
+	myMap = folium.Map(location=[ave_lt, ave_lg], zoom_start=10) 
 	draw_polylines(points, df['metric'].values, myMap)
 	# save map to html file
 	myMap.save(map_path)
