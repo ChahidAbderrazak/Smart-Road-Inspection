@@ -148,7 +148,7 @@ def build_Hais_data_strucure(dataroot):
 		save_mission_json(mission_root, drone_meta,configuration)
 
 def test_drone_data_preparation():
-	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone' #/inspection/2022-10-12/UIOT-bridge/bridge2'
+	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
 	# Build the predefined data structure od HAIS node
 	build_Hais_data_strucure(dataroot)
 

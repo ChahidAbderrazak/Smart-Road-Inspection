@@ -7,6 +7,7 @@ from matplotlib.transforms import offset_copy
 import numpy as np
 from glob import glob
 import matplotlib.animation as animation
+from tqdm import tqdm
 
 try:
     from lib import utils
@@ -202,7 +203,6 @@ class RPLidar_sensor(object):
 			line1.set_ydata(y)
 			fig.canvas.draw()
 			fig.canvas.flush_events()
-			input(f'flag')
 			if k==num_scans:
 				break
 
@@ -239,7 +239,9 @@ class HAIS_visualizer(object):
 		scans_dict_list= self.read_scan()	
 		Kinematics_list=[]
 		lat_list, lon_list, alt_list, metric_list =[],[],[], []
-		for k,	scan in enumerate(scans_dict_list[20:]):
+		print(f'\n - Loading the collected data [{len(scans_dict_list)} samples]. Please wait ...')
+
+		for k,	scan in enumerate(tqdm(scans_dict_list)):
 			if k%self.refresh==0:
 					plt.clf()
 			if scan!={}:
@@ -253,9 +255,13 @@ class HAIS_visualizer(object):
 					if self.disp:
 						self.plot_lidar_data(detect_obj)
 
-				elif scan['sensor_name']=='CSI_CAMERA':
+				elif 'CAMERA' in scan['sensor_name']:
 					import cv2 
-					img=cv2.imread(filename)
+					try:
+						img=cv2.imread(filename)
+					except:
+						print(f'\n - Error: with in loading the image file: \n {filename}')
+						continue
 					try:
 						if self.disp:
 							self.update_plot_camera(img)
@@ -410,10 +416,10 @@ def run_HAIS_visualizer():
 	root= "/media/abdo2020/DATA1/Datasets/data-demo/demo-hais-data"
 	root= '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak'
 	root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-12/Oshawa-roads/mission2'
-	root='/home/abdo2020/Desktop/HAIS_DATABASE/GPS-calibration'
+	root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
 	lidar = HAIS_visualizer(root, disp=False)
 	# vizualise lidar image
-	print('Visualize RPLidar measurment')
+	print('Visualize collected the mission ')
 	lidar.visualize()
 
 if __name__ == '__main__':
