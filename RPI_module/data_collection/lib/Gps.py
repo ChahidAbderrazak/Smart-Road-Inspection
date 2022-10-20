@@ -113,7 +113,7 @@ def update_gps():
                                 d = line1.find(',')
                                 alt = float(line1[:d])
                                 
-                                return False, lat, lng, alt
+                                return False, lat/100, lng/100, alt
                             
                             else:
                                 #print (f'\n - Error: GPS buffer summation of chkVal flag is incorrect:  {chkVal}!= {int(chkSum, 16)}')

@@ -101,7 +101,6 @@ class HAIS_node:
 	def __load_table__(self, table_name) -> dict:
 			""" Loads a table. """
 			filename=osp.join(self.table_root, '{}.json'.format(table_name)) 
-			print(f'\n flag : filename={filename}')
 			if not osp.exists(filename):
 				# create an empty json file
 				self.create_new_folder(osp.dirname(filename))
@@ -138,7 +137,7 @@ class HAIS_node:
 		print(  f'########################################################')
 		if not os.path.exists(self.scenes_path):
 			msg=f'\n\n - The sensors data file [{self.scenes_path}] does not  exist!! \
-				\n Please check the confif/config.json file. '
+				\n Please check the file <config/config.json> '
 			raise Exception(msg)
 		# initialization
 		list_sensors, init_sensors={}, {}
@@ -149,20 +148,19 @@ class HAIS_node:
 		log_ = self.build_log_table_entry(token=log_token,vehicle=self.config['vehicle'], location=self.config['location'])
 		self.update_table(log_table, log_, log_filename)
 		scene_files_list=glob(os.path.join(self.scenes_path, "*.json"))
-		for scene_id, scene_file in enumerate(scene_files_list[:1]):
+		for scene_id, scene_file in enumerate(scene_files_list[:10]):
 			# prepaer Scene table + new entry 
 			scene_data = self.load_json(scene_file)
 			scene_data=[k for k in scene_data if k != {}]
 			scene_filename = self.get_table_path('scene')
 			scene_table = self.load_json(scene_filename)
 			scene_token = self.get_scene_token(scene_file )
-			scene_name = f"Mission date: {os.path.basename(scene_file)[:-5]}"
+			scene_name = f"M3-{os.path.basename(scene_file)[:-5]}"
 			##Build sample related tables + new entry
 			print(f'\n - Building the database stucture of scene ({scene_name}) [{scene_id+1}/{len(scene_files_list)}]. Please wait ...')
 	
 			sample_filename = self.get_table_path('sample') 
 			prev_sample=''
-			old_scene=2
 			for id, sample in enumerate(tqdm(scene_data)):
 				if sample!={}:
 					# get sensor data
@@ -176,38 +174,41 @@ class HAIS_node:
 					sensor_filename= sample['filename'] #os.path.join('sweeps', sensor_channel, sample_token+'.'+fileformat)
 					height, width = 0, 0
 					# input(f'\n flag: sensor_filename={sensor_filename} , current_scene={current_scene}')
-					
-					if old_scene==current_scene:
-						new_sample_recorded=True
-						old_scene+1
-					else:
-						new_sample_recorded=False
 					# sample details
-					sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
+					sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene)
+
 					#  check  if the sample is the last?
-					try:
-						scene_data[id+1] # check if there still one extr smple data
-						next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=1)
-					except:
+					# try:
+					# 	scene_data[id+1] # check if there still one extr smple data
+					# 	print(scene_data[id+1] )
+					# except:
+					# 	next_sample=''
+					# 	#input(f'\n [ {id} samples] next_sample={next_sample}')
+					
+					#  check  if the sample is the last?
+					# print(f'\n flag: progress {id}/{len(scene_data)}')
+					if id<len(scene_data)-1:
+						next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene+1)
+					else: 
 						next_sample=''
-						#input(f'\n [ {id} samples] next_sample={next_sample}')
+
 					#  check  if the sample is the first?
-					if prev_sample=='':
+					if prev_sample=='': 
 						first_sample_token = sample_token
 
+					sample_data_token= self.get_sample_data_token(sample_token=sample_token, frame_count=id)
+					prev_sample_data = self.get_sample_data_token(sample_token=prev_sample, frame_count=id-1)
+					next_sample_data = self.get_sample_data_token(sample_token=next_sample, frame_count=id+1)
+					
+					# sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
+					# prev_sample_data = self.get_sample_data_token(sample_token=sample_token, frame_count=id-1)
+					# next_sample_data = self.get_sample_data_token(sample_token=next_sample, frame_count=id+1)
+					
+		
 					# update sample data table + new entry
 					sample_data_filename = self.get_table_path('sample_data')
 					sample_data_table = self.load_json(sample_data_filename)
-					sample_data_token= self.get_sample_data_token(sample_token=sample_token, frame_count=id)
-
-					if next_sample!='': 
-						next_sample_data = self.get_sample_data_token(sample_token=sample_token, frame_count=id+1)
-					else:
-						next_sample_data = self.get_sample_data_token(sample_token='')
-					if prev_sample!='':
-						prev_sample_data = self.get_sample_data_token(sample_token=sample_token, frame_count=id-1)
-					else:
-						prev_sample_data = self.get_sample_data_token(sample_token='')
+					
 
 					# create sample data table
 					calibrated_sensor_token=self.get_calib_token(sample_data_token)
@@ -240,30 +241,36 @@ class HAIS_node:
 																								rotation=rotation_calib, camera_intrinsic=camera_intrinsic)
 					self.update_table(calib_table, calib_, calib_filename)
 					
-					#  check  if a new sample of measurment is presented?
-					if prev_sample=='' or next_sample=='' or new_sample_recorded:
-						if next_sample=='':
-							sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
-							next_sample = self.get_sample_token(scene_name='', scene_nb=current_scene, step=0)
-						else:
-							if prev_sample!='':
-								sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=-1)
-								next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
-							else:
-								sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
-								next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=1)
+					# #  check  if a new sample of measurment is presented?
+					# if old_scene==current_scene:
+					# 	new_sample_recorded=True
+					# 	old_scene+1
+					# else:
+					# 	new_sample_recorded=False
+
+					# if new_sample_recorded : # or prev_sample=='' or next_sample=='' :
+					# 	if next_sample=='':
+					# 		sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
+					# 		next_sample = self.get_sample_token(scene_name='', scene_nb=current_scene, step=0)
+					# 	else:
+					# 		if prev_sample!='':
+					# 			sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=-1)
+					# 			next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
+					# 		else:
+					# 			sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
+					# 			next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=1)
 
 						
-						print(f'\n flag: \n - prev_sample={prev_sample}\n - sample_token={sample_token}\n - next_sample={next_sample}')
-						sample_ = self.build_sample_table_entry(token=sample_token,timestamp=timestamp,prev_sample=prev_sample, \
-																											next_sample=next_sample, scene_token=scene_token)
-						sample_table = self.load_json(sample_filename)
-						self.update_table(sample_table, sample_, sample_filename)
+					# print(f'\n flag: \n - prev_sample={prev_sample}\n - sample_token={sample_token}\n - next_sample={next_sample}')
+					sample_ = self.build_sample_table_entry(token=sample_token,timestamp=timestamp,prev_sample=prev_sample, \
+																										next_sample=next_sample, scene_token=scene_token)
+					sample_table = self.load_json(sample_filename)
+					self.update_table(sample_table, sample_, sample_filename)
 
-						# moving to next sample
-						prev_sample=sample_token
-						sample_token=next_sample
-						old_scene+=1
+					# moving to next sample
+					prev_sample=sample_token
+					sample_token=next_sample
+					# old_scene+=1
 
 			# Build Scene table + new entry 
 			last_sample_token = prev_sample
@@ -273,8 +280,55 @@ class HAIS_node:
 			# print(f'\n\n  -> scene_:\n{scene_}')
 			self.update_table(scene_table, scene_, scene_filename)
 			
+		# Default Table
+		self.create_default_tables(log_tokens=[log_token])
+		
 		# display
 		print(f'\n\n  # The Generatd table are saved the follwing directory: \n {self.table_root}')
+
+	def create_default_tables(self, log_tokens):
+		'''
+		Build the default tables
+		'''
+		# Build category + new entry 
+		category_filename = self.get_table_path('category')
+		category_table = self.load_json(category_filename)
+		category_ =[
+								{
+									"token": "1",
+									"name": "road.public.Concrete.Bus_lane",
+									"description": "Bus lane in Concrete."
+								},
+								{
+									"token": "2",
+									"name": "road.public.bridge",
+									"description": "bridge."
+								}
+							]
+		self.save_json(category_, category_filename)
+		# self.update_table(category_table, category_, category_filename)
+
+		# Build maps + new entry 
+		maps_filename = self.get_table_path('map')
+		maps_table = self.load_json(maps_filename)
+		maps_ =[
+							{
+								"category": "1",
+								"token": "1",
+								"filename": "maps/map1.png",
+								"log_tokens": log_tokens
+							}
+						]
+		self.save_json(maps_, maps_filename)
+		# self.update_table(maps_table, maps_, maps_filename)
+
+		# copy map image
+		import shutil
+		src="bin/maps/map1.png" 
+		dst=os.path.join( self.dataroot, maps_[0]["filename"] )
+		self.create_new_folder(os.path.dirname(dst))
+		shutil.copy(src, dst)
+		print( f'\n info: map is copied in {dst}')
 
 	def annotate_database(self,scene):
 		'''
@@ -307,8 +361,7 @@ class HAIS_node:
 		current_sample= scene['first_sample_token']
 		prev_sample = nusc.get('sample', current_sample)['prev']
 		next_sample = nusc.get('sample', current_sample)['next']
-		# print(f'\n flag0: \n - prev_sample = {prev_sample} \n - next_sample = {next_sample}')
-
+		print(f'\n flag0: \n - prev_sample = {prev_sample} \n - next_sample = {next_sample}')
 		input(f'\n flag: \n - curr_sample = \n{nusc.get("sample", current_sample)}')
 		while current_sample!='':
 			print(f'\n\n  --> annotating the sample: {current_sample}')
@@ -405,13 +458,14 @@ class HAIS_node:
 
 	#################	 SAMPLE TABLE	################# 
 	def update_table(self,old_table, entry, filename):
-		e=entry['token']
-		for ID in old_table:
-			if ID['token']==entry['token']:
-				msg = f'\n\n Error: The token <{e}> already exist in the table < {os.path.basename(filename)[:-5]} >'
-				#print(msg)
-				# raise ValueError(msg)
-				return 1
+		if len(old_table)>0:
+			e=entry['token']
+			for ID in old_table:
+				if ID['token']==entry['token']:
+					msg = f'\n\n Error: The token <{e}> already exist in the table < {os.path.basename(filename)[:-5]} >'
+					#print(msg)
+					# raise ValueError(msg)
+					return 1
 		table = old_table + [entry]
 		self.save_json(table, filename)
 
@@ -433,6 +487,23 @@ class HAIS_node:
 			}
 			return entry
 
+	#################	 MAPS TABLE	################# 
+	def get_maps_token(self, config):
+		return config['vehicle'] +'__'+  config['location']
+
+	def build_maps_table_entry(self, token,vehicle,location):
+			from datetime import datetime
+			today = datetime.now()
+			logfile = vehicle + '_' + today.strftime("%Y-%m-%d-%Hh-%Mmin")
+			date_captured=today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
+			entry = {
+			"token": token,
+			"category": logfile,
+			"filename": vehicle,
+			"log_tokens": date_captured,
+			}
+			return entry
+
 	#################	 SCENE TABLE	 ################# 
 	def get_scene_token(self, scene_file):
 		return os.path.basename(scene_file)[:-5]
@@ -451,10 +522,10 @@ class HAIS_node:
 		return entry
 
 	#################	 SAMPLE TABLE	 ################# 
-	def get_sample_token(self, scene_name, scene_nb, step=0):
+	def get_sample_token(self, scene_name, scene_nb):
 		if scene_name=='':
 			return ''
-		scene_tag = 's'+str(scene_nb+step)
+		scene_tag = 's'+str(scene_nb)
 		return scene_name + '_' +  scene_tag
 
 	def build_sample_table_entry(self, token,timestamp,prev_sample, next_sample, scene_token):
@@ -593,13 +664,9 @@ class HAIS_node:
 if __name__ == '__main__':
 	# raw-data folder
 	dataroot="/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak"
-	# Loaf the collected inspection sensors dataset
-	raw_data = HAIS_node(dataroot=dataroot)
+	version='v1.0'
+	# Load the collected inspection sensors dataset
+	raw_data = HAIS_node(dataroot=dataroot, version=version)
 
 	# create the database structure
 	raw_data.create_database()
-
-	# # annotate the a scene
-	# scene_=raw_data.scene
-	# print(f'\n\n - scene= {scene_}')
-	# raw_data.annotate_database(scene=scene_[0])	

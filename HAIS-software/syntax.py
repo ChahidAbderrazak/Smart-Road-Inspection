@@ -22,3 +22,26 @@
 # my_sample = nusc_dataloder.get('sample', first_sample_token)
 # print(my_sample)
 # ################################################################################
+from datetime import datetime
+
+
+# def get_drone_timestamp(str_time):
+# 	date, time_ = str_time.split(' ')
+# 	year, month, day = date.split('-')
+# 	time_, ms = time_.split('.')
+# 	hour, min, sec= time_.split(':')
+# 	a=datetime(int(year), int(month), int(day), int(hour), int(min), int(sec))
+# 	a.microsecond
+# 	return datetime.timestamp(a)
+
+def get_drone_timestamp(str_time):
+	now = datetime.strptime(str_time,'%Y-%m-%d %H:%M:%S.%f')
+	now.microsecond
+	return datetime.timestamp(now)
+
+str_time="2022-10-12 14:09:41.488"
+timestamp=get_drone_timestamp(str_time)
+print(f' time={str_time} timestamp={timestamp}')
+
+date = datetime.fromtimestamp(timestamp)
+print(f' date={date} ')

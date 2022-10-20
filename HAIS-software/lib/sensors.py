@@ -13,6 +13,7 @@ try:
 except:
     import utils
 import matplotlib.colors as mcolors
+
 colors_list=['#0051a2', '#97964a', '#ffd44f', '#f4777f', '#93003a',"#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442"]
 class RPLidar_sim(object):
 	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
@@ -219,69 +220,89 @@ class RPLidar_sensor(object):
 class HAIS_visualizer(object):
 	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
 
-	def __init__(self, root, DMAX=100, refresh=30):
-		
+	def __init__(self, root, disp=True, DMAX=100, refresh=30):
 		self.root=root
-		self.files_list=glob(os.path.join(root, 'missions', '*.json'))
+		self.files_list=glob(os.path.join(self.root, 'missions', '*.json'))
+		self.result_filepath=os.path.join(self.root, 'inspection_dic.json')
+		self.disp=disp
 		self.DMAX=DMAX
 		self.refresh=refresh
 		# plot
-		plt.ion()
-		self.fig = plt.figure()
+		if self.disp:
+			plt.ion()
+			self.fig = plt.figure()
+
 	def get_full_path(self, filename):
 		return os.path.join(self.root, filename) 
 
 	def visualize(self):
 		scans_dict_list= self.read_scan()	
-		Kinematics_list=[]	
+		Kinematics_list=[]
+		lat_list, lon_list, alt_list, metric_list =[],[],[], []
 		for k,	scan in enumerate(scans_dict_list[20:]):
 			if k%self.refresh==0:
 					plt.clf()
 			if scan!={}:
 				# LIDAR
 				filename=self.get_full_path(scan['filename'])
-				car_loc_list=[]
 				if scan['sensor_name']=='LIDAR':
 					new_=utils.load_json(filename)
 					if len(new_)==0:
 						continue
 					detect_obj = new_[0]['points']
-					self.plot_lidar_data(detect_obj)
+					if self.disp:
+						self.plot_lidar_data(detect_obj)
 
 				elif scan['sensor_name']=='CSI_CAMERA':
 					import cv2 
 					img=cv2.imread(filename)
 					try:
-						self.update_plot_camera(img)
+						if self.disp:
+							self.update_plot_camera(img)
 					except:
 						print(f'\n error with the image: {img} of file {filename}')
 						continue
 
 				elif scan['sensor_name']=='IMU_SENSOR':
 					new_=scan['meta_data']
-					[lat, lng, alt]=scan['position']['Translation']
-					car_location=lat/100, lng/100, alt/100,
-					car_loc_list+=[(car_location[0], car_location[1]),1]
-					print(car_loc_list)
-					# self.update_map(car_location)
+					try:
+						[lat, lng, alt]=scan['position']['Translation']
+					except:
+						continue
+					# calibrate ofset
+					# offset=[37.82922, -35.33007, 0]
+					offset=[37.81533, -35.82142]
+					lat+=offset[0]
+					lng+=offset[1]
+					# normlizatoin
+					lat, lng, alt=lat/100, lng/100, alt/100
+					car_location=[lat, lng, alt]
+					lat_list.append(lat); lon_list.append(lng); alt_list.append(alt); metric_list.append(-1)
 
-					# Kinemetics
+  				# Kinemetics
 					AccXangle, AccYangle=new_['ACCX Angle'], new_['ACCY Angle']
 					gyroXangle, gyroYangle, gyroZangle=new_['GRYX Angle'], new_['GYRY Angle'], new_['GYRZ Angle']
 					CFangleX, CFangleY = new_['CFangleX Angle'], 0 #new_['CFangleY Angle'],
 					heading, tiltCompensatedHeading = new_['HEADING'], new_['tiltCompensatedHeading']
 					kalmanX, kalmanY= new_['kalmanX'], new_['kalmanY']
 					Kinematics_list.append([AccXangle, AccYangle, gyroXangle, gyroYangle, gyroZangle, CFangleX, CFangleY, heading, tiltCompensatedHeading, kalmanX, kalmanY])
-					self.plot_Kinemetics(Kinematics_list[-20:])
-					
+					if self.disp:
+						self.plot_Kinemetics(Kinematics_list[-20:])
+
 				else:
 					continue
+				
 				# update the plot
-				self.fig.canvas.draw()
-				self.fig.canvas.flush_events()
-			  # # sleep 3 seconds
+				if self.disp:
+					self.fig.canvas.draw()
+					self.fig.canvas.flush_events()
+			  
+				# # sleep 3 seconds
 				# time.sleep(3)
 
+		# update json
+		inspection_dict={'lon': lon_list, 'lat':  lat_list, 'alt':  alt_list, 'metric': metric_list}
+		utils.save_json([inspection_dict], self.result_filepath)
 
 	def update_plot_camera(self, img):
 		# plt.clf()
@@ -389,7 +410,8 @@ def run_HAIS_visualizer():
 	root= "/media/abdo2020/DATA1/Datasets/data-demo/demo-hais-data"
 	root= '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak'
 	root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-12/Oshawa-roads/mission2'
-	lidar = HAIS_visualizer(root)
+	root='/home/abdo2020/Desktop/HAIS_DATABASE/GPS-calibration'
+	lidar = HAIS_visualizer(root, disp=False)
 	# vizualise lidar image
 	print('Visualize RPLidar measurment')
 	lidar.visualize()

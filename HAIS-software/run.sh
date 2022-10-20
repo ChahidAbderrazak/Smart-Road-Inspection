@@ -7,7 +7,7 @@ conda activate $env_name
 
 #######################        SYNTAX      ##########################
 
-python syntax.py
+# python syntax.py
 
 #######################  SENSORS FUNCTIONS ##########################
 
@@ -26,10 +26,13 @@ python syntax.py
 
 #######################  DATABASE MODULE ##########################
 
-# # Build and generate structures hais-database 
-# echo & echo  "Build and generate structures hais-database "
-# python lib/hais_database.py
+# Convert drone data to hais database stucture
+echo & echo  "Build and generate structures hais-database "
+python lib/dji_drone.py
 
+# Build Nuscene-like database  using hais database stucture
+echo & echo  "Build and generate structures hais-database "
+python lib/hais_database.py
 
 #######################  HAIS SOFTWARE ##########################
 # python main.py

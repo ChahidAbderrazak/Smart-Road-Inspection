@@ -37,6 +37,12 @@ def save_json(json_string, filename):
 		print(f'\n\n - error in saving {filename}')
 		return 1
 
+def update_json(json_string, filename):
+    old_list = load_json(filename)
+    combined_list= old_list + json_string
+    save_json(combined_list, filename)
+
+
 def pkl_to_dict(filename):
 	import pickle
 	open_file = open(filename, "rb")
@@ -113,6 +119,7 @@ def load_tif_as_jpg(img_path, scale=0.0, save=False):
     img.save(target_name, "JPEG")
 
     return  cv2.imread(target_name)
+
 
 #%%######################   2D VISUALIZATIONS   ######################
 def show_image(img, img_title, cmap="cividis", figsize = (8,8)):
@@ -193,6 +200,8 @@ def getListOfFiles(dirName, ext, path_pattern='', allFiles = list()):
     # create a list of file and sub directories 
     # names in the given directory 
     listOfFile = os.listdir(dirName)
+    if ext[0]=='.':
+        ext=ext[1:]
     # Iterate over all the entries
     for entry in listOfFile:
         # Create full path
