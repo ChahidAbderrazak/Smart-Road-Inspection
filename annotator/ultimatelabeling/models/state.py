@@ -78,6 +78,7 @@ class State:
             yield self.get_file_name(frame)
 
     def find_videos(self):
+        print(f'\n - finding videos in the folder: {self.DATA_DIR}')
         return next(os.walk(self.DATA_DIR))[1]
 
     def check_raw_videos(self):
@@ -109,7 +110,7 @@ class State:
             pickle.dump(state_dict, f)
 
     def load_state(self):
-        
+        print(f'\n - Loading the annotator state saved in : \n{self.STATE_PATH}')
         if os.path.exists(self.STATE_PATH):
             with open(self.STATE_PATH, 'rb') as f:
                 self.__dict__.update(pickle.load(f))

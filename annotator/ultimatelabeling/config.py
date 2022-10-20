@@ -4,10 +4,10 @@ def get_data_config():
 	from ultimatelabeling import utils
 	
 	# conf_dict = utils.load_json('config/annotation_config.json')
-	ROOT_DIR = "../bin" #"/media/abdo2020/DATA1/Datasets/toolboxes/UltimateLabeling"
+	ROOT_DIR = "./bin"
 	STATE_PATH = os.path.join(ROOT_DIR, "state.pkl")
 	# DATA_DIR = conf_dict['DATA_DIR'] 
-	DATA_DIR = '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/2022.08.05/VID_015/'
+	DATA_DIR = './data/VID_015/'
 	OUTPUT_DIR = DATA_DIR
 
 	RESOURCES_DIR = os.path.join(ROOT_DIR, "res")

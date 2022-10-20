@@ -3,10 +3,10 @@ clear
 eval "$($(which conda) 'shell.bash' 'hook')"
 echo  "Activating conda environment"
 env_name=hais-node-env
-# conda activate $env_name
+conda activate $env_name
 # ################################################
 
 #######################  IMAGE ANNOTATION MODULE ##########################
-python ultimatlabeling_manager.py
+python ultimatlabeling_manager.py --data $1
 
-conda deactivate 
+conda deactivate

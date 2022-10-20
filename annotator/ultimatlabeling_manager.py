@@ -2,6 +2,7 @@ import os
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui
+from argparse import ArgumentParser
 
 # os.chdir('./lib/ultimatelabeling' )
 from ultimatelabeling.views import *
@@ -37,7 +38,6 @@ def save_json(json_string, filename):
 		print(f'\n\n - error in saving {filename}')
 		return 1
 
-
 class MainWindow(QMainWindow):
     def __init__(self,DATA_DIR, OUTPUT_DIR):
         super().__init__()
@@ -45,13 +45,11 @@ class MainWindow(QMainWindow):
         self.OUTPUT_DIR=OUTPUT_DIR
         self.setWindowIcon(QtGui.QIcon('files/icon.png'))
         self.setWindowTitle("HAIS Annotator using UltimateLabeler toolbox")
-        
-
+    
         self.central_widget = CentralWidget(DATA_DIR=self.DATA_DIR, OUTPUT_DIR=self.OUTPUT_DIR)
         self.central_widget.setFocusPolicy(Qt.StrongFocus)
         self.setFocusProxy(self.central_widget)
-        self.central_widget.setFocus(True)
-
+        self.central_widget.setFocus(False)
         self.statusBar()
 
         mainMenu = self.menuBar()
@@ -90,7 +88,7 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.central_widget)
         
-        self.showMaximized()
+        # self.showMaximized()
         self.show()
         self.center()
         
@@ -124,7 +122,6 @@ class MainWindow(QMainWindow):
         self.central_widget.ssh_login.closeServers()
         self.central_widget.state.track_info.save_to_disk()
         self.central_widget.state.save_state()
-
 
 class CentralWidget(QWidget, StateListener):
     def __init__(self,DATA_DIR, OUTPUT_DIR):
@@ -206,6 +203,9 @@ class CentralWidget(QWidget, StateListener):
         app.setPalette(Theme.get_palette(self.state.theme))
 
 def run_2D_annotator(DATA_DIR, OUTPUT_DIR=''):
+    # remove old state
+    remove_old_state(DATA_DIR)
+    # start the GUI app
     import os
     app = QApplication([])
     app.setStyle("Fusion")
@@ -216,19 +216,30 @@ def run_2D_annotator(DATA_DIR, OUTPUT_DIR=''):
         main_window = MainWindow(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
     app.exec()
 
-def get_data_root():
-    conf_dict = load_json('config/annotation_config.json')
-    DATA_DIR = conf_dict['DATA_DIR']
-    OUTPUT_DIR = conf_dict['DATA_DIR']
-    return DATA_DIR, OUTPUT_DIR
+def remove_old_state(DATA_DIR):
+    state_filename=os.path.join(os.path.dirname(DATA_DIR), "state.pkl") 
+    if os.path.exists(state_filename):
+        os.remove(state_filename) 
+
+def prepare_parser():
+    parser = ArgumentParser(description='Model training')
+    parser.add_argument(
+        "--data",
+        metavar="FILE",
+        help="path to the config.yml file",
+        type=str,
+    )
+    return parser
 
 if __name__ == '__main__':
-    # ## Annotating using config file
-    # DATA_DIR, OUTPUT_DIR = get_data_root()
-    # run_2D_annotator(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
+    parser = prepare_parser()
+    args =  parser.parse_args()
+    DATA_DIR =args.data
 
     ## Annotating using folder path
-    DATA_DIR = '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/dash-CAM/test' #2022.08.05'
+    #DATA_DIR = '/run/user/1003/gvfs/smb-share:server=sesl-cloud.local,share=hais-project/dataset/raw-data/dash-cam/TEST_ROUTE-3'
+    
+    #trip1-2022-08-05' #test' #
     run_2D_annotator(DATA_DIR=DATA_DIR)
 
 

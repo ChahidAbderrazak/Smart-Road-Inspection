@@ -150,7 +150,7 @@ def subdivide_bbox(bbox):
 
 
 def convert_video_to_frames(video_file, output_folder):
-    subprocess.check_call(['/bin/bash', '../bin/extract_all.sh', video_file, output_folder])
+    subprocess.check_call(['/bin/bash', 'extract_all.sh', video_file, output_folder])
 
 def convert_video_to_frames_opencv(video_file, output_folder):
     if not os.path.exists(output_folder):

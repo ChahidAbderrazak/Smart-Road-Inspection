@@ -1,0 +1,19 @@
+name: hais-node-env
+
+channels:
+- pytorch
+- defaults
+- conda-forge
+dependencies:
+- python=3.7
+- pytorch
+- torchvision
+
+- pip:
+  - pip
+  - torch
+  - torchvision
+  - tensorflow
+  - torchviz
+  - seaborn
+  - -r requirements.txt
