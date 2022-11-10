@@ -1,13 +1,15 @@
 
 from lib import hais_database, dji_drone, utils
 
-def convert_measurment_to_database(dataroot, version):
+def convert_measurment_to_database(dataroot):
 	'''
 	Build a Nuscenes-like data base using hais-node and hais-drone data
 	'''
  	# If Drone, build the predefined data structure od HAIS node
 	dji_drone.build_Hais_data_strucure(dataroot)
 
+
+def create_HAIS_database(dataroot, version='v0.0'):
 	# Load the collected inspection sensors dataset
 	raw_data = hais_database.HAIS_node(dataroot=dataroot, version=version)
 
@@ -44,12 +46,17 @@ def  explore_database(dataroot, version):
 
 if __name__ == "__main__":
 	dataroot="/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak"
+	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-12/Oshawa-roads/mission2'
 	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
-	# dataroot='/media/abdo2020/DATA1/Datasets/data-demo/demo-hais-data'
+	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/road/ERC-road'
+	dataroot='/home/abdo2020/Dropbox (KAUST)/Research/Projects/2021-Smart-CT-data-Inspection/programming/codes-in-process/code-published-online/HAIS-Visualization/download/node1'
 	version='v1.0'
 
-	# convert the sensors measurment to a structured HAIS-database
-	convert_measurment_to_database(dataroot, version)
+	# # convert the sensors measurment to a structured HAIS-database
+	# convert_measurment_to_database(dataroot)
+
+	# Create the  HAIS database
+	create_HAIS_database(dataroot=dataroot, version=version)
 
 	# Explore the created database
 	explore_database(dataroot, version)

@@ -25,7 +25,6 @@ def sparse_DJI_SRT(filename):
 	with open(filename) as f:
 			res = [list(g) for b,g in groupby(f, lambda x: bool(x.strip())) if b]
 	output = []
-	lon_list,lat_list, alt_list,metric_list=[],[],[],[]
 	for sub in res:
 			if len(sub) >= 3: # not strictly necessary, but better safe than sorry
 					sub = [x.strip() for x in sub]
@@ -46,22 +45,15 @@ def sparse_DJI_SRT(filename):
 								dict_.update({metric: float(location[k+1])})
 					# updaet the location and the metadata
 					output.append(dict_)
-					lon_list.append(dict_['longitude'])
-					lat_list.append(dict_['latitude'])
-					alt_list.append(dict_['abs_alt'])
-					import random
-					road_metric = random.randint(0, 4)
-					metric_list.append(road_metric)
-	inspection_dict={'lon': lon_list, 'lat':	lat_list, 'alt':	alt_list, 'metric': metric_list}
-	return output, inspection_dict
+					
+	return output
 
 def convert_done_metadata(filename):
 	'''
 	convert drone metadata to json format
 	'''
 	output_filename=filename.replace('.SRT', '.json')
-	inspection_filename=os.path.join(os.path.dirname(filename), 'inspection_dic.json')
-	drone_meta, inspection_dict = sparse_DJI_SRT(filename)
+	drone_meta = sparse_DJI_SRT(filename)
 	
 	# save the drone metadata
 	utils.save_json(drone_meta, output_filename)
@@ -69,9 +61,7 @@ def convert_done_metadata(filename):
 
 	# save the drone positions
 	utils.save_json(drone_meta, output_filename)
-	print(f'\n The inspection json file is saved in : \n {inspection_filename}')
-	utils.save_json([inspection_dict], inspection_filename)
-	return drone_meta, inspection_dict
+	return drone_meta
 
 def save_mission_json(mission_root, drone_meta,configuration):
 	dict_frame_list=[{}]
@@ -140,7 +130,7 @@ def build_Hais_data_strucure(dataroot):
 		info_file_path=os.path.join(os.path.dirname(video_path), "info.json")
 		utils.save_json(configuration, info_file_path)
 		# convert drone metadata to json format
-		drone_meta, inspection_dict=convert_done_metadata(filename)
+		drone_meta=convert_done_metadata(filename)
 
 		# Build the mission json_file:
 		mission_root=os.path.join(os.path.dirname(video_path), "missions")

@@ -1,0 +1,15 @@
+### Firebase packages
+pyrebase
+requests>=2.26
+numpy
+
+# nano sensors packages
+Jetson.GPIO
+rplidar
+pygame
+smbus
+pygame
+Pillow
+
+### Inspection packages
+matplotlib

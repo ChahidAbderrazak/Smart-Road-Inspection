@@ -6,6 +6,7 @@
 import os, sys
 import time
 import json
+import random
 from tqdm import tqdm
 import pickle
 import os.path as osp
@@ -148,7 +149,16 @@ class HAIS_node:
 		log_ = self.build_log_table_entry(token=log_token,vehicle=self.config['vehicle'], location=self.config['location'])
 		self.update_table(log_table, log_, log_filename)
 		scene_files_list=glob(os.path.join(self.scenes_path, "*.json"))
-		for scene_id, scene_file in enumerate(scene_files_list[:10]):
+
+		# Load the inspection table
+		inspect_filename=osp.join(self.dataroot, 'inspection_dic.json')
+		if os.path.exists(inspect_filename):
+			inspect_table = self.load_json(inspect_filename)
+		else:
+			inspect_table={'lon': [], 'lat':	[], 'alt':	[], 
+										 'token':[], 'metric': []}
+		# start the missions leading
+		for scene_id, scene_file in enumerate(scene_files_list):
 			# prepaer Scene table + new entry 
 			scene_data = self.load_json(scene_file)
 			scene_data=[k for k in scene_data if k != {}]
@@ -158,7 +168,6 @@ class HAIS_node:
 			scene_name = f"M3-{os.path.basename(scene_file)[:-5]}"
 			##Build sample related tables + new entry
 			print(f'\n - Building the database stucture of scene ({scene_name}) [{scene_id+1}/{len(scene_files_list)}]. Please wait ...')
-	
 			sample_filename = self.get_table_path('sample') 
 			prev_sample=''
 			for id, sample in enumerate(tqdm(scene_data)):
@@ -240,7 +249,16 @@ class HAIS_node:
 					calib_ = self.build_calib_table_entry(token=calibrated_sensor_token, sensor_token=sensor_token,  translation=translation_calib, \
 																								rotation=rotation_calib, camera_intrinsic=camera_intrinsic)
 					self.update_table(calib_table, calib_, calib_filename)
-					
+
+					# inspection table
+					if not ego_pose_token in inspect_table['token']:
+						road_metric = random.randint(0, 4)
+						inspect_table['lon'].append(translation[0])
+						inspect_table['lat'].append(translation[1])
+						inspect_table['alt'].append(translation[2])
+						inspect_table['token'].append(ego_pose_token)
+						inspect_table['metric'].append(road_metric)
+
 					# #  check  if a new sample of measurment is presented?
 					# if old_scene==current_scene:
 					# 	new_sample_recorded=True
@@ -280,7 +298,11 @@ class HAIS_node:
 			# print(f'\n\n  -> scene_:\n{scene_}')
 			self.update_table(scene_table, scene_, scene_filename)
 			
-		# Default Table
+		
+		# save inspection table
+		self.save_json(inspect_table, inspect_filename)
+
+		# Default Table: maps, etc
 		self.create_default_tables(log_tokens=[log_token])
 		
 		# display
