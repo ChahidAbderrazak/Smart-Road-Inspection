@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import cv2
-import pygame
 from datetime import datetime
 import numpy as np
 

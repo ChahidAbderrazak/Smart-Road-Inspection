@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import signal
-import pygame
 import threading
 from lib.config_parameters import *
 from lib.utils import *
@@ -89,7 +88,7 @@ def save_accelerometer_data():
 
 def save_gps_data():
     global data_root, dict_fr_list, dict_frame, configuration, sensor_frame,scene_count, stop_threads, car_location
-    car_location = Gps.gpsDt()
+    car_location = Gps.get_gps_data()
     #car_location=[lat, lng, alt]
     print(f"\n - car_location ={car_location}")
     
@@ -125,7 +124,7 @@ def init():
     disp=False
     dict_fr_list = []
     # get the car position
-    car_location= Gps.gpsDt()
+    car_location= Gps.get_gps_data()
 
     # define the log file
     data_log = load_json(filename)
@@ -157,17 +156,18 @@ def collect_node_data():
             # start sensors recording
             scene_count+=1
             ## LIDAR 
-            lidar_device.lidar.start()
-            #for scan in lidar_device.lidar.iter_scans():
-            scan = next(lidar_device.lidar.iter_scans())    
-            for (_, angle, distance) in scan:
-                    scan_data[min([359, floor(angle)])] = distance
-            lidar_d=lidar_device.process_lidar_data(scan_data)
-            lidar_device.obj_coord_list=lidar_d
-            print(f' {len(lidar_d)} objects -> {lidar_d}')
-            # save lidar data
-            lidar_device.lidar.stop()
-            save_lidar_data(lidar_d)           
+            if lidar_device.lidar_connected:
+                lidar_device.lidar.start()
+                #for scan in lidar_device.lidar.iter_scans():
+                scan = next(lidar_device.lidar.iter_scans())    
+                for (_, angle, distance) in scan:
+                        scan_data[min([359, floor(angle)])] = distance
+                lidar_d=lidar_device.process_lidar_data(scan_data)
+                lidar_device.obj_coord_list=lidar_d
+                print(f' {len(lidar_d)} objects -> {lidar_d}')
+                # save lidar data
+                lidar_device.lidar.stop()
+                save_lidar_data(lidar_d)           
             
             # CAMERA
             save_image_data()
@@ -188,56 +188,6 @@ def collect_node_data():
         lidar_device.stop_lidar()
         print(f'\n\n {e}') 
         sys.exit(0)
-
-def run_data_collection():
-    global car_location, sensor_frame, disp
-    disp=False
-    dict_fr_list = []
-    # get the car position
-    err, lat, lng, alt = Gps.gpsDt()
-    car_location=[lat, lng, alt]
-
-    # define the log file
-    data_log = load_json(filename)
-    sensor_frame = 1+len(data_log)
-    if sensor_frame==0:
-        save_json([{}], filename)
-    # set up folder to save data locally
-    create_databse_folders(data_root)
-    # display
-    print(f"configuration={configuration}")
-    print(f"filename={filename}")
-    print(f"sensor_frame={sensor_frame}")
-    # initialise pygame
-    pygame.init()
-    print("pygame initiated")
-
-    # threads for parallel processing
-    t1 = threading.Thread(target=save_mission_json_file)
-    t2 = threading.Thread(target=save_gps_data)
-    t3 = threading.Thread(target=save_accelerometer_data)
-    t4 = threading.Thread(target=save_image_data)
-    t5 = threading.Thread(target=save_lidar_data)
-    
-    # start the threads
-    t1.start(); t2.start(); t3.start(); t4.start()
-    t5.start()
-
-        
-    # Quit pygame
-    pygame.quit()
-
-def handle_ctrl_c(signal, frame):
-    lidar_device = RPLidar_Sensor(PORT_NAME='/dev/ttyUSB0',visualize=False)
-    print('Stoping.')
-    lidar_device.lidar.stop()
-    lidar_device.lidar.stop_motor()
-    lidar_device.lidar.disconnect()
-    print('Lidar stopped!!.')
-
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, handle_ctrl_c)
 
 if __name__ == "__main__":
     collect_node_data()

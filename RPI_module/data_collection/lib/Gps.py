@@ -1,143 +1,41 @@
-
-# This program was modified and tested by Manir on 2022.09.20 and working fine
-
-#! /usr/bin/python
+from gps import *
 import time
-import smbus
-import signal
-import sys
 
-BUS = None
-address = 0x42
-rdIntrvl = 1
+running = True
+try:
+    gpsd = gps(mode=WATCH_ENABLE|WATCH_NEWSTYLE)
+    gps_connected=True
+except:
+    gps_connected=False
 
-lat = 190
-lng = 190
-alt = -1000
- 
+def getPositionData(gps):
+    nx = gpsd.next()
+    # For a list of all supported classes and fields refer to:
+    # https://gpsd.gitlab.io/gpsd/gpsd_json.html
+    if nx['class'] == 'TPV':
+        lat = getattr(nx,'lat', "Unknown")
+        lng = getattr(nx,'lon', "Unknown")
+        # print ("Node position: lon = " + str(lng) + ", lat = " + str(lat))
+        return False, lat, lng, -1 
+  
+    return True, "Unknown", "Unknown", "Unknown"
 
-def connectBus():
-    global BUS
-    BUS = smbus.SMBus(1)
-                     
-#def handle_ctrl_c(signal, frame):
-        #sys.exit(130)
-
-#signal.signal(signal.SIGINT, handle_ctrl_c)
-def gpsDt(repeat_gps=20):
+def get_gps_data(repeat_gps=20):
     ''' outputs [lat, lng, alt] '''
-    try:
-        err=True
-        cnt=0
-        while(err):
-            err, lat, lng, alt = update_gps()
-            cnt+=1
-            if cnt==repeat_gps:
-                print(f'\n - GPS error 1: the GPS sesor could not get the satelite signal within {repeat_gps} trials.')
-                return []
-        return lat, lng, alt
-    except Exception as e:
-        print('\n - GPS error 2: Please connect the GPS  antenna and make sure you are in an open-air area')
-        #sys.exit(0)
+    err=True
+    cnt=0
+    if not gps_connected:
+        print('\n - GPS error 2: Please connect the GPS  is connected and make sure you are in an open-air area')
         return []
-
-def update_gps():
-    lat = 190
-    lng = 190
-    alt = -1000
-    c = None
-    response = []
-    try:
-        while True:
-            c = BUS.read_byte(address)
-            if c == 255:
-                return True, -1,-1,-1
-
-            elif c == 10:
-             break
-            else:
-                response.append(c)
-
-        if(response.count(36) == 1):
-            if len(response) < 84:
-                CharError = 0;
-                for c in response:
-                    if (c < 32 or c > 122) and  c != 13:
-                        CharError+=1
-                if (CharError == 0):
-                    gpsChars = ''.join(chr(c) for c in response)
-                    if (gpsChars.find('txbuf') == -1):
-                        gpsStr, chkSum = gpsChars.split('*',2)
-                        gpsComponents = gpsStr.split(',')
-                        chkVal = 0
-                        for ch in gpsStr[1:]:
-                             chkVal ^= ord(ch)
-                        if (chkVal == int(chkSum, 16)):
-                            lat = 190
-                            lng = 190
-                            alt = -1000
-                            d = 0
-                            line1 = gpsChars[1:]
-
-                            if line1[:5] == 'GNGGA':
-                                d = line1.find(',')
-                                d += 1
-                                line1 = line1[d:]
-                                d = line1.find(',')
-                                d += 1
-                                line1 = line1[d:]
-                                d = line1.find(',')
-                                lat = float(line1[:d])
-                                d += 1
-                                line1 = line1[d:]
-                                latD = line1[:1]
-                                if latD == 'S':
-                                    lat = lat * (-1)
-
-                                line1 = line1[2:]
-                                d = line1.find(',')
- 
-                                lng = float(line1[:d])
-                                d += 1
-                                line1 = line1[d:]
-                                lngD = line1[:1]
-                                if lngD == 'W':
-                                    lng = lng * (-1)
-
-                                line1 = line1[2:]
-                                for i in range(0, 3):
-                                    d = line1.find(',')
-                                    d += 1
-                                    line1 = line1[d:]
-
-                                d = line1.find(',')
-                                alt = float(line1[:d])
-                                
-                                return False, lat/100, lng/100, alt
-                            
-                            else:
-                                #print (f'\n - Error: GPS buffer summation of chkVal flag is incorrect:  {chkVal}!= {int(chkSum, 16)}')
-                                return True, -1,-1,-1
-                        else:
-                            #print (f'\n - Error: GPS buffer flag 5 incoeerect. {line1[:5]}!= GNGGA')
-                            return True, -1,-1,-1
-                    else:
-                        #print (f'\n - Error: GPS buffer does not contain the flag <txbuf>. \n buffer={gpsChars}')
-                        return True, -1,-1,-1
-                else:
-                    #print (f'\n - Error: number of buffer error flags ={CharError}.')
-                    return True, -1,-1,-1
+        
+    while(err):
+        err, lat, lng, alt = getPositionData(gpsd)
+        cnt+=1
+        if cnt==repeat_gps:
+            print(f'\n - GPS error 1: the GPS sesor could not get the satelite signal within {repeat_gps} trials.')
+            return []
+    return lat, lng, alt
     
-            else:
-                #print (f'\n - Error: GPS buffer size >= 84 . size = {len(response)} ')
-                return True, -1,-1,-1
-    
-        else:
-            #print (f'\n - Error: GPS buffer incorrect {response.count(36)}!= 1')
-            return True, -1,-1,-1
-    except IOError:
-        connectBus()
-        print ('\n - Error: bus error')
+if __name__ == "__main__":
+	get_gps_data()
 
-
-connectBus()

@@ -59,10 +59,6 @@ def detectIMU():
         if (LSM6DSL_WHO_AM_I_response == 0x6A) and (LIS3MDL_WHO_AM_I_response == 0x3D):
             print("Found BerryIMUv3 (LSM6DSL and LIS3MDL)")
             BerryIMUversion = 3
-    time.sleep(1)
-
-
-
 
 def writeByte(device_address,register,value):
     bus.write_byte_data(device_address, register, value)

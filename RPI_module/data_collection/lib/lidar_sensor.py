@@ -1,12 +1,11 @@
 import os, sys
 import numpy as np
 from math import cos, sin, pi, floor
-import pygame
 
 class RPLidar_Sensor(object):
     '''Class for communicating with RPLidar rangefinder scanners : sampling time = 5seconds'''
 
-    def __init__(self, PORT_NAME,angle_step=1,FOV=120,visualize=False,max_distance=0, IMIN=0, IMAX=50):
+    def __init__(self, PORT_NAME,angle_step=1,repeat_lidar=20, FOV=120,visualize=False,max_distance=0, IMIN=0, IMAX=50):
         '''Initilize RPLidar object for communicating with the sensor.
 
         Parameters
@@ -23,10 +22,12 @@ class RPLidar_Sensor(object):
         self.PORT_NAME=PORT_NAME
         self.angle_step=angle_step
         self.visualize=visualize
+        self.repeat_lidar=repeat_lidar
         self.FOV=FOV
         self.max_distance=max_distance
         self.IMIN=IMIN
         self.IMAX=IMAX
+        self.lidar_connected=True
         self.obj_coord_list=[]   
 
         # inializations
@@ -44,8 +45,9 @@ class RPLidar_Sensor(object):
         self.lcd.fill((0,0,0))
         pygame.display.update()
 
-    def init_lidar(self):
+    def init_lidar(self, ):
         from rplidar import RPLidar
+        cnt=0
         while(True):
             try:
                 print(f' \n - connecting to {self.PORT_NAME} ...')
@@ -55,7 +57,12 @@ class RPLidar_Sensor(object):
                 print(info); print(health)
                 break
             except:
-                 print(f' \n - Lidar connection Error to {self.PORT_NAME} ...')
+                 print(f' \n - Warrning: Faild attempts to connect the lidar using  port {self.PORT_NAME} ...')
+            cnt+=1
+            if cnt>self.repeat_lidar:
+                self.lidar_connected=False
+                print(f' \n - Error: The lidar is not conencted to {self.PORT_NAME} ...')
+                break
                  
     def stop_lidar(self):
             print('Stoping.')
@@ -115,9 +122,6 @@ def test_lidar():
                 lidar_device.get_lidar_shot()
                 
   
-
-
-
 
 if __name__ == "__main__":
         test_lidar()
