@@ -19,7 +19,7 @@ class HAIS_node:
 	"""
 	def __init__(self,dataroot: str = 'data/',
 										version: str = 'data/',
-										verbose: bool = True):
+										verbose: bool = False):
 			"""
 			Loads/Collected data and saved the json tables and filder/files strucutre 
 			:param config: Collected data setup configuration: inspection node, desctiption,etc.
@@ -29,70 +29,17 @@ class HAIS_node:
 			:param map_resolution: Resolution of maps (meters).
 			"""
 			self.dataroot=dataroot
-			self.config_file=os.path.join(self.dataroot, 'info.json')
-			try:
-				self.config=self.load_json(self.config_file)
-			except Exception as e:
-				print(f'\n\n {e}')
-				sys.exit(0)
 			self.version = version
 			self.verbose = verbose
-			self.table_names = ['category', 'attribute', 'visibility', 'instance', 'sensor', 'calibrated_sensor',
-													'ego_pose', 'log', 'scene', 'sample', 'sample_data', 'sample_annotation', 'map', 'labels_config']
-			self.scenes_path = os.path.join(self.dataroot, "missions")
-		
+			self.config_file=os.path.join(self.dataroot, 'info.json')
+			self.config=self.load_config()
+			self.node_name=self.config["vehicle"]
+			# If Drone, build the predefined data structure od HAIS node
+			self.convert_drone_database()
 			# building the json tables
-			start_time = time.time()
-			if verbose:
-					print(f"======\nLoading HAIS-bot tables...  \n - dataset= {self.version} \n - root= {self.dataroot}")
-
-			# Explicitly assign tables to help the IDE determine valid class members.
-			self.category = self.__load_table__('category')
-			self.attribute = self.__load_table__('attribute')
-			self.visibility = self.__load_table__('visibility')
-			self.instance = self.__load_table__('instance')
-			self.sensor = self.__load_table__('sensor')
-			self.calibrated_sensor = self.__load_table__('calibrated_sensor')
-			self.ego_pose = self.__load_table__('ego_pose')
-			self.log = self.__load_table__('log')
-			self.scene = self.__load_table__('scene')
-			self.sample = self.__load_table__('sample')
-			self.sample_data = self.__load_table__('sample_data')
-			self.sample_annotation = self.__load_table__('sample_annotation')
-			self.map = self.__load_table__('map')
-			self.labels_config = self.__load_table__('labels_config')
-			lidar_tasks = [t for t in ['lidarseg', 'panoptic'] if osp.exists(osp.join(self.table_root, t + '.json'))]
-			if len(lidar_tasks) > 0:
-					self.lidarseg_idx2name_mapping = dict()
-					self.lidarseg_name2idx_mapping = dict()
-					self.load_lidarseg_cat_name_mapping()
-			for i, lidar_task in enumerate(lidar_tasks):
-					if self.verbose:
-							print(f'Loading HAIS-Bot-{lidar_task}...')
-					if lidar_task == 'lidarseg':
-							self.lidarseg = self.__load_table__(lidar_task)
-					else:
-							self.panoptic = self.__load_table__(lidar_task)
-
-					setattr(self, lidar_task, self.__load_table__(lidar_task))
-					label_files = os.listdir(os.path.join(self.dataroot, lidar_task, self.version))
-					num_label_files = len([name for name in label_files if (name.endswith('.bin') or name.endswith('.npz'))])
-					num_lidarseg_recs = len(getattr(self, lidar_task))
-					assert num_lidarseg_recs == num_label_files, \
-							f'Error: there are {num_label_files} label files but {num_lidarseg_recs} {lidar_task} records.'
-					self.table_names.append(lidar_task)
-					# Sort the colormap to ensure that it is ordered according to the indices in self.category.
-					self.colormap = dict({c['name']: self.colormap[c['name']]
-																for c in sorted(self.category, key=lambda k: k['index'])})
-
-			# If available, also load the image_annotations table created by export_2d_annotations_as_json().
-			if osp.exists(osp.join(self.table_root, 'image_annotations.json')):
-					self.image_annotations = self.__load_table__('image_annotations')
-
-			if verbose:
-					for table in self.table_names:
-							print("{} {},".format(len(getattr(self, table)), table))
-					print("Done loading in {:.3f} seconds.\n======".format(time.time() - start_time))
+			self.create_database_table()
+			# display
+			self.display()
 
 	@property
 	def table_root(self) -> str:
@@ -112,6 +59,101 @@ class HAIS_node:
 					table = json.load(f)
 			return table
 
+	def load_config(self):
+		try:
+			config=self.load_json(self.config_file)
+			return config
+
+		except Exception as e:
+			print(f'\n\n {e}')
+			sys.exit(0)
+
+	def display(self):
+		print(f'\n########################################################')
+		print(f'##            Creating the  HAIS database              ')
+		print(f"## - Node= {self.node_name} 	")
+		print(f"## - dataset= {self.version} 	\n## - root= {self.dataroot}")
+		print(  f'########################################################')
+
+	def convert_drone_database(self):
+			# If Drone, build the predefined data structure od HAIS node
+			if 'drone' in self.node_name:
+				print( f'\t - This data is collected by a drone [{self.node_name}] and needs to be converted')
+				try:
+					from lib import dji_drone
+				except:
+					import dji_drone
+				dji_drone.build_Hais_data_strucure(	self.dataroot)
+			# building the json tables
+			self.create_database_table()
+
+	def create_database_table(self):
+		# building the json tables
+		self.table_names = ['category', 'attribute', 'visibility', 'instance', 'sensor', 'calibrated_sensor',
+												'ego_pose', 'log', 'scene', 'sample', 'sample_data', 'sample_annotation', 'map', 'labels_config']
+		self.scenes_path = os.path.join(self.dataroot, "missions")
+		start_time = time.time()
+		if self.verbose:
+				print(f"======\nLoading HAIS-bot tables...  \n - dataset= {self.version} \n - root= {self.dataroot}")
+
+		# Explicitly assign tables to help the IDE determine valid class members.
+		self.category = self.__load_table__('category')
+		self.attribute = self.__load_table__('attribute')
+		self.visibility = self.__load_table__('visibility')
+		self.instance = self.__load_table__('instance')
+		self.sensor = self.__load_table__('sensor')
+		self.calibrated_sensor = self.__load_table__('calibrated_sensor')
+		self.ego_pose = self.__load_table__('ego_pose')
+		self.log = self.__load_table__('log')
+		self.scene = self.__load_table__('scene')
+		self.sample = self.__load_table__('sample')
+		self.sample_data = self.__load_table__('sample_data')
+		self.sample_annotation = self.__load_table__('sample_annotation')
+		self.map = self.__load_table__('map')
+		self.labels_config = self.__load_table__('labels_config')
+		lidar_tasks = [t for t in ['lidarseg', 'panoptic'] if osp.exists(osp.join(self.table_root, t + '.json'))]
+		if len(lidar_tasks) > 0:
+				self.lidarseg_idx2name_mapping = dict()
+				self.lidarseg_name2idx_mapping = dict()
+				self.load_lidarseg_cat_name_mapping()
+		for i, lidar_task in enumerate(lidar_tasks):
+				if self.verbose:
+						print(f'Loading HAIS-Bot-{lidar_task}...')
+				if lidar_task == 'lidarseg':
+						self.lidarseg = self.__load_table__(lidar_task)
+				else:
+						self.panoptic = self.__load_table__(lidar_task)
+				setattr(self, lidar_task, self.__load_table__(lidar_task))
+				label_files = os.listdir(os.path.join(self.dataroot, lidar_task, self.version))
+				num_label_files = len([name for name in label_files if (name.endswith('.bin') or name.endswith('.npz'))])
+				num_lidarseg_recs = len(getattr(self, lidar_task))
+				assert num_lidarseg_recs == num_label_files, \
+						f'Error: there are {num_label_files} label files but {num_lidarseg_recs} {lidar_task} records.'
+				self.table_names.append(lidar_task)
+				# Sort the colormap to ensure that it is ordered according to the indices in self.category.
+				self.colormap = dict({c['name']: self.colormap[c['name']]
+															for c in sorted(self.category, key=lambda k: k['index'])})
+
+		# If available, also load the image_annotations table created by export_2d_annotations_as_json().
+		if osp.exists(osp.join(self.table_root, 'image_annotations.json')):
+				self.image_annotations = self.__load_table__('image_annotations')
+
+		if self.verbose:
+				for table in self.table_names:
+						print("{} {},".format(len(getattr(self, table)), table))
+				print("Done loading in {:.3f} seconds.\n======".format(time.time() - start_time))
+
+	def create_database_root(self):
+		import shutil
+		# 
+		DIR=osp.join(self.dataroot, self.version)
+		if not os.path.exists(DIR):
+				os.makedirs(DIR)
+		else:
+			shutil.rmtree(DIR) 
+			os.makedirs(DIR)
+			print(f'\n Warrning: the old {self.version} database is removed and replaced by a new one!! \n')
+
 	def pkl_to_dict(self, filename):
 		open_file = open(filename, "rb")
 		dict = pickle.load(open_file)
@@ -122,26 +164,36 @@ class HAIS_node:
 		return osp.join(self.table_root, '{}.json'.format(table_name)) 
 
 	def load_lidarseg_cat_name_mapping(self):
-			""" Create mapping from class index to class name, and vice versa, for easy lookup later on """
-			for lidarseg_category in self.category:
-					# Check that the category records contain both the keys 'name' and 'index'.
-					assert 'index' in lidarseg_category.keys(), \
-							'Please use the category.json that comes with nuScenes-lidarseg, and not the old category.json.'
+		""" Create mapping from class index to class name, and vice versa, for easy lookup later on """
+		for lidarseg_category in self.category:
+			# Check that the category records contain both the keys 'name' and 'index'.
+			assert 'index' in lidarseg_category.keys(), \
+					'Please use the category.json that comes with nuScenes-lidarseg, and not the old category.json.'
 
-					self.lidarseg_idx2name_mapping[lidarseg_category['index']] = lidarseg_category['name']
-					self.lidarseg_name2idx_mapping[lidarseg_category['name']] = lidarseg_category['index']
+			self.lidarseg_idx2name_mapping[lidarseg_category['index']] = lidarseg_category['name']
+			self.lidarseg_name2idx_mapping[lidarseg_category['name']] = lidarseg_category['index']
 
 	def create_database(self):
-		print(f'\n########################################################')
-		print(f'\n##            Updating the HAIS database              ##')
-		print(f'\n## - Sensor file={self.scenes_path}                                   ')
-		print(  f'########################################################')
+		'''
+		Creation of a structured HAIS database
+		'''
+		try:
+			# display
+			print(f'\n - Creating the structured HAIS database')
+			print(f'\t - Sensor folder={self.scenes_path} ')
+			self.build_database_tables()
+			
+		except:
+			# create the database root
+			self.create_database_root()
+			self.build_database_tables()
+
+	def build_database_tables(self):
+		# check the mission file 		
 		if not os.path.exists(self.scenes_path):
-			msg=f'\n\n - The sensors data file [{self.scenes_path}] does not  exist!! \
+			msg=f'\n\n - The sensors data file [{ self.scenes_path}] does not  exist!! \
 				\n Please check the file <config/config.json> '
 			raise Exception(msg)
-		# initialization
-		list_sensors, init_sensors={}, {}
 		# Build log table + new entry 
 		log_filename = self.get_table_path('log')
 		log_table = self.load_json(log_filename)
@@ -149,14 +201,16 @@ class HAIS_node:
 		log_ = self.build_log_table_entry(token=log_token,vehicle=self.config['vehicle'], location=self.config['location'])
 		self.update_table(log_table, log_, log_filename)
 		scene_files_list=glob(os.path.join(self.scenes_path, "*.json"))
-
 		# Load the inspection table
 		inspect_filename=osp.join(self.dataroot, 'inspection_dic.json')
+		inspect_table={'lon': [], 'lat':	[], 'alt':	[], 
+											'token':[], 'metric': []}
 		if os.path.exists(inspect_filename):
-			inspect_table = self.load_json(inspect_filename)
-		else:
-			inspect_table={'lon': [], 'lat':	[], 'alt':	[], 
-										 'token':[], 'metric': []}
+			try:
+				inspect_table = self.load_json(inspect_filename)
+			except Exception as e:
+				print(f'\t -  Exceptio {e}.  \n\t    A new Json file will be created!')
+		
 		# start the missions leading
 		for scene_id, scene_file in enumerate(scene_files_list):
 			# prepaer Scene table + new entry 
@@ -165,7 +219,7 @@ class HAIS_node:
 			scene_filename = self.get_table_path('scene')
 			scene_table = self.load_json(scene_filename)
 			scene_token = self.get_scene_token(scene_file )
-			scene_name = f"M3-{os.path.basename(scene_file)[:-5]}"
+			scene_name = f"{self.node_name}-{os.path.basename(scene_file)[:-5]}"
 			##Build sample related tables + new entry
 			print(f'\n - Building the database stucture of scene ({scene_name}) [{scene_id+1}/{len(scene_files_list)}]. Please wait ...')
 			sample_filename = self.get_table_path('sample') 
@@ -173,40 +227,37 @@ class HAIS_node:
 			for id, sample in enumerate(tqdm(scene_data)):
 				if sample!={}:
 					# get sensor data
-					sensor_name= sample["sensor_name"] # list(sample.keys())[1]
-					current_scene=sample["scene"]
-					timestamp = int(sample['timestamp']*1000000)
+					sensor_name= sample["sensor_name"] 
+					try:
+						current_scene=sample["scene"]
+					except:
+						current_scene=sample["frame"]
+					timestamp = int(float(sample['timestamp'])*1000000)
 					rotation, translation =sample["position"]["Rotation"], sample["position"]["Translation"]
 					is_key_frame = True
 					sensor_channel= sensor_name
 					sensor_modality, fileformat = self.get_sensor_modality(sensor_name), sample['fileformat'] #
 					sensor_filename= sample['filename'] #os.path.join('sweeps', sensor_channel, sample_token+'.'+fileformat)
 					height, width = 0, 0
+					meta_data=sample['meta_data']
 					# input(f'\n flag: sensor_filename={sensor_filename} , current_scene={current_scene}')
 					# sample details
 					sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene)
 
 					#  check  if the sample is the last?
-					# try:
-					# 	scene_data[id+1] # check if there still one extr smple data
-					# 	print(scene_data[id+1] )
-					# except:
-					# 	next_sample=''
-					# 	#input(f'\n [ {id} samples] next_sample={next_sample}')
-					
-					#  check  if the sample is the last?
-					# print(f'\n flag: progress {id}/{len(scene_data)}')
 					if id<len(scene_data)-1:
 						next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene+1)
 					else: 
+						sample_token = next_sample
 						next_sample=''
+						
 
 					#  check  if the sample is the first?
 					if prev_sample=='': 
 						first_sample_token = sample_token
 
-					sample_data_token= self.get_sample_data_token(sample_token=sample_token, frame_count=id)
 					prev_sample_data = self.get_sample_data_token(sample_token=prev_sample, frame_count=id-1)
+					sample_data_token= self.get_sample_data_token(sample_token=sample_token, frame_count=id)
 					next_sample_data = self.get_sample_data_token(sample_token=next_sample, frame_count=id+1)
 					
 					# sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
@@ -225,10 +276,10 @@ class HAIS_node:
 					self.create_new_folder( os.path.dirname(os.path.join(self.dataroot,sensor_filename)) )
 					sample_data_ = self.build_sample_data_table_entry(token=sample_data_token,timestamp=timestamp, sample_token=sample_token, ego_pose_token=ego_pose_token,\
 																calibrated_sensor_token=calibrated_sensor_token,fileformat=fileformat, is_key_frame=is_key_frame,\
-																		prev_sample=prev_sample_data, next_sample=next_sample_data, filename=sensor_filename, height=height, width=width)
-
+																		prev_sample=prev_sample_data, next_sample=next_sample_data, filename=sensor_filename, height=height, width=width, meta_data=meta_data)
+					
 					self.update_table(sample_data_table, sample_data_, sample_data_filename)
-
+					
 					# Update the ego-pos table
 					ego_pose_filename = self.get_table_path('ego_pose')
 					ego_pose_table = self.load_json(ego_pose_filename)
@@ -251,34 +302,15 @@ class HAIS_node:
 					self.update_table(calib_table, calib_, calib_filename)
 
 					# inspection table
-					if not ego_pose_token in inspect_table['token']:
+					if not sample_data_token in inspect_table['token']:
 						road_metric = random.randint(0, 4)
 						inspect_table['lon'].append(translation[0])
 						inspect_table['lat'].append(translation[1])
 						inspect_table['alt'].append(translation[2])
-						inspect_table['token'].append(ego_pose_token)
+						inspect_table['token'].append(sample_data_token)
 						inspect_table['metric'].append(road_metric)
 
-					# #  check  if a new sample of measurment is presented?
-					# if old_scene==current_scene:
-					# 	new_sample_recorded=True
-					# 	old_scene+1
-					# else:
-					# 	new_sample_recorded=False
-
-					# if new_sample_recorded : # or prev_sample=='' or next_sample=='' :
-					# 	if next_sample=='':
-					# 		sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
-					# 		next_sample = self.get_sample_token(scene_name='', scene_nb=current_scene, step=0)
-					# 	else:
-					# 		if prev_sample!='':
-					# 			sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=-1)
-					# 			next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
-					# 		else:
-					# 			sample_token = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=0)
-					# 			next_sample = self.get_sample_token(scene_name=scene_name, scene_nb=current_scene, step=1)
-
-						
+					# update sample tabel?
 					# print(f'\n flag: \n - prev_sample={prev_sample}\n - sample_token={sample_token}\n - next_sample={next_sample}')
 					sample_ = self.build_sample_table_entry(token=sample_token,timestamp=timestamp,prev_sample=prev_sample, \
 																										next_sample=next_sample, scene_token=scene_token)
@@ -297,14 +329,11 @@ class HAIS_node:
 																							last_sample_token=last_sample_token, description=self.config['description'])
 			# print(f'\n\n  -> scene_:\n{scene_}')
 			self.update_table(scene_table, scene_, scene_filename)
-			
-		
+
 		# save inspection table
 		self.save_json(inspect_table, inspect_filename)
-
 		# Default Table: maps, etc
 		self.create_default_tables(log_tokens=[log_token])
-		
 		# display
 		print(f'\n\n  # The Generatd table are saved the follwing directory: \n {self.table_root}')
 
@@ -438,8 +467,7 @@ class HAIS_node:
 				data=[]
 			return data
 		except:
-			msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!  \
-							\n --> a new Jason file will be created!!    '
+			msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!'
 			print(msg)
 			# raise ValueError(msg)
 			return []
@@ -496,35 +524,35 @@ class HAIS_node:
 		return config['vehicle'] +'__'+  config['location']
 
 	def build_log_table_entry(self, token,vehicle,location):
-			from datetime import datetime
-			today = datetime.now()
-			logfile = vehicle + '_' + today.strftime("%Y-%m-%d-%Hh-%Mmin")
-			date_captured=today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
-			entry = {
-			"token": token,
-			"logfile": logfile,
-			"vehicle": vehicle,
-			"date_captured": date_captured,
-			"location": location
-			}
-			return entry
+		from datetime import datetime
+		today = datetime.now()
+		logfile = vehicle + '_' + today.strftime("%Y-%m-%d-%Hh-%Mmin")
+		date_captured=today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
+		entry = {
+		"token": token,
+		"logfile": logfile,
+		"vehicle": vehicle,
+		"date_captured": date_captured,
+		"location": location
+		}
+		return entry
 
 	#################	 MAPS TABLE	################# 
 	def get_maps_token(self, config):
 		return config['vehicle'] +'__'+  config['location']
 
 	def build_maps_table_entry(self, token,vehicle,location):
-			from datetime import datetime
-			today = datetime.now()
-			logfile = vehicle + '_' + today.strftime("%Y-%m-%d-%Hh-%Mmin")
-			date_captured=today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
-			entry = {
-			"token": token,
-			"category": logfile,
-			"filename": vehicle,
-			"log_tokens": date_captured,
-			}
-			return entry
+		from datetime import datetime
+		today = datetime.now()
+		logfile = vehicle + '_' + today.strftime("%Y-%m-%d-%Hh-%Mmin")
+		date_captured=today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
+		entry = {
+		"token": token,
+		"category": logfile,
+		"filename": vehicle,
+		"log_tokens": date_captured,
+		}
+		return entry
 
 	#################	 SCENE TABLE	 ################# 
 	def get_scene_token(self, scene_file):
@@ -567,7 +595,7 @@ class HAIS_node:
 		return sample_token+'_f'+str(frame_count)
 
 	def build_sample_data_table_entry(self, token,timestamp, sample_token, ego_pose_token, calibrated_sensor_token, \
-																	fileformat, is_key_frame, prev_sample, next_sample, filename, height=0, width=0):
+																	fileformat, is_key_frame, prev_sample, next_sample, filename, height=0, width=0, meta_data=""):
 		entry = {
 		"token": token,
 		"sample_token": sample_token,
@@ -579,6 +607,7 @@ class HAIS_node:
 		"height": height,
 		"width": width,
 		"filename": filename,
+		"meta_data": meta_data,
 		"prev": prev_sample,
 		"next": next_sample,
 		}

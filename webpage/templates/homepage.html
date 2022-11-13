@@ -1,0 +1,227 @@
+
+<!-- Source:  https://getbootstrap.com/docs/4.0/examples/dashboard/# -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico">
+
+    <title>HAIS: Highway Automated Inspection System (2022)</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/dashboard/">
+
+
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> 
+
+    <!-- Custom styles for this template -->
+    <link href="../static/css/dashboard.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Smart Road Inspection</a>
+      <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
+      <ul class="navbar-nav px-3">
+        <li class="nav-item text-nowrap">
+          <a class="nav-link" href="#">Log In</a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+          <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+             
+              <!-- --------------------------  Side-Bar Menu  ---------------------------------- -->
+              <li class="nav-item">
+                <a class="nav-link " href="/">
+                  <span data-feather="home"></span>
+                  Dashboard <span class="sr-only">(admin)</span>
+                </a>
+
+              <li class="nav-item">
+                <a class="nav-link" href="/map">
+                  <span data-feather="map"></span>
+                  Road Conditions
+                </a>
+              </li>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link" href="/sensors">
+                  <span data-feather="activity"></span>
+                  Measurment
+                </a>
+              </li>
+
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/ai">
+                  <span data-feather="bar-chart-2"></span>
+                  Inspection
+                </a>
+              </li> 
+
+              <li class="nav-item">
+                <a class="nav-link" href="/reports">
+                  <span data-feather="layers"></span>
+                  Reports
+                </a>
+
+              <li class="nav-item">
+                <a class="nav-link active" href="/contact">
+                  <span data-feather="file-text"></span>
+                  Contact
+                </a>
+              </li>
+              <!-- ----------------------------------------------------------------------------- -->
+            </ul>
+          </div>
+        </nav>
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+              <h1 class="h2">Inspection History</h1>
+              <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group mr-2">
+                  <button class="btn btn-sm btn-outline-secondary">Share</button>
+                  <button class="btn btn-sm btn-outline-secondary">Export</button>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                  <span data-feather="calendar"></span>
+                  This week
+                </button>
+              </div>
+            </div>
+  
+            <canvas class="my-4" id="myChart" width="800" height="140"></canvas>
+
+            <div class="table-responsive">
+              <table class="table table-striped table-sm">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Mission</th>
+                    <th>Roads ID</th>
+                    <th>Date/Time</th>
+                    <th>Responsible</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td>inspection</td>
+                    <td>T1/S15, N14</td>
+                    <td>15-04-2021-14:30</td>
+                    <td>Danial</td>
+                    <td>urgent maintenece is needed</td>
+                  </tr>
+                  <tr>
+                      <td>2</td>
+                      <td>reparation</td>
+                      <td>T1/S15, N14</td>
+                      <td>14-04-2021-17:30</td>
+                      <td>Tarek</td>
+                      <td>reparation finished</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>inspection</td>
+                        <td>S127, N8</td>
+                        <td>12-04-2021-17:30</td>
+                        <td>Joseph</td>
+                        <td>Medium-level </td>
+                      </tr>
+                      <tr>
+                          <td>4</td>
+                          <td>reparation</td>
+                          <td> N8</td>
+                          <td>10-04-2021-17:30</td>
+                          <td>Idrees</td>
+                          <td>reparation in process</td>
+                        </tr>
+  
+                </tbody>
+              </table>
+            </div>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <!-- <script src="../../assets/js/vendor/popper.min.js"></script> -->
+    <script src="../static/js/bootstrap.min.js"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+
+    <!-- Graphs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+    <script>
+      var days_axis = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] //Utils.months({count: 7});
+      var data={
+          labels: days_axis ,
+          datasets: [{
+            data: [12, 1, 2, 15, 4, 4,21],
+            label: 'Hole cases',
+            lineTension: 0,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgb(255, 99, 132,)',
+            borderWidth: 1,
+            // pointBackgroundColor: '#007bff'
+          },{
+            data: [1, 0, 0, 2, 5, 14,3],
+            label: 'Crack cases',
+            lineTension: 0,
+            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+            borderColor: 'rgb(255, 159, 64)',
+            borderWidth: 1,
+            // pointBackgroundColor: '#ff7300'
+
+          },{
+            data: [10, 15, 6, 10, 4, 6,17],
+            label: 'Good roads cases',
+            lineTension: 0,
+            backgroundColor: 'rgba(0, 255, 0, 0.2)',
+            borderColor: 'rgb(0, 255, 0)',
+            borderWidth: 1,
+            // pointBackgroundColor: '#00FF00'
+
+          }]
+        }
+        // bar colors
+        var ctx = document.getElementById("myChart");
+        var myChart = new Chart(ctx,{type: 'bar',
+                                data: data,
+                                options: {
+                                    scales: {
+                                        x: {stacked: true},
+                                        y: {stacked: true}
+                                    }},
+                                legend: { title : {text:"Inspection statistics"},
+                                          display: true,
+                                          position:'right'
+                                        },
+                                title: {display: true,},
+                            });
+    </script>
+  </body>
+</html>

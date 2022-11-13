@@ -1,4 +1,5 @@
 
+import os, sys
 from lib import hais_database, dji_drone, utils
 
 def convert_measurment_to_database(dataroot):
@@ -37,32 +38,37 @@ def  explore_database(dataroot, version):
 	print(f'\n\n ==> First sample of the scene: \n {my_sample}')
 	# nusc.list_sample(my_sample['token'])
 	
-	sensor_list =  list(my_sample['data'].keys())
-	print(f'\n\n ==> List of sensors: \n {sensor_list}')
-	sensor=sensor_list[0]
-	cam_front_data = nusc.get('sample_data', my_sample['data'][sensor])
-	print(f'\n\n ==> First sensor data:  {sensor}: \n {cam_front_data}')
-	nusc.render_sample_data(cam_front_data['token'])
+	# sensor_list =  list(my_sample['data'].keys())
+	# print(f'\n\n ==> List of sensors: \n {sensor_list}')
+	# sensor=sensor_list[0]
+	# cam_front_data = nusc.get('sample_data', my_sample['data'][sensor])
+	# try:
+	# 	print(f'\n\n ==> First sensor data:  {sensor}: \n {cam_front_data}')
+	# 	nusc.render_sample_data(cam_front_data['token'])
+	# except Exception as e:
+	# 	print(f'\n - Error: cannot render the data of the sensor: {sensor} \
+	# 		      \n - Exception: {e}')
+
 
 if __name__ == "__main__":
-	dataroot="/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak"
-	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-12/Oshawa-roads/mission2'
-	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
-	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/road/ERC-road'
-	dataroot='/home/abdo2020/Dropbox (KAUST)/Research/Projects/2021-Smart-CT-data-Inspection/programming/codes-in-process/code-published-online/HAIS-Visualization/download/node1'
+
 	version='v1.0'
+	root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node'
+	# root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone'
+	list_datasets=utils.getListOfFiles(root, ext='json', path_pattern='info.json') 
+	dataroot_list=[ os.path.dirname(path) for path in list_datasets if 'medium-speed' not in path]
+	dataroot_list.sort()
+	input(f' --> list of {len(dataroot_list)} available collected data : \n{dataroot_list}')
+	# dataroot_list=['/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak']
+	for dataroot in dataroot_list:
+		# Create the  HAIS database
+		create_HAIS_database(dataroot=dataroot, version=version)
 
-	# # convert the sensors measurment to a structured HAIS-database
-	# convert_measurment_to_database(dataroot)
+		# Explore the created database
+		explore_database(dataroot, version)
 
-	# Create the  HAIS database
-	create_HAIS_database(dataroot=dataroot, version=version)
-
-	# Explore the created database
-	explore_database(dataroot, version)
-
-	# # synchorize (upload/download) sensors measurement
-	# sync_data_to_firebase()
+		# # synchorize (upload/download) sensors measurement
+		# sync_data_to_firebase()
 
 
 

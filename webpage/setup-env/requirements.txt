@@ -1,0 +1,27 @@
+######## deep learning packages
+torch
+torchvision
+tensorflow
+torchviz
+
+######## Web API packages
+fastapi 
+uvicorn
+python-multipart
+Pyrebase
+# Flask
+
+######## general packages
+nuscenes-devkit
+pillow
+matplotlib
+pandas
+numpy
+scipy
+PyYAML
+glob2
+tqdm
+multiprocess
+
+######## testing code
+pytest

@@ -20,8 +20,7 @@ def load_json(filename):
 			data=[]
 		return data
 	except:
-		msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!  \
-			       \n --> a new Jason file will be created!!    '
+		msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!'
 		print(msg)
 		# raise ValueError(msg)
 		return []
@@ -192,7 +191,7 @@ def parent_folder(file_path, n=1):
 def get_extension(filename):
     return os.path.splitext(filename)[1][1:]
 
-def getListOfFiles(dirName, ext, path_pattern='', allFiles = list()):
+def getListOfFiles(dirName, ext, path_pattern='', allFiles = []):
     '''
       For the given path, search for the List of all files in the directory tree of extention <ext> 
     '''
@@ -209,12 +208,13 @@ def getListOfFiles(dirName, ext, path_pattern='', allFiles = list()):
         # If entry is a directory then get the list of files in this directory 
         if os.path.isdir(fullPath) :
             allFiles = allFiles + getListOfFiles(fullPath, ext=ext, path_pattern=path_pattern)
-        else:
-            # txt_list_files = [i for i in fullPath if ]
-            extension = os.path.splitext(fullPath)[1][1:]
-            if extension==ext and search(path_pattern, fullPath) :
-              allFiles.append(fullPath) 
-    # print(f'\n dirName[{ext}]= {dirName}\n allFiles={allFiles}')           
+
+        elif search(path_pattern, fullPath) :
+                extension = os.path.splitext(fullPath)[1][1:]
+                if extension==ext:
+                    allFiles.append(fullPath) 
+        # print(f'\n dirName[{ext}]= {dirName}\n allFiles={allFiles}')           
+    allFiles=[k for k in allFiles if ext in os.path.splitext(k)[1][1:] == ext]
     return list(set(allFiles)) 
 
 def img_array_gray2rgb(array_gray, scale=255):

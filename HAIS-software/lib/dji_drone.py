@@ -97,38 +97,54 @@ def save_mission_json(mission_root, drone_meta,configuration):
 		mission_path=os.path.join(mission_root, filename_strg)
 		utils.save_json(dict_frame_list, mission_path)
 
-def build_Hais_data_strucure(dataroot):
+def build_Hais_data_strucure(dataroot, ext='.SRT'):
 	'''
-	Build the predefined data structure od HAIS node
+	Build the predefined data structure of HAIS node
 	'''
-	list_files= utils.getListOfFiles(dataroot, ext='.SRT')
-	print(f'\n - {len(list_files)} file are found : \n {list_files}')
+	# display
+	print(f'\n- Converting the drone data to HAIS database structure. Please wait ...')
+	# check the root:
+	if os.path.isfile(dataroot):
+		dataroot=os.path.dirname(dataroot)
+	# find the drone video
+	list_files= utils.getListOfFiles(dataroot, ext=ext, path_pattern='', allFiles=[])
+	print(f'\n - {len(list_files)} drone videos are found : \n {list_files}')
 
 	for filename in list_files:
 		# find the videos format
 		video_path=''
-		for ext in ['.LRF', '.lrf', '.MP4', '.mp4', '.MOV', '.mov']:
-			path=filename.replace('.SRT', ext)
+		# extension = os.path.splitext(filename)[1][1:]
+		for ext_ in ['.LRF', '.lrf', '.MP4', '.mp4', '.MOV', '.mov']:
+			path=filename.replace('.SRT', ext_)
 			if os.path.exists(path):
 				video_path=path
 				break
 		if video_path=='':
 			print(f'\n - Warnning: No videos is found corresponding to drone mission: \n{filename}')
 			continue
-		# convert the video into image s
-		print(f'\n - converting the video: \n{video_path}')
+		# convert the video into images
+		print(f'\n - converting the video: \n  {filename} \n{video_path}')
 		sweeps_path=os.path.join(os.path.dirname(video_path), "sweeps", "DRONE_CAMERA")
-		if not os.path.exists(sweeps_path) or len(glob(os.path.join(sweeps_path,'*')))==0:
-			cmd=f"bin/convert_video_to_Images.sh {video_path} {sweeps_path}"
+		nb_images=len(glob(os.path.join(sweeps_path,'*')))
+		if not os.path.exists(sweeps_path) or nb_images==0:
+			cmd=f"lib/convert_video_to_Images.sh {video_path} {sweeps_path}"
 			utils.create_new_directory(sweeps_path)
 			os.system(cmd)
+		else:
+			print(f'\n\t- the video file [ {video_path} ] is already converted to {nb_images} images')
 
 		# create the mission info
-		configuration={ "vehicle":"drone-M3", "location":"NA",
-			"description": "HAIS- Road inspection using Drone-M3"
-		}
-		info_file_path=os.path.join(os.path.dirname(video_path), "info.json")
-		utils.save_json(configuration, info_file_path)
+		config_file=os.path.join(dataroot, 'info.json')
+
+		configuration=utils.load_json(config_file)
+		if configuration==[]:
+			configuration={ "vehicle":"drone-TDB", 
+											"location":"NA",
+											"description": "HAIS- Road inspection using a Drone"
+										}
+			# sve the data info
+			info_file_path=os.path.join(os.path.dirname(video_path), "info.json")
+			utils.save_json(configuration, info_file_path)
 		# convert drone metadata to json format
 		drone_meta=convert_done_metadata(filename)
 
@@ -137,6 +153,7 @@ def build_Hais_data_strucure(dataroot):
 		utils.create_new_directory(mission_root)
 		save_mission_json(mission_root, drone_meta,configuration)
 
+################################################################################
 def test_drone_data_preparation():
 	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
 	# Build the predefined data structure od HAIS node

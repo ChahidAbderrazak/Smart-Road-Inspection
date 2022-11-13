@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<base target="_top">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<title>HAIS: Highway Automated Inspection System</title>
+	
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		.leaflet-container {
+			height: 400px;
+			width: 600px;
+			max-width: 100%;
+			max-height: 100%;
+		}
+	</style>
+
+	
+</head>
+<body>
+
+<div id="map" style="width: 1800px; height: 1000px;"></div>
+<script>
+	popup_msg = "";
+	const map = L.map('map').setView([51.505, -0.09], 13);
+	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+	}).addTo(map);
+
+	// ---------------------------------------------------------------------------
+	//  adding: marker + cercle+ polygone
+
+	// const marker = L.marker([51.5, -0.09]).addTo(map)
+	// 	.bindPopup('<b>Hello world!</b><br />I am a popup.').openPopup();
+
+	// const circle = L.circle([51.508, -0.11], {
+	// 	color: 'red',
+	// 	fillColor: '#f03',
+	// 	fillOpacity: 0.5,
+	// 	radius: 500
+	// }).addTo(map).bindPopup('I am a circle.');
+
+	// const polygon = L.polygon([
+	// 	[51.509, -0.08],
+	// 	[51.503, -0.06],
+	// 	[51.51, -0.047]
+	// ]).addTo(map).bindPopup('I am a polygon.');
+
+
+	const popup = L.popup()
+		.setLatLng([51.513, -0.09])
+		.setContent('Click on the road to visualise the sensors data')
+		.openOn(map);
+
+	// ---------------------------------------------------------------------------
+	//  Onclick data exploration
+	function onMapClick(e) {
+		var res={'CSI_CAMERA': '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-31/HAIS_DATABASE-high-speed/sweeps/CSI_CAMERA/2022-10-31-17h-19min-39sec__CSI_CAMERA__1.jpg', 'IMU_SENSOR': {'ACCX Angle': 45.00000038242425, 'ACCY Angle': -44.999998087878765, 'GRYX Angle': 0.01333808, 'GYRY Angle': -0.36012816000000003, 'GYRZ Angle': -0.3001068, 'CFangleX Angle': -27.14405011672726, 'HEADING': 45.0, 'tiltCompensatedHeading': 32.154547781250486, 'kalmanX': 12.426650746177863, 'kalmanY': -12.677749304398809}, 'GPS_SENSOR': [43.9310942, -78.8674386, -1]}
+		resObj = JSON.parse(JSON.stringify(res))
+		img_path= resObj.CSI_CAMERA
+		// lidar_path=resObj.LIDAR
+		popup
+			.setLatLng(e.latlng)
+			.setContent(`${e.latlng.toString()} details:  
+			<br>  ${JSON.stringify(resObj.IMU_SENSOR)}
+			<br> <img src=${img_path} alt="picture" width="256" height="256"> 
+			// <br> <div id="button"><a href="tutorial.html">Log In</a></div> 
+			<br> <input type="button" value="Add Students" onclick="window.location.href='page.html';"/>
+			">
+			`) // 
+			.openOn(map);
+	}
+	map.on('click', onMapClick);
+
+		// ---------------------------------------------------------------------------
+		// Fetsch the route coordinates
+		var index = 'node1';
+		function getColor(x) {
+			return x < 0     ?    '#bd0026':
+						x < 1     ?   '#f03b20':
+						x < 2     ?   '#fd8d3c':
+						x < 3     ?   '#fecc5c':
+						'#ffffb2' ;
+		};
+		fetch(`/get_routes/${index}`)
+			.then(function (response) {
+					return response.text();
+			}).then(function (text) {
+					console.log('Retreived road:');
+					console.log(text); 
+					// get the route coordinate and color
+					var latlngs = [];
+					resObj = JSON.parse(text)
+					console.log('lat coordinates:');
+					console.log(resObj.alt); 
+					for (i = 0; i < resObj.alt.length; i++) {
+						latlngs.push([resObj.lon[i], resObj.lat[i] ]);
+					}
+					console.log('Retreived road coordinates:');
+					console.log(latlngs); 
+					var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
+					// zoom the map to the polyline
+					map.fitBounds(polyline.getBounds());
+			});
+
+
+</script>
+
+</body>

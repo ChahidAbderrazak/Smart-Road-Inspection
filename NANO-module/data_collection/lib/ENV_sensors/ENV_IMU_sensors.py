@@ -126,5 +126,5 @@ def get_IMU_data(LCD_visualize=False):
 			break
 			
 if __name__ == "__main__":
-	# get_IMU_data(LCD_visualize=False)
+	get_IMU_data(LCD_visualize=False)
 	get_wheather_sensors_data(LCD_visualize=False)
