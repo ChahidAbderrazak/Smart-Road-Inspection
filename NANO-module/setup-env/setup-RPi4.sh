@@ -1,3 +1,4 @@
+#!/bin/bash
 # 1- install general packages
 
 # 1- install opencv

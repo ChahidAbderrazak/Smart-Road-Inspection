@@ -1,3 +1,4 @@
+#!/bin/bash
 # 1- install general packages
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y update && sudo DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev
