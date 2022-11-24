@@ -11,7 +11,6 @@ $ sudo apt install gpsd-clients
 [more details](https://gpswebshop.com/blogs/tech-support-by-os-linux/how-to-connect-an-usb-gps-receiver-with-a-linux-computer)
 
 
-
 # Run data collection 
 ```
 $ ./run.sh
