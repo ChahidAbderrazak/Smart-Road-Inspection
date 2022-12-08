@@ -17,6 +17,7 @@ gpsd = gps(mode=WATCH_ENABLE|WATCH_NEWSTYLE)
 try:
     print ("Application started!")
     while running:
+		print('\n.######')
         getPositionData(gpsd)
         time.sleep(1.0)
 

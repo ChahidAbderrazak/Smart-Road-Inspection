@@ -5,7 +5,8 @@ import signal
 import threading
 from lib.config_parameters import *
 from lib.utils import *
-from lib import Gps, Imu
+from lib import Imu
+from lib.Gps import *
 from lib.lidar_sensor import *
 # from rplidar import RPLidar
        
@@ -39,8 +40,10 @@ def save_mission_json_file():
         old_dict = load_json(filename)
         combined_dict = old_dict + dict_fr_list
         save_json(combined_dict, filename)
-        print(f"\n - Saving {str(len(combined_dict))}  frames in {filename}" )
         dict_fr_list = []
+        if len(combined_dict)%100==0:
+            print(f"\n - Saving {str(len(combined_dict))}  frames in {filename}" )
+        
 
 def save_image_data():
     global data_root, dict_fr_list, dict_frame, configuration, sensor_frame,scene_count, stop_threads, vid,  car_location
@@ -88,7 +91,7 @@ def save_accelerometer_data():
 
 def save_gps_data():
     global data_root, dict_fr_list, dict_frame, configuration, sensor_frame,scene_count, stop_threads, car_location
-    car_location = Gps.get_gps_data()
+    car_location = get_gps_data()
     #car_location=[lat, lng, alt]
     print(f"\n - car_location ={car_location}")
     
@@ -124,8 +127,9 @@ def init():
     disp=False
     dict_fr_list = []
     # get the car position
-    car_location= Gps.get_gps_data()
-
+    car_location= get_gps_data()
+    #car_location= [-1,-1,-1]
+    
     # define the log file
     data_log = load_json(filename)
     sensor_frame = 1+len(data_log)
@@ -172,22 +176,26 @@ def collect_node_data():
             # CAMERA
             save_image_data()
             
-            ## IMU data
-            save_accelerometer_data()
+            # IMU data
+            try:
+                save_accelerometer_data()
+            except Exception as e:
+                print(f'\n error: cannot read the IMU sensor! Exception: {e}')
             
             # GPS data
             save_gps_data()
             
             # update the mission file 
             save_mission_json_file()
-            
     except KeyboardInterrupt:
+        print(f'\n - Stopping Lidar after KeyboardInterrupt !!')
         lidar_device.stop_lidar() 
         sys.exit(0)
+
     except Exception as e:
         lidar_device.stop_lidar()
-        print(f'\n\n {e}') 
-        sys.exit(0)
+        print(f'\n\n stopping lidar after occured issue! \n Exception: {e}') 
+        # sys.exit(0)
 
 if __name__ == "__main__":
     collect_node_data()

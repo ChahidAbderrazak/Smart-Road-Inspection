@@ -5,7 +5,7 @@ from math import cos, sin, pi, floor
 class RPLidar_Sensor(object):
     '''Class for communicating with RPLidar rangefinder scanners : sampling time = 5seconds'''
 
-    def __init__(self, PORT_NAME,angle_step=1,repeat_lidar=20, FOV=120,visualize=False,max_distance=0, IMIN=0, IMAX=50):
+    def __init__(self, PORT_NAME,angle_step=1,repeat_lidar=100, FOV=120,visualize=False,max_distance=0, IMIN=0, IMAX=50):
         '''Initilize RPLidar object for communicating with the sensor.
 
         Parameters
@@ -54,10 +54,11 @@ class RPLidar_Sensor(object):
                 self.lidar = RPLidar(self.PORT_NAME)
                 info = self.lidar.get_info()
                 health = self.lidar.get_health()
+                print(f' \n - RPlidar has been successfully connected! ')
                 print(info); print(health)
                 break
-            except:
-                 print(f' \n - Warrning: Faild attempts to connect the lidar using  port {self.PORT_NAME} ...')
+            except Exception as e:
+                 print(f' \n - Warrning: Faild attempts to connect the lidar using  port {self.PORT_NAME}\n Exception: {e}')
             cnt+=1
             if cnt>self.repeat_lidar:
                 self.lidar_connected=False
@@ -87,9 +88,11 @@ class RPLidar_Sensor(object):
                 point = (int(x),int(y))   
                 points_list.append(point)
                 if self.visualize:
+                    import pygame
                     normalize_point=(160 + int(x / self.max_distance * 119), 120 + int(y / self.max_distance * 119))
                     self.lcd.set_at(normalize_point, pygame.Color(255, 0, 0))
         if self.visualize:
+            import pygame
             print(f' {len(points_list)} objects -> {points_list}')
             pygame.display.update()
         
@@ -110,8 +113,9 @@ class RPLidar_Sensor(object):
             return lidar_d
 
         except KeyboardInterrupt:
-                self.stop_lidar() 
-                sys.exit(0)
+            print(f'\n - Stopping Lidar after KeyboardInterrupt !!')
+            self.stop_lidar() 
+            sys.exit(0)
 
 
 def test_lidar():

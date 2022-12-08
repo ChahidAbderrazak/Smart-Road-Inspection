@@ -5,7 +5,7 @@ numpy
 
 # RPI senesors packages
 pigpio
-rplidar
+rplidar-roboticia
 pygame
 smbus
 

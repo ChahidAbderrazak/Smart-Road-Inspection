@@ -96,13 +96,22 @@ def DSP_road_inspection(img_path, hole_patch_root, patch_size=(256,256), detect_
     detection_list=[]
     # load the image
     image_RGB = utils.load_image(img_path)
+
+    # deblur the image
+    image_RGB=deblur_image(image_RGB)
+
+    # resize the images
     # size=(128,128)
     # image_RGB=resize_image(image_RGB, size)
+
+    # convert to gray scale
     image_RGB = np.array(image_RGB)
     image = color.rgb2gray(image_RGB)
     # mask= 0*np.empty_like( image)
     # result= 0*np.empty_like( image)
     # print(f'flag: seg_image={np.unique(image_RGB)}')
+
+    # patchs matching
     for patch_path in patch_paths:
         road_hole_RGB = utils.load_image(patch_path)
         # input(f'flag: seg_hole={np.unique(road_hole_RGB)}, size={len(np.unique(road_hole_RGB))}')
@@ -166,6 +175,13 @@ def segmenting_road(img, disp=False):
 
     return road_mask
 
+
+def deblur_image(img):
+    
+    alpha=1
+    deblur_img = alpha*vertical_mb + (1-alpha)*horizonal_mb
+    return deblur_img
+
 def DSP_segmentation(img_path, n_segments=200,compactness=10, mean_th=0.3, std_th=2.0, nb_defect_segment=2, disp=1):
     from skimage.util import img_as_float
     import cv2
@@ -196,15 +212,18 @@ def main_DSP_road_inspection():
     from glob import glob
     import cv2
     # load template-image
-      
     hole_patch_root='bin/holes-patches' 
     # hole_patch_root='bin/holes-patches/test' 
 
-    # load image
     # img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/hole/'#good-roads/'#cracks/'#
-    img_folder='/media/abdo2020/DATA1/running/workspace/OBJ-manually-labeled-obj_HAIS-dash-CAM-dev/data/train' 
+    img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-hais-data/HAIS_DATABASE-medium-speed'# ERC-parking'#   
 
-    for img_path in glob(os.path.join(img_folder,'*'))[2:10]:#
+    # list the existing images
+    img_ext='.jpg'
+    list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
+    list_images.sort()
+    print(f'\n - Found images =  {len(list_images)} images')
+    for img_path in list_images[0:1]:#
         # DSP-based road inspection
         img,img_rgb, matching_score, mask = DSP_road_inspection(img_path, hole_patch_root, detect_th=detect_th, disp=False)
 

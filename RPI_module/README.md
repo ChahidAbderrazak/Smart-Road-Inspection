@@ -11,11 +11,6 @@ $ sudo apt install gpsd-clients
 [more details](https://gpswebshop.com/blogs/tech-support-by-os-linux/how-to-connect-an-usb-gps-receiver-with-a-linux-computer)
 
 
-to vizualise and test the gps : 
-```
-$ sudo apt-get -y install foxtrotgps
-$ foxtrotgps
-```
 
 # Run data collection 
 ```

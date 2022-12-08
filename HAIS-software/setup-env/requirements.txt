@@ -1,8 +1,8 @@
-### General packages
+############ General packages
 tqdm
 glob2
 
-### Firebase packages
+############ Firebase packages
 pyrebase
 requests>=2.26
 numpy
@@ -10,26 +10,29 @@ opencv-python
 scp
 pynput
 
-### Inspection packages
+############ Image deblurring packages
+pylops
+
+############ Inspection packages
 matplotlib
 pandas
 scipy
 scikit-image
 imutils
+pillow
 
-
-### Visualization packages
+############ Visualization packages
 osmnx==1.1.2
 folium
 scikit-learn 
 # geopandas
 
-### Deep learning packages
+############ Deep learning packages
 tqdm
 torch
-pillow
+tensorflow
 
-### Annotation packages
+############ Annotation packages
 # nuscens
 nuscenes-devkit==1.1.9
 #UltimateLabeling
@@ -38,5 +41,5 @@ opencv-contrib-python==4.1.2.30
 paramiko
 # folium
 
-### labelme Annotation packages
+############ labelme Annotation packages
 video-cli

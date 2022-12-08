@@ -148,8 +148,8 @@ IMU.detectIMU()
 if(IMU.BerryIMUversion == 99):
     print(" No BerryIMU found... exiting ")
     print('')
-    sys.exit()
-IMU.initIMU()
+else:
+    IMU.initIMU()
 
 def imuDt():
     global a

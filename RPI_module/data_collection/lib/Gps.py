@@ -15,7 +15,7 @@ def getPositionData(gps):
     if nx['class'] == 'TPV':
         lat = getattr(nx,'lat', "Unknown")
         lng = getattr(nx,'lon', "Unknown")
-        # print ("Node position: lon = " + str(lng) + ", lat = " + str(lat))
+        print ("Node position: lon = " + str(lng) + ", lat = " + str(lat))
         return False, lat, lng, -1 
   
     return True, "Unknown", "Unknown", "Unknown"
