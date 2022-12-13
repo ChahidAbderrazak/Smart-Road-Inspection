@@ -6,7 +6,7 @@ from PyQt5.QtCore import QThread, QMutex
 from ultimatelabeling.styles import Theme
 from .ssh_credentials import SSHCredentials
 from .track_info import TrackInfo
-from ultimatelabeling import utils
+from ultimatelabeling import utils, utils_abderrazak
 # from ultimatelabeling.config import DATA_DIR, self.STATE_PATH
 
 class FrameMode:
@@ -68,10 +68,13 @@ class State:
     def get_file_name(self, frame=None):
         if frame is None:
             frame = self.current_frame
-
-        file_path = self.file_names[frame]
-        base = os.path.basename(file_path)
-        return os.path.splitext(base)[0]
+        try:
+            file_path = self.file_names[frame]
+            base = os.path.basename(file_path)
+            return os.path.splitext(base)[0]
+        except:
+            print('\n warning: empty image folder!!' )
+            return ''
 
     def get_file_names(self):
         for frame in range(self.nb_frames):
@@ -79,7 +82,7 @@ class State:
 
     def find_videos(self):
         print(f'\n - finding videos in the folder: {self.DATA_DIR}')
-        return next(os.walk(self.DATA_DIR))[1]
+        return next(os.walk(self.DATA_DIR))[1] 
 
     def check_raw_videos(self):
         files = glob.glob(os.path.join(self.DATA_DIR, "*.mp4"))
@@ -93,14 +96,19 @@ class State:
                 print("Extracting video {}...".format(base))
                 utils.convert_video_to_frames(file, os.path.join(self.DATA_DIR, filename))
         self.video_list = self.find_videos()
-        
 
     def update_file_names(self):
-        if self.current_video:
-            self.file_names = sorted(glob.glob(os.path.join(self.DATA_DIR, self.current_video, '*.jpg')), key = utils.natural_sort_key)
-            self.file_names.extend( sorted(glob.glob(os.path.join(self.DATA_DIR, self.current_video, '*.png')), key = utils.natural_sort_key) )
 
+        if self.current_video:
+            dirName=os.path.join(self.DATA_DIR, self.current_video)
+            list_images=[]
+            for ext in ['.jpg','.png', '.jpeg']:
+                list_images+=utils_abderrazak.getListOfFiles(dirName, ext=ext) 
+            self.file_names = sorted(list_images, key = utils.natural_sort_key)
+            # self.file_names = sorted(glob.glob(os.path.join(self.DATA_DIR, self.current_video, '*.jpg')), key = utils.natural_sort_key)
+            # self.file_names.extend( sorted(glob.glob(os.path.join(self.DATA_DIR, self.current_video, '*.png')), key = utils.natural_sort_key) )
             self.nb_frames = len(self.file_names)
+            print(f'\n - {self.nb_frames} images found in the folder: {dirName}')
 
     def save_state(self):
         

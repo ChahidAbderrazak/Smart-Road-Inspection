@@ -225,8 +225,15 @@ def prepare_parser():
     parser = ArgumentParser(description='Model training')
     parser.add_argument(
         "--data",
-        metavar="FILE",
+        metavar="DIR",
         help="path to the raw data images",
+        type=str,
+    )
+    parser.add_argument(
+        "--dst",
+        metavar="DIR",
+        default='',
+        help="path to the annotation destination",
         type=str,
     )
     return parser
@@ -235,11 +242,12 @@ if __name__ == '__main__':
     parser = prepare_parser()
     args =  parser.parse_args()
     DATA_DIR =args.data
+    OUTPUT_DIR=args.dst
 
     ## Annotating using folder path
     #DATA_DIR = '/run/user/1003/gvfs/smb-share:server=sesl-cloud.local,share=hais-project/dataset/raw-data/dash-cam/TEST_ROUTE-3'
     
     #trip1-2022-08-05' #test' #
-    run_2D_annotator(DATA_DIR=DATA_DIR)
+    run_2D_annotator(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
 
 

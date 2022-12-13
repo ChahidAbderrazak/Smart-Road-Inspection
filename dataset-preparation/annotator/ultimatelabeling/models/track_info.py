@@ -97,7 +97,7 @@ class TrackInfo:
         df = pd.DataFrame(columns=["frame", "class_id", "track_id", "xc", "yc", "w", "h", "infer", "polygon", "kp"])
 
         for i, file_name in enumerate(file_names):
-            txt_file = os.path.join(OUTPUT_DIR, "{}/{}.txt".format(self.video_name, file_name))
+            txt_file = os.path.join(self.OUTPUT_DIR, "{}/{}.txt".format(self.video_name, file_name))
             if not os.path.exists(txt_file):
                 continue
 
@@ -162,7 +162,6 @@ class TrackInfo:
 
     def write_detections(self, file_name, detections=None):
         txt_file = os.path.join(self.OUTPUT_DIR, "{}/{}.txt".format(self.video_name, file_name))
-
         if detections is None:
             detections = self.detections
 
