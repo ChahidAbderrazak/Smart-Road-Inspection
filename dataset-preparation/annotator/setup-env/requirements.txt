@@ -1,0 +1,22 @@
+######## ultimatelabeling packages
+PyQt5
+opencv-contrib-python==4.1.2.30
+paramiko
+scp
+pynput
+numpy
+tqdm
+torch
+
+######## general packages
+matplotlib
+pandas
+numpy
+scipy
+PyYAML
+glob2
+tqdm
+pillow
+
+######## testing code
+pytest

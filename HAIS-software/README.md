@@ -31,20 +31,29 @@ $ pip install -r setup-env/requirements.txt
 ./run.sh
 ```
 
+# Data labeling
+1. **manual data labeling**
+```
+$ run python
 
+```
+2. **copy existing labels** 
+```
+$ rsync -a --prune-empty-dirs --include '*/' --include '*.xml' --include '*.txt' --include '*.json' --exclude '*' source/ target/
 
+```
 # Project components
-1. Inspection node design
+1. **Inspection node design**
 get the sensors data and shared them on firebase
 ```
 $ run python
 
 ```
-2. Box enclosure
-water-proof eclosure of the electronic devices nad inspectin node.
+2. **Box enclosure**
+water-proof eclosure of the electronic devices nad inspection node.
 
-2. Drone control
-INtegrate bridge inspection in drones with cameras
+2. **Drone control**
+Integrate bridge inspection in drones with cameras
 
 # Acknowledgement
 

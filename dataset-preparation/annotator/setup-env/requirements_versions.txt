@@ -1,0 +1,54 @@
+attrs==22.1.0
+bcrypt==4.0.1
+brotlipy==0.7.0
+certifi==2021.5.30
+cffi @ file:///home/conda/feedstock_root/build_artifacts/cffi_1631636256886/work
+charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1661170624537/work
+colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1655412516417/work
+conda==4.10.3
+conda-package-handling @ file:///home/conda/feedstock_root/build_artifacts/conda-package-handling_1618231398977/work
+cryptography @ file:///home/conda/feedstock_root/build_artifacts/cryptography_1634230300355/work
+cycler==0.11.0
+dataclasses==0.8
+evdev==1.6.0
+glob2==0.7
+idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1663625384323/work
+importlib-metadata==4.8.3
+importlib-resources==5.4.0
+iniconfig==1.1.1
+kiwisolver==1.3.1
+matplotlib==3.3.4
+numpy==1.19.5
+opencv-contrib-python==4.1.2.30
+packaging==21.3
+pandas==1.1.5
+paramiko==2.12.0
+Pillow==8.4.0
+pluggy==1.0.0
+py==1.11.0
+pycosat @ file:///home/conda/feedstock_root/build_artifacts/pycosat_1610094796351/work
+pycparser @ file:///home/conda/feedstock_root/build_artifacts/pycparser_1636257122734/work
+PyNaCl==1.5.0
+pynput==1.7.6
+pyOpenSSL @ file:///home/conda/feedstock_root/build_artifacts/pyopenssl_1663846997386/work
+pyparsing==3.0.9
+PyQt5==5.15.6
+PyQt5-Qt5==5.15.2
+PyQt5-sip==12.9.1
+PySocks @ file:///home/conda/feedstock_root/build_artifacts/pysocks_1610291458349/work
+pytest==7.0.1
+python-dateutil==2.8.2
+python-xlib==0.32
+pytz==2022.6
+PyYAML==6.0
+requests @ file:///home/conda/feedstock_root/build_artifacts/requests_1656534056640/work
+ruamel-yaml-conda @ file:///home/conda/feedstock_root/build_artifacts/ruamel_yaml_1611943345403/work
+scipy==1.5.4
+scp==0.14.4
+six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
+tomli==1.2.3
+torch==1.10.2
+tqdm @ file:///home/conda/feedstock_root/build_artifacts/tqdm_1662214488106/work
+typing_extensions==4.1.1
+urllib3 @ file:///home/conda/feedstock_root/build_artifacts/urllib3_1669259737463/work
+zipp==3.6.0
