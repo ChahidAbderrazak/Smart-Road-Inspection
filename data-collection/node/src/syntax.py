@@ -1,26 +1,11 @@
-from gps import *
-import time
+import ast
+original_String = '{"John" : 01, "Rick" : 02, "Sam" : 03}'
 
-running = True
+# printing original string
+print("The original string is : " + str(original_String))
 
-def getPositionData(gps):
-    nx = gpsd.next()
-    # For a list of all supported classes and fields refer to:
-    # https://gpsd.gitlab.io/gpsd/gpsd_json.html
-    if nx['class'] == 'TPV':
-        latitude = getattr(nx, 'lat', "Unknown")
-        longitude = getattr(nx, 'lon', "Unknown")
-        print ("Your position: lon = " + str(longitude) + ", lat = " + str(latitude))
+# using ast.literal_eval() method
+result = ast.literal_eval(original_String)
 
-gpsd = gps(mode=WATCH_ENABLE|WATCH_NEWSTYLE)
-
-try:
-    print ("Application started!")
-    while running:
-		print('\n.######')
-        getPositionData(gpsd)
-        time.sleep(1.0)
-
-except (KeyboardInterrupt):
-    running = False
-    print ("Applications closed!")
+# print result
+print("The converted dictionary is : " + str(result))

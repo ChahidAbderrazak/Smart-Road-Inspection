@@ -294,5 +294,18 @@ def imuDt():
 
     if tiltCompensatedHeading < 0:
         tiltCompensatedHeading += 360
-
-    return AccXangle, AccYangle, gyroXangle, gyroYangle, gyroZangle, CFangleX, CFangleY, heading, tiltCompensatedHeading, kalmanX, kalmanY
+    # AccXangle, AccYangle, tiltCompensatedHeading:      var position roll, pitch, yaw
+    # gyroXangle, gyroYangle, gyroZangle : X, Y, Z angle calculated from the gyro sensor 
+    # CFangleX, CFangleY : car X and Y angle  
+    # kalmanX, kalmanY : 
+    
+    # define the kenetic metrics
+    roll=CFangleX
+    pitch=CFangleY
+    yaw = tiltCompensatedHeading
+    Acc=[AccXangle, AccYangle, -1]
+    Gyr=[gyroXangle, gyroYangle, gyroZangle]
+    Mag=[MAGx, MAGy, MAGz]
+    kalmanXY=[kalmanX, kalmanY]
+    dict_Kinetic={'angular_position':[roll, pitch, yaw], 'Acc':Acc, 'Gyr':Gyr, 'Mag':Mag,"kalmanXY": kalmanXY}
+    return dict_Kinetic

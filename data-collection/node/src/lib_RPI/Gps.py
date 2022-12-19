@@ -32,7 +32,7 @@ def get_gps_data(repeat_gps=20):
         err, lat, lng, alt = getPositionData(gpsd)
         cnt+=1
         if cnt==repeat_gps:
-            print(f'\n - GPS error 1: the GPS sesor could not get the satelite signal within {repeat_gps} trials.')
+            print(f'\n - GPS error 1: the GPS sensor could not get the satelite signal within {repeat_gps} trials.')
             return []
     return lat, lng, alt
     

@@ -1,0 +1,12 @@
+### Firebase packages
+pyrebase
+requests>=2.26
+numpy
+
+# Nano ROS senesors packages
+roslibpy
+pygame
+pyrebase
+
+### Inspection packages
+matplotlib

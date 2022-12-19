@@ -7,7 +7,7 @@ conda activate $env_name
 
 #######################        SYNTAX      ##########################
 
-python syntax.py
+# python syntax.py
 
 #######################  SENSORS FUNCTIONS ##########################
 # echo && echo && echo  "--> Test sensors functions"
@@ -18,6 +18,11 @@ python syntax.py
 # # Run the DSP Based inspection algorithm 
 # echo && echo && echo  "--> Run the DSP Based inspection algorithm"
 # python  lib/inspection_algorithm.py
+
+
+# Run lane inspection algorithm 
+echo && echo && echo  "--> Run the lane marker inspection algorithm"
+python  lib/inspection_algorithm.py
 
 #######################  VISUALIZATION MODULE ##########################
 
