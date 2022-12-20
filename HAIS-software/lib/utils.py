@@ -133,17 +133,15 @@ def show_image(img, img_title, cmap="cividis", figsize = (8,8)):
 
 def show_two_image(img0, img1, img_title, cmap="cividis", figsize = (8,8)):
     # show image
-    fig = plt.figure(figsize = figsize) # create a 5 x 5 figure 
-    ax1 = fig.add_subplot(121)
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
     ax1.imshow(img0, interpolation='none', cmap=cmap)
     ax1.set_title(img_title)#, fontsize=40)
-    
-    ax2 = fig.add_subplot(122)
+    plt.axis("off")
+
     ax2.imshow(img1, interpolation='none', cmap=cmap)
-    
+    plt.axis("off")
 
     # plt.savefig('./residual_image.jpg')   
-    plt.axis("off")
     plt.show()
 
 def show_input_images(img_input, img_ouput, msg='', cmap='gray'):

@@ -234,16 +234,18 @@ def image_erosion(img, erosion_tol=5):
         img[:,:,k]=np.multiply(img[:,:,k],img_filter)
     return img
 
-def lane_inspection(img_path, bright_th=190, erosion_tol=5):
+def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
     import cv2
     import imutils
     # Load the image
     image = cv2.imread(img_path)
+    n,m, _=image.shape
     max_pixel=np.max(image)
     # print(f'\n - image: size= {image.size} , pixels[{np.min(image)}, {np.max(image)}]')
     lane=image.copy()
     lane[image<bright_th]=0
     # lane[image>=bright_th]=255
+    # image erosion
     lane=image_erosion(lane, erosion_tol=erosion_tol)
 
     resized = imutils.resize(lane, width=300)
@@ -252,7 +254,7 @@ def lane_inspection(img_path, bright_th=190, erosion_tol=5):
     # and threshold it
     gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.threshold(blurred, 110, 255, cv2.THRESH_BINARY)[1]
     # find contours in the thresholded image and initialize the
     # shape detector
     cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
@@ -261,30 +263,73 @@ def lane_inspection(img_path, bright_th=190, erosion_tol=5):
     sd = ShapeDetector()
     
     # loop over the contours
+    cimg = np.zeros_like(lane)
+    nb_cnts=0
     for c in cnts:
         # compute the center of the contour, then detect the name of the
         # shape using only the contour
         M = cv2.moments(c)
-        # input(f'\n - flag: {M}')
+        area = cv2.contourArea(c)
+        # input(f'\n - flag: countour {area}')
+        area_th=0.4*np.max([n,m])
+        if area<area_th:
+            continue
+        else:
+            nb_cnts+=1
+            # print(f'\n - image [{n}X{m}]:  th={area_th}, area {area}')
+
         try:
             cX = int((M["m10"] / M["m00"]) * ratio)
             cY = int((M["m01"] / M["m00"]) * ratio)
+            # box sizze
+            box_sz=cX*cY
             shape = sd.detect(c)
             # multiply the contour (x, y)-coordinates by the resize ratio,
             # then draw the contours and the name of the shape on the image
             c = c.astype("float")
             c *= ratio
             c = c.astype("int")
+            # input(f'\n cX={cX} \n cY={cY} \n shape={shape} \n c={c[0]} ')
+            # fitting the line
+            rows,cols = lane.shape[:2]
+            [vx,vy,x,y] = cv2.fitLine(c, cv2.DIST_L2,0,0.01,0.01)
+            lefty = int((-x*vy/vx) + y)
+            righty = int(((cols-x)*vy/vx)+y)
+            # plot contors and lane
+            cv2.line(lane,(cols-1,righty),(0,lefty),(0,0,255),2)
             cv2.drawContours(lane, [c], -1, (0, 255, 0), 2)
             cv2.putText(lane, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
                 0.5, (255, 255, 255), 2)
+
+            # Create a mask image that contains the contour filled in
+            cv2.drawContours(cimg, [c], -1, color=255, thickness=-1)
+            # Access the image pixels and create a 1D numpy array then add to list
+            pts = np.where(cimg == 255)
+            # utils.show_two_image(image, cimg,img_title=f'lane mark image', figsize = (8,8))
         except Exception as e:
             continue
-    pixels= list(lane[lane>0])
-    n,m, _=lane.shape
-    reflextion_coef=10*(len(pixels)/(n*m))*(np.mean(pixels)/max_pixel)
 
-    utils.show_two_image(image, lane,img_title=f'lane mark image [reflection ={reflextion_coef:.1f}]', figsize = (8,8))
+    # final mask
+    mask = np.zeros_like(lane)
+    mask[cimg == 255]=image[cimg == 255]
+    # lane=np.multiply(cimg,lane)
+    pixels= list(mask[mask>0])
+    reflection_coef=(np.median(pixels)/max_pixel)
+    # print(f'\n - ####\n - reflection_coef= {reflection_coef}')
+    if nb_cnts==0:
+        reflection_coef=0
+    else:
+        reflection_coef*=(20/nb_cnts)
+    # print(f'\n - reflection_coef= {reflection_coef}')
+
+    reflection_coef*=(len(pixels)/(n*m))
+    # print(f'\n - reflection_coef= {reflection_coef}')
+    if disp>0:
+        utils.show_two_image(image, lane, img_title=f'lane mark image [reflection coeficient ={reflection_coef:.2f}]', figsize = (8,8))
+
+    return reflection_coef, image, lane
+
+
 #########################################################################################
 
 
@@ -299,7 +344,7 @@ def main_DSP_segmentation():
     img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/good-roads/'#hole/'#cracks/'#
     for img_path in glob(os.path.join(img_folder,'*')):#[1:2]:#
         # DSP-based road segmentation
-        utils.DSP_segmentation(img_path, n_segments=200,compactness=10, mean_th=0.3, std_th=2.0, nb_defect_segment=2)
+        DSP_segmentation(img_path, n_segments=200,compactness=10, mean_th=0.3, std_th=2.0, nb_defect_segment=2)
 
 def main_DSP_road_inspection():
 
@@ -344,11 +389,37 @@ def main_lane_inspeection():
     bright_th=200
     # load image
     img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-lane-mark' 
-    for img_path in glob(os.path.join(img_folder,'*')):#[1:2]:#
+    img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-12-12/road-and-mark/sweeps/RIGHT_CAMERA'
+    resize=(500,500)
+    out_video='results/lane_marker_results.mp4'
+
+    out = cv2.VideoWriter(out_video, 
+                         cv2.VideoWriter_fourcc(*'MJPG'),
+                         10, resize)
+
+    for k, img_path in enumerate(glob(os.path.join(img_folder,'*'))):#enumerate([1:2]):#
         # DSP-based road segmentation
-        lane_inspection(img_path)#, bright_th=bright_th)
+        reflection_coef, image, lane=lane_inspection(img_path, disp=0)#, bright_th=bright_th)
 
+        # Display the resulting frame
+        image = cv2.resize(image, resize) 
+        n,m, _=image.shape
+        if reflection_coef<0.2:
+            color=(0,0,255)
+        else:
+            color=(255, 255, 255)
+        cv2.putText(image, f'frame{k}:  reflection coef={reflection_coef:.2}', 
+                        (int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
+                            0.8, color, 2)
+        cv2.imshow('Normal Video',image)
 
+        # save the video
+        out.write(image)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Destroy all the windows
+    cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     # syntax()
