@@ -165,9 +165,9 @@ def init(msg):
     global data_root, mission_filename, car_location, sensor_frame, disp
     disp=False
     # display
-    print(f'\n\n###################################')
-    print(f'##   Running HAIS Datalogger [Jetson-{msg}]')
-    print(f'###################################\n\n')
+    print('\n\n###################################')
+    print('##   Running HAIS Datalogger [Jetson-' + msg +']')
+    print('###################################\n\n')
 
     ###################### BUILDING THE DATABASE  ######################
     # create json file

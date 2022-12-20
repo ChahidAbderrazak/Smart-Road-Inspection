@@ -47,7 +47,7 @@ def test_camera():
 			# by frame
 			ret, frame = vid.read()
 			if frame==None:
-				print('\n error in reading the Camera port ['+str(cam_id)+']') 
+				print('\n No Camera is conneted to port ['+str(cam_id)+']') 
 				continue
 
 			print('\n - image size= ', frame.shape)
@@ -57,23 +57,21 @@ def test_camera():
 			cv2.imwrite(filename, frame)
 			# Display the resulting frame
 			cv2.imshow('frame', frame)
-			# After the loop release the cap object
-			vid.release()
-			# Destroy all the windows
-			cv2.destroyAllWindows()
 		except Exception as e:
 			print('\n error with the camera port ['+str(cam_id)+']') ;# print(' Exception:', e)
+	# After the loop release the cap object
+	vid.release()
+	# Destroy all the windows
+	cv2.destroyAllWindows()
 
 def run_RPi_testing():
-	#print('\n\n --- Testing RPi Nano sensors')
-
+	print('\n\n --- Testing RPi Nano sensors')
 	test_camera()
 	# test_lidar()
 
 def run_Jetson_testing():
 	print('\n\n --- Testing Jetson Nano sensors')
 	test_camera()
-	# test_lidar()
 	# print('\n --> testing the IMU sensor')
 	# dict_Kinetic=ENV_IMU_sensors.get_IMU_data(LCD_visualize=False)
 
@@ -85,6 +83,6 @@ def run_Jetson_testing():
 
 
 if __name__ == "__main__":
-	# run_RPi_testing()
-	run_Jetson_testing()
+	run_RPi_testing()
+	# run_Jetson_testing()
     

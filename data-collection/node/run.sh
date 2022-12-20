@@ -1,14 +1,8 @@
 #!/bin/bash
-# free devices
-sudo lsof /dev/ttyUSB0  # Lidar
-cd src
-
 ############# Data collection RPI  ################
+rm -r /home/pi/Desktop/upload
+unzip -o /home/pi/Downloads/node.zip -d  /home/pi/Downloads/
+cd /home/pi/Downloads/src
+
 echo "==> Start the data collection [RPI]"
 python main_RPI.py
-
-# ############# Data collection Jetson  ################
-# echo "==> Start the data collection [Jetson]"
-# python main_jetson.py
-
-

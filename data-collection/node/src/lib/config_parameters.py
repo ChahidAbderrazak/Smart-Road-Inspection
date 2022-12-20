@@ -9,8 +9,10 @@ configuration= {"vehicle": "car1",
 								"node": "Node1", 
 								"location": "Oshawa", 
 								"description": "HAIS- datalogger for road Inspection"}
-data_root = "/home/pi/Desktop/upload" #"/home/hais/Desktop/upload"  									# storage path on local device
+
 fs=5 #1  																				# sampling frequancy in Hz 
+data_root = "/home/pi/Desktop/upload"    				# RPi: storage path on local device
+# data_root = "/home/hais/Desktop/upload"     # Jetson; storage path on local device
 
 # intialize global variables
 dict_frame = {}  																# dictionary of sensor data corresponding to a single frame

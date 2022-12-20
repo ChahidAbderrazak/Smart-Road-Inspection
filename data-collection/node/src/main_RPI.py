@@ -13,6 +13,7 @@ from lib_RPI.lidar_sensor import *
 CSI_cam = cv2.VideoCapture(0)													# Main Camera for the road
 cam_right= cv2.VideoCapture(1)												# RIGHT Camera for the right lane marker
 cam_left= cv2.VideoCapture(2)												# LEFT Camera for the left lane marker
+
 ################################################## SENSOR FUNCTIONS #################################################
 def save_lidar_data():
     global data_root, dict_fr_list, dict_frame, configuration, sensor_frame, scene_count, lidar_device, car_location
@@ -46,30 +47,35 @@ def save_road_camera_data():
     global data_root, dict_fr_list, dict_frame, configuration, car_location, sensor_frame, dict_fr_list, scene_count
 
     # save road camera file locally
-    try:
-        sensor_name="CSI_CAMERA"
-        # capture the cam frame
-        ret, frame=CSI_cam.read()
-        # update mission file
-        dict_frame=add_data_to_pipeline(sensor_frame)
 
-        # save RGB image
-        dict_frame=save_image(sensor_name=sensor_name, frame=frame, sensor_frame=sensor_frame)
-        sensor_frame+=1
-    except Exception as e:
-        print(f'\n error: cannot read the {sensor_name} sensor! \n Exception: {e}')
+    # try:
+    sensor_name="CSI_CAMERA"
+    # capture the cam frame
+    ret, frame=CSI_cam.read()
+    # update mission file
+    dict_frame=add_data_to_pipeline(sensor_frame)
+
+    # save RGB image
+    dict_frame=save_image(sensor_name=sensor_name, frame=frame, sensor_frame=sensor_frame)
+    sensor_frame+=1
+    # except Exception as e:
+    #     print(f'\n error: cannot read the {sensor_name} sensor! \n Exception: {e}')
     
 def save_road_camera_data_par():
     while True:
         save_road_camera_data()
 
 def save_lane_camera_data():
+    global data_root, dict_fr_list, dict_frame, configuration, car_location, sensor_frame, dict_fr_list, scene_count
     # save left-sided camera
     try:
         sensor_name='LEFT_CAMERA' 
         ret, frame=cam_left.read()
+        # update mission file
+        dict_frame=add_data_to_pipeline(sensor_frame)
         # save the sensor frame
-        save_image(sensor_name, frame)
+        dict_frame=save_image(sensor_name=sensor_name, frame=frame, sensor_frame=sensor_frame)
+        sensor_frame+=1
     except Exception as e:
         print(f'\n error: cannot read the {sensor_name} sensor! \n Exception: {e}')
 
@@ -77,8 +83,11 @@ def save_lane_camera_data():
     try:
         sensor_name='RIGHT_CAMERA'
         ret, frame=cam_right.read()
+        # update mission file
+        dict_frame=add_data_to_pipeline(sensor_frame)
         # save the sensor frame
-        save_image(sensor_name, frame)
+        dict_frame=save_image(sensor_name=sensor_name, frame=frame, sensor_frame=sensor_frame)
+        sensor_frame+=1
     except Exception as e:
         print(f'\n error: cannot read the {sensor_name} sensor! \n Exception: {e}')
 
@@ -92,19 +101,24 @@ def save_accelerometer_data():
         IMU_data=Imu.imuDt()
         # update outputs
         sensor_name="IMU_SENSOR"
-        save_IMU_file(sensor_name, IMU_data)
+        # update mission file
+        dict_frame=add_data_to_pipeline(sensor_frame)
+        # save the sensor frame
+        dict_frame=save_IMU_file(sensor_name=sensor_name, IMU_data=IMU_data)
+        sensor_frame+=1
     except Exception as e:
         print(f'\n error: cannot read the IMU sensor! \n Exception: {e}')
         return 
     
 def save_gps_data():
     global data_root, dict_fr_list, dict_frame, configuration, sensor_frame, scene_count, car_location
-    car_location=get_gps_data()
-    #car_location=[lat, lng, alt]
-    
-    # update outputs
     sensor_name="GPS_SENSOR"
-    save_GPS_file(sensor_name, car_location)
+    car_location=get_gps_data()
+    # update mission file
+    dict_frame=add_data_to_pipeline(sensor_frame)
+    # save the sensor frame
+    dict_frame=save_GPS_file(sensor_name=sensor_name, car_location=car_location)
+    sensor_frame+=1
 
 def save_ego_data_par():
     while True:
@@ -134,7 +148,7 @@ def save_mission_json_file():
         save_json(combined_dict, mission_filename)
         dict_fr_list=[]
         if len(combined_dict)%1000==0:
-            print(f"\n - Saving {str(len(combined_dict))}  frames in {filename}" )
+            print(f"\n - Saving {str(len(combined_dict))}  frames in {mission_filename}" )
 
 # def uploading_to_firebase(th=1000000):
 #     cnt=-1
@@ -233,14 +247,14 @@ def collect_node_data_par():
     lidar_thrd=threading.Thread(target=save_lidar_data_par)
     cam0_thrd=threading.Thread(target=save_road_camera_data_par)
     ego_thrd=threading.Thread(target=save_ego_data_par)
-    # lane_cam_thrd=threading.Thread(target=save_lane_camera_data_par)
+    lane_cam_thrd=threading.Thread(target=save_lane_camera_data_par)
     # upload_thrd=threading.Thread(target=uploading_to_firebase)
 
     # Start the treads
     lidar_thrd.start()
     cam0_thrd.start()
     ego_thrd.start()
-    # lane_cam_thrd.start()
+    lane_cam_thrd.start()
     # upload_thrd.start()
 
 if __name__ == "__main__":
