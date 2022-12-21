@@ -38,7 +38,7 @@ python  lib/inspection_algorithm.py
 
 # # Build Nuscene-like database  using HAIS database stucture
 # echo && echo  "--> Build Nuscene-like database  using HAIS database stucture "
-# python lib/HAIS_database.py
+# python lib/hais_database.py
 
 #######################  HAIS SOFTWARE ##########################
 

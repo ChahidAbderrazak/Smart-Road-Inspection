@@ -82,9 +82,9 @@ def resize_image(src_image, size):
     # return the resized image
     return new_image
 
-def DSP_road_inspection(img_path, hole_patch_root, patch_size=(256,256), detect_th=0.75, disp=True):
+def inspection_patch_matching(img_path, hole_patch_root, patch_size=(256,256), detect_th=0.75, disp=True):
     '''
-    DSP-based road inspection
+    DSP-based road inspection using patch matching
     '''
     print(f'\n ===>  DSP-based road inspection')
     import numpy as np
@@ -96,9 +96,6 @@ def DSP_road_inspection(img_path, hole_patch_root, patch_size=(256,256), detect_
     detection_list=[]
     # load the image
     image_RGB = utils.load_image(img_path)
-
-    # deblur the image
-    image_RGB=deblur_image(image_RGB)
 
     # resize the images
     # size=(128,128)
@@ -134,6 +131,139 @@ def DSP_road_inspection(img_path, hole_patch_root, patch_size=(256,256), detect_
     if disp:
         plot_dsp_detection(road_hole_RGB, image, matching_score, mask, detection_list)
     return image, image_RGB, matching_score, mask
+
+def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1, 
+                        blur_size=(5, 5), cnt_th=[110, 255], 
+                        cnt_size_ratio=0.4):
+    import imutils
+    # print(f'\n - image: size= {image.size} , pixels[{np.min(image)}, {np.max(image)}]')
+    image=image0.copy()
+    n,m, _=diff_image.shape
+    lane=diff_image.copy()
+    lane[diff_image<bright_th]=0
+    # lane[diff_image>=bright_th]=255
+    # image erosion
+    lane=image_erosion(lane, erosion_tol=erosion_tol)
+    resized = imutils.resize(lane, width=300)
+    ratio = lane.shape[0] / float(resized.shape[0])
+    # convert the resized image to grayscale, blur it slightly,
+    # and threshold it
+    gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+    if blur_size==(0,0):
+        blurred=gray
+    else:
+        blurred = cv2.GaussianBlur(gray, blur_size, 0)
+
+    thresh = cv2.threshold(blurred, cnt_th[0], cnt_th[1], cv2.THRESH_BINARY)[1]
+    # find contours in the thresholded image and initialize the
+    # shape detector
+    cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+    sd = ShapeDetector()
+    # loop over the contours
+    cimg = np.zeros_like(lane)
+    nb_cnts=0
+    for c in cnts:
+        # compute the center of the contour, then detect the name of the
+        # shape using only the contour
+        M = cv2.moments(c)
+        area = cv2.contourArea(c)
+        # input(f'\n - flag: countour {area}')
+        area_th=cnt_size_ratio*np.max([n,m])
+        if area<area_th:
+            continue
+        else:
+            nb_cnts+=1
+            # print(f'\n - image [{n}X{m}]:  th={area_th}, area {area}')
+
+        try:
+            cX = int((M["m10"] / M["m00"]) * ratio)
+            cY = int((M["m01"] / M["m00"]) * ratio)
+            # box sizze
+            box_sz=cX*cY
+            shape = sd.detect(c)
+            # multiply the contour (x, y)-coordinates by the resize ratio,
+            # then draw the contours and the name of the shape on the image
+            c = c.astype("float")
+            c *= ratio
+            c = c.astype("int")
+            # input(f'\n cX={cX} \n cY={cY} \n shape={shape} \n c={c[0]} ')
+            # fitting the line
+            rows,cols = image.shape[:2]
+            [vx,vy,x,y] = cv2.fitLine(c, cv2.DIST_L2,0,0.01,0.01)
+            lefty = int((-x*vy/vx) + y)
+            righty = int(((cols-x)*vy/vx)+y)
+            # plot contours and line
+            # cv2.line(lane,(cols-1,righty),(0,lefty),(0,0,255),2)
+            cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+            # cv2.putText(lane, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+                # 0.5, (255, 255, 255), 2)
+
+            # Create a mask image that contains the contour filled in
+            cv2.drawContours(cimg, [c], -1, color=255, thickness=-1)
+            # Access the image pixels and create a 1D numpy array then add to list
+            pts = np.where(cimg == 255)
+            # utils.show_two_image(image, cimg,img_title=f'lane mark image', figsize = (8,8))
+        except Exception as e:
+            continue
+
+    # final mask
+    mask = np.zeros_like(image)
+    mask[cimg == 255]=image[cimg == 255]
+    mask[image>150]=0
+    return lane, mask, nb_cnts
+
+def inspection_diff(img_path, bright_th=0, erosion_tol=1, 
+                    cnt_th=[5, 300], disp=True):
+    '''
+    DSP-based road inspection using image derivatives
+    '''
+    def image_diff(I):
+        import cv2
+        import numpy as np
+        import matplotlib.pyplot as plt
+        from scipy import ndimage
+
+        I =  I.astype(np.float64)
+
+        #-Derivative x
+        Kx = -1*np.array([[-1,0,1]])
+        Fx = ndimage.convolve(I, Kx)
+
+        #-Derivative y
+        Ky = -1*np.array([[-1],[0],[1]])
+        Fy = ndimage.convolve(I, Ky)
+
+        #--Magnitute
+        magnitude = np.sqrt(Fx**2 + Fy**2) # G
+
+        return magnitude
+
+    print(f'\n ===>  DSP-based road inspection')
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from glob import glob
+    from skimage import color
+    from skimage.color import rgb2gray, gray2rgb
+
+    # load the image
+    image_RGB = utils.load_image(img_path)
+    # convert to gray scale
+    diff_RGB=image_RGB.copy()
+    # image difference
+    for k in range(3):
+        diff_RGB[:,:,k]=image_diff(image_RGB[:,:,k])
+
+    # image thresholding
+    _, damage_mask, nb_cnts = residual_thresholding(image_RGB, diff_RGB, bright_th=bright_th, 
+                                                   erosion_tol=erosion_tol, blur_size=(0, 0), cnt_th=cnt_th, 
+                                                    cnt_size_ratio=0)
+    print(f'\n - nb countours =  {nb_cnts}')
+    damage_img=cv2.addWeighted(image_RGB, 1, damage_mask, 0.8, 0)
+    # utils.show_two_image(image_RGB, damage_img, img_title=f'Road inspection[{nb_cnts} damages]', figsize = (8,8))
+
+    return damage_img, damage_mask
 
 def segmenting_road(img, disp=False):
     from skimage import data, segmentation, color
@@ -174,23 +304,6 @@ def segmenting_road(img, disp=False):
         plt.show()
 
     return road_mask
-
-
-def deblur_image(img):
-    
-    alpha=1
-    deblur_img = alpha*vertical_mb + (1-alpha)*horizonal_mb
-    return deblur_img
-
-def DSP_segmentation(img_path, n_segments=200,compactness=10, mean_th=0.3, std_th=2.0, nb_defect_segment=2, disp=1):
-    from skimage.util import img_as_float
-    import cv2
-    # Load the image
-    img =img_as_float( cv2.imread(img_path))
-    # DSP-base segmentation 
-    dsp_color_mask1 = utils.segment_image_DSP(img, n_segments=n_segments, compactness=compactness, mean_th=mean_th, \
-        std_th=std_th, nb_defect_segment=nb_defect_segment, disp=disp)
-
 
 ##### LANE Reflection ceoficient
 import cv2
@@ -234,14 +347,12 @@ def image_erosion(img, erosion_tol=5):
         img[:,:,k]=np.multiply(img[:,:,k],img_filter)
     return img
 
-def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
-    import cv2
+def image_thresholding(image, bright_th=160, erosion_tol=1, 
+                        blur_size=(5, 5), cnt_th=[110, 255], 
+                        cnt_size_ratio=0.4):
     import imutils
-    # Load the image
-    image = cv2.imread(img_path)
-    n,m, _=image.shape
-    max_pixel=np.max(image)
     # print(f'\n - image: size= {image.size} , pixels[{np.min(image)}, {np.max(image)}]')
+    n,m, _=image.shape
     lane=image.copy()
     lane[image<bright_th]=0
     # lane[image>=bright_th]=255
@@ -253,15 +364,18 @@ def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
     # convert the resized image to grayscale, blur it slightly,
     # and threshold it
     gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    thresh = cv2.threshold(blurred, 110, 255, cv2.THRESH_BINARY)[1]
+    if blur_size==(0,0):
+        blurred=gray
+    else:
+        blurred = cv2.GaussianBlur(gray, blur_size, 0)
+
+    thresh = cv2.threshold(blurred, cnt_th[0], cnt_th[1], cv2.THRESH_BINARY)[1]
     # find contours in the thresholded image and initialize the
     # shape detector
     cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
     sd = ShapeDetector()
-    
     # loop over the contours
     cimg = np.zeros_like(lane)
     nb_cnts=0
@@ -271,7 +385,7 @@ def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
         M = cv2.moments(c)
         area = cv2.contourArea(c)
         # input(f'\n - flag: countour {area}')
-        area_th=0.4*np.max([n,m])
+        area_th=cnt_size_ratio*np.max([n,m])
         if area<area_th:
             continue
         else:
@@ -295,8 +409,8 @@ def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
             [vx,vy,x,y] = cv2.fitLine(c, cv2.DIST_L2,0,0.01,0.01)
             lefty = int((-x*vy/vx) + y)
             righty = int(((cols-x)*vy/vx)+y)
-            # plot contors and lane
-            cv2.line(lane,(cols-1,righty),(0,lefty),(0,0,255),2)
+            # plot contours and line
+            # cv2.line(lane,(cols-1,righty),(0,lefty),(0,0,255),2)
             cv2.drawContours(lane, [c], -1, (0, 255, 0), 2)
             cv2.putText(lane, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
                 0.5, (255, 255, 255), 2)
@@ -310,10 +424,21 @@ def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
             continue
 
     # final mask
-    mask = np.zeros_like(lane)
-    mask[cimg == 255]=image[cimg == 255]
+    lane_mrk_mask = np.zeros_like(lane)
+    lane_mrk_mask[cimg == 255]=image[cimg == 255]
+    return lane, lane_mrk_mask, nb_cnts
+
+def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
+    import cv2
+    # Load the image
+    image = cv2.imread(img_path)
+    n,m, _=image.shape
+    max_pixel=np.max(image)
+
+    # image thresholding
+    lane, lane_mrk_mask, nb_cnts = image_thresholding(image=image, bright_th=bright_th, erosion_tol=erosion_tol)
     # lane=np.multiply(cimg,lane)
-    pixels= list(mask[mask>0])
+    pixels= list(lane_mrk_mask[lane_mrk_mask>0])
     reflection_coef=(np.median(pixels)/max_pixel)
     # print(f'\n - ####\n - reflection_coef= {reflection_coef}')
     if nb_cnts==0:
@@ -327,81 +452,119 @@ def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
     if disp>0:
         utils.show_two_image(image, lane, img_title=f'lane mark image [reflection coeficient ={reflection_coef:.2f}]', figsize = (8,8))
 
-    return reflection_coef, image, lane
-
+    return reflection_coef, image, lane, lane_mrk_mask
 
 #########################################################################################
-
-
 def main_DSP_segmentation():
-    
-    from glob import glob
     import cv2
-    # load template-image
-    templ_img_path='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/hole/download (2).jpeg'
-    road_hole = utils.load_image(templ_img_path)[80:120, 80:120]
-    # load image
+    from glob import glob
+    from skimage.util import img_as_float
+
     img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/good-roads/'#hole/'#cracks/'#
+    n_segments=200
+    compactness=10
+    mean_th=0.3
+    std_th=2.0
+    nb_defect_segment=2
+
     for img_path in glob(os.path.join(img_folder,'*')):#[1:2]:#
-        # DSP-based road segmentation
-        DSP_segmentation(img_path, n_segments=200,compactness=10, mean_th=0.3, std_th=2.0, nb_defect_segment=2)
+        # Load the image
+        img =img_as_float( cv2.imread(img_path))
+        # DSP-base segmentation 
+        dsp_color_mask1 = utils.segment_image_DSP(img, n_segments=n_segments, compactness=compactness, mean_th=mean_th, \
+        std_th=std_th, nb_defect_segment=nb_defect_segment, disp=1)
 
-def main_DSP_road_inspection():
-
-    detect_th=0.95
+def main_patch_matching_inspection():
+	
+    detect_th=0.75
     factor=1
     Min_box_area=100
     from glob import glob
     import cv2
     # load template-image
     hole_patch_root='bin/holes-patches' 
-    # hole_patch_root='bin/holes-patches/test' 
+    hole_patch_root='bin/holes-patches/test' 
 
     # img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/hole/'#good-roads/'#cracks/'#
     img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-hais-data/HAIS_DATABASE-medium-speed'# ERC-parking'#   
 
     # list the existing images
     img_ext='.jpg'
+    out_video='results/dsp_road_inspection_results.mp4'
+    resize=(500,500)
+
+    # inspect the images
+    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, resize)
     list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
     list_images.sort()
     print(f'\n - Found images =  {len(list_images)} images')
-    for img_path in list_images[0:1]:#
-        # DSP-based road inspection
-        img,img_rgb, matching_score, mask = DSP_road_inspection(img_path, hole_patch_root, detect_th=detect_th, disp=False)
-
-        # try:
-        #     img,img_rgb, matching_score, mask = DSP_road_inspection(img_path, hole_patch_root, detect_th=detect_th, disp=False)
-        # except:
-        #     continue
-        # # road mask extraction
-        # road_mask=segmenting_road(img_rgb, disp=True)
-        # # mask=np.multiply(road_mask,mask)
+    for img_path in list_images[5:]:#:#
+        # patch matching based inspection
+        img,img_rgb, matching_score, mask = inspection_patch_matching(img_path, hole_patch_root, detect_th=detect_th, disp=False)
 
         # creat ebouding boxes
         img_box, mask_out, nb_box, label_boxes, img_class= utils.create_object_boxes(img, mask, Min_box_area=Min_box_area, factor=factor, disp=0)
-        # display the detection 
-        utils.display_detection(img_rgb, img_box, matching_score, mask_out, msg='Bouding boxes', cmap="gray")
+        # # display the detection 
+        # utils.display_detection(img_rgb, img_box, matching_score, mask_out, msg='Bouding boxes', cmap="gray")
 
-def main_lane_inspeection():
-    
+        # Display the diagnosed frame
+        cv2.imshow('DSP-based road inspection',img_box)
+        # save the video
+        # print(f'\n - images size=  {img_box.shape} ')
+        img_box = cv2.resize(img_box, resize) 
+        img_box = np.uint8(255 * img_box)
+        out.write(img_box)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    print('end')
+
+def main_image_variation_inspection():
+
+    detect_th=0.75
+    factor=1
+    Min_box_area=100
     from glob import glob
     import cv2
-    bright_th=200
+    img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-hais-data/HAIS_DATABASE-medium-speed'# ERC-parking'#   
+    # list the existing images
+    img_ext='.jpg'
+    out_video='results/dsp_variation_road_inspection_results.mp4'
+    resize=(500,500)
+    # inspect the images
+    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, resize)
+    list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
+    list_images.sort()
+    print(f'\n - Found images =  {len(list_images)} images')
+    for img_path in list_images[5:]:#:#
+        # variation based inspection
+        damage_img, mask = inspection_diff(img_path, disp=True)
+ 
+        # Display the diagnosed frame
+        cv2.imshow('DSP-based road inspection',damage_img)
+        # save the video
+        # print(f'\n - images size=  {img_box.shape} ')
+        damage_img = cv2.resize(damage_img, resize) 
+        # img_box = np.uint8(255 * img_box)
+        out.write(damage_img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    print('end')
+
+def main_lanemarker_inspection():
+    from glob import glob
+    import cv2
     # load image
     img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-lane-mark' 
     img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-12-12/road-and-mark/sweeps/RIGHT_CAMERA'
     resize=(500,500)
     out_video='results/lane_marker_results.mp4'
-
-    out = cv2.VideoWriter(out_video, 
-                         cv2.VideoWriter_fourcc(*'MJPG'),
-                         10, resize)
-
+    # inspect the images
+    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'),10, resize)
     for k, img_path in enumerate(glob(os.path.join(img_folder,'*'))):#enumerate([1:2]):#
         # DSP-based road segmentation
-        reflection_coef, image, lane=lane_inspection(img_path, disp=0)#, bright_th=bright_th)
+        reflection_coef, image, lane, lane_mrk_mask=lane_inspection(img_path, disp=0)#, bright_th=bright_th)
 
-        # Display the resulting frame
+        # Display the diagnosed frame
         image = cv2.resize(image, resize) 
         n,m, _=image.shape
         if reflection_coef<0.2:
@@ -409,29 +572,29 @@ def main_lane_inspeection():
         else:
             color=(255, 255, 255)
         cv2.putText(image, f'frame{k}:  reflection coef={reflection_coef:.2}', 
-                        (int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.8, color, 2)
-        cv2.imshow('Normal Video',image)
+                    (int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
+                     0.8, color, 2)
+        cv2.imshow('Road reflection coeficient',image)
 
         # save the video
         out.write(image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
     # Destroy all the windows
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     # syntax()
 
-    # # DSP-based road inspection
-    # main_DSP_road_inspection()
+    ### DSP-based road inspection
+    # main_patch_matching_inspection()
+    main_image_variation_inspection()
 
     # # DSP-based road segmentation
     # main_DSP_segmentation()
 
-    # road lane inspection
-    main_lane_inspeection()
+    # # road lane inspection
+    # main_lanemarker_inspection()
 
 
 

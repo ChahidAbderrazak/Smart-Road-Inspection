@@ -715,6 +715,7 @@ class HAIS_node:
 if __name__ == '__main__':
 	# raw-data folder
 	dataroot="/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak"
+	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-12-12/road-and-mark'
 	version='v1.0'
 	# Load the collected inspection sensors dataset
 	raw_data = HAIS_node(dataroot=dataroot, version=version)

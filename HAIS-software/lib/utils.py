@@ -133,7 +133,7 @@ def show_image(img, img_title, cmap="cividis", figsize = (8,8)):
 
 def show_two_image(img0, img1, img_title, cmap="cividis", figsize = (8,8)):
     # show image
-    fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True, figsize=figsize)
     ax1.imshow(img0, interpolation='none', cmap=cmap)
     ax1.set_title(img_title)#, fontsize=40)
     plt.axis("off")
@@ -141,6 +141,21 @@ def show_two_image(img0, img1, img_title, cmap="cividis", figsize = (8,8)):
     ax2.imshow(img1, interpolation='none', cmap=cmap)
     plt.axis("off")
 
+    # plt.savefig('./residual_image.jpg')   
+    plt.show()
+
+def show_road_damage_image(img, mask, img_title, cmap="cividis", figsize = (8,8)):
+    # show image
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True, figsize=figsize)
+    ax1.imshow(img, interpolation='none', cmap=cmap)
+    ax1.set_title(img_title)#, fontsize=40)
+    plt.axis("off")
+
+    ax2.imshow(img, interpolation='none', origin='lower')
+        # ax2.imshow(segments_slic_refined, cmap='hot', interpolation='none', alpha=0.4)
+    ax2.imshow(mask, cmap='Reds', interpolation='none', alpha=0.6)
+    ax2.set_title(img_title)
+    plt.axis("off")
     # plt.savefig('./residual_image.jpg')   
     plt.show()
 

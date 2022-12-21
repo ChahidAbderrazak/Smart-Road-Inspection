@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 from ultimatelabeling.views import *
 from ultimatelabeling.models import State, StateListener, KeyboardNotifier
 from ultimatelabeling.styles import Theme
-
+from ultimatelabeling import  utils_abderrazak
 
 def load_json(filename):
 	try:
@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         self.OUTPUT_DIR=OUTPUT_DIR
         self.setWindowIcon(QtGui.QIcon('files/icon.png'))
         self.setWindowTitle("HAIS Annotator using UltimateLabeler toolbox")
-    
+         
         self.central_widget = CentralWidget(DATA_DIR=self.DATA_DIR, OUTPUT_DIR=self.OUTPUT_DIR)
         self.central_widget.setFocusPolicy(Qt.StrongFocus)
         self.setFocusProxy(self.central_widget)
@@ -221,6 +221,25 @@ def remove_old_state(DATA_DIR):
     if os.path.exists(state_filename):
         os.remove(state_filename) 
 
+def find_sweep_folder(DATA_DIR):
+    import numpy as np
+    list_images=[]
+    for ext in ['.jpg','.png', '.jpeg']:
+        list_images+=utils_abderrazak.getListOfFiles(DATA_DIR,path_pattern='sweeps', ext=ext) 
+    data_folders=np.unique([os.path.dirname(os.path.dirname(path)) for path in list_images ])
+    
+    # slect the data root folder
+    if len(data_folders)==0:
+        return DATA_DIR
+    elif len(data_folders)==1:
+        return os.path.join(data_folders[0],'')
+    else:
+        msg='\n'
+        for k, folder in enumerate(data_folders):
+            msg+=f'- \n {k} ) {folder}'
+        idx=input(f'\n List of sweep folders: {msg} \n\n please select the data sweep folder to annotate:')    
+        return os.path.join(data_folders[idx],'')
+
 def prepare_parser():
     parser = ArgumentParser(description='Model training')
     parser.add_argument(
@@ -244,9 +263,10 @@ if __name__ == '__main__':
     DATA_DIR =args.data
     OUTPUT_DIR=args.dst
 
+    # find the sweep foder
+    DATA_DIR = find_sweep_folder(DATA_DIR)
     ## Annotating using folder path
     #DATA_DIR = '/run/user/1003/gvfs/smb-share:server=sesl-cloud.local,share=hais-project/dataset/raw-data/dash-cam/TEST_ROUTE-3'
-    
     #trip1-2022-08-05' #test' #
     run_2D_annotator(DATA_DIR=DATA_DIR, OUTPUT_DIR=OUTPUT_DIR)
 
