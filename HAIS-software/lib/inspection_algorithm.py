@@ -132,9 +132,28 @@ def inspection_patch_matching(img_path, hole_patch_root, patch_size=(256,256), d
         plot_dsp_detection(road_hole_RGB, image, matching_score, mask, detection_list)
     return image, image_RGB, matching_score, mask
 
+def evalute_damage(damage_mask_rgb, th=[0.08, 0.11]):
+    from skimage.color import rgb2gray
+    # evaluate the damage
+    damage_mask= rgb2gray(damage_mask_rgb)
+    zeros= len(np.where(damage_mask==0)[0])
+    deep= len(np.where(damage_mask<=th[0])[0])-zeros
+    small = len(np.where(damage_mask>th[1])[0])  
+    all_pixels= len(np.where(damage_mask>0)[0])
+    medium = all_pixels - deep -small
+    # print(f'\n - zeros={zeros}, \n - small={small}, \n - deep={deep}, \n - all_pixels={all_pixels} \n - medium={medium}') 
+    deep=int(100*deep/all_pixels)
+    medium=int(100*medium/all_pixels)
+    small=int(100*small/all_pixels)
+
+    dict={  'deep':f'{deep}%',
+            'medium':f'{medium}%',
+            'small':f'{small}%'}
+    return dict
+
 def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1, 
                         blur_size=(5, 5), cnt_th=[110, 255], 
-                        cnt_size_ratio=0.4):
+                        cnt_size_ratio=0.4, disp=True):
     import imutils
     # print(f'\n - image: size= {image.size} , pixels[{np.min(image)}, {np.max(image)}]')
     image=image0.copy()
@@ -199,23 +218,28 @@ def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1,
             cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
             # cv2.putText(lane, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
                 # 0.5, (255, 255, 255), 2)
-
             # Create a mask image that contains the contour filled in
             cv2.drawContours(cimg, [c], -1, color=255, thickness=-1)
-            # Access the image pixels and create a 1D numpy array then add to list
-            pts = np.where(cimg == 255)
-            # utils.show_two_image(image, cimg,img_title=f'lane mark image', figsize = (8,8))
+           
+            
         except Exception as e:
             continue
 
     # final mask
     mask = np.zeros_like(image)
-    mask[cimg == 255]=image[cimg == 255]
+    mask[cimg==255]=image[cimg==255]
     mask[image>150]=0
-    return lane, mask, nb_cnts
+    # evaluate the damage
+    dict_damage=evalute_damage(mask)
+    print(f' damage report={dict_damage}')
+    # display
+    if disp:
+        utils.show_two_image(image, mask,img_title=f'road damages', figsize = (8,8))
+
+    return lane, mask, nb_cnts, dict_damage
 
 def inspection_diff(img_path, bright_th=0, erosion_tol=1, 
-                    cnt_th=[5, 300], disp=True):
+                    cnt_th=[5, 300], cnt_size_ratio=0.1, disp=True):
     '''
     DSP-based road inspection using image derivatives
     '''
@@ -256,14 +280,14 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
         diff_RGB[:,:,k]=image_diff(image_RGB[:,:,k])
 
     # image thresholding
-    _, damage_mask, nb_cnts = residual_thresholding(image_RGB, diff_RGB, bright_th=bright_th, 
+    _, damage_mask, nb_cnts, dict_damage = residual_thresholding(image_RGB, diff_RGB, bright_th=bright_th, 
                                                    erosion_tol=erosion_tol, blur_size=(0, 0), cnt_th=cnt_th, 
-                                                    cnt_size_ratio=0)
-    print(f'\n - nb countours =  {nb_cnts}')
+                                                    cnt_size_ratio=cnt_size_ratio, disp=disp)
+    print(f'\n - nb damagges =  {nb_cnts}')
     damage_img=cv2.addWeighted(image_RGB, 1, damage_mask, 0.8, 0)
     # utils.show_two_image(image_RGB, damage_img, img_title=f'Road inspection[{nb_cnts} damages]', figsize = (8,8))
 
-    return damage_img, damage_mask
+    return damage_img, damage_mask, nb_cnts, dict_damage
 
 def segmenting_road(img, disp=False):
     from skimage import data, segmentation, color
@@ -450,7 +474,7 @@ def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
     reflection_coef*=(len(pixels)/(n*m))
     # print(f'\n - reflection_coef= {reflection_coef}')
     if disp>0:
-        utils.show_two_image(image, lane, img_title=f'lane mark image [reflection coeficient ={reflection_coef:.2f}]', figsize = (8,8))
+        utils.show_two_image(image, lane, img_title=f'lane mark image [reflection coefficient ={reflection_coef:.2f}]', figsize = (8,8))
 
     return reflection_coef, image, lane, lane_mrk_mask
 
@@ -529,7 +553,7 @@ def main_image_variation_inspection():
     # list the existing images
     img_ext='.jpg'
     out_video='results/dsp_variation_road_inspection_results.mp4'
-    resize=(500,500)
+    resize=(800,500)
     # inspect the images
     out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, resize)
     list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
@@ -537,14 +561,21 @@ def main_image_variation_inspection():
     print(f'\n - Found images =  {len(list_images)} images')
     for img_path in list_images[5:]:#:#
         # variation based inspection
-        damage_img, mask = inspection_diff(img_path, disp=True)
- 
+        damage_img, mask, nb_damages, dict_damage = inspection_diff(img_path, disp=False)
+        
+        # Display the diagnosed frame
+        damage_img = cv2.resize(damage_img, resize) 
+        n,m, _=damage_img.shape
+        if nb_damages>1:
+            color=(0,0,0)
+            cv2.putText(damage_img, f'{nb_damages} damages: {str(dict_damage)}', 
+            (int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
+                0.6, color, 2)
+     
         # Display the diagnosed frame
         cv2.imshow('DSP-based road inspection',damage_img)
         # save the video
-        # print(f'\n - images size=  {img_box.shape} ')
-        damage_img = cv2.resize(damage_img, resize) 
-        # img_box = np.uint8(255 * img_box)
+        # damage_img = np.uint8(255 * damage_img)
         out.write(damage_img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -574,7 +605,7 @@ def main_lanemarker_inspection():
         cv2.putText(image, f'frame{k}:  reflection coef={reflection_coef:.2}', 
                     (int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
                      0.8, color, 2)
-        cv2.imshow('Road reflection coeficient',image)
+        cv2.imshow('Road reflection coefficient',image)
 
         # save the video
         out.write(image)
