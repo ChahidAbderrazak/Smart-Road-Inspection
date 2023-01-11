@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+
+	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+		integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+		integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
+	</script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+		integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous">
+	</script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.2/socket.io.js'></script>
+	<script src="https://www.gstatic.com/firebasejs/8.2.10/firebase.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-storage.js"></script>
+	<link rel="stylesheet" type="text/css" href="./style.css">
+	<title>Ground Station</title>
+</head>
+<style>
+
+</style>
+
+<body style="background-color: #d8d8d8;">
+	<div class="container">
+		<br>
+		<h2><strong>Ground Station</strong></h2>
+		<br><br><br>
+		<div class="container" style="width:80%;">
+			<div class="card mb-3">
+				<div class="card-header">
+					<h3>Live Stream</h3>
+				</div>
+				<div class="card-body">
+					<video id="vid" autoplay></video>
+				</div>
+			</div>
+
+			<div class="card mb-3">
+				<div class="card-header">
+					<h3>Drone Readings</h3>
+				</div>
+				<div class="card-body">
+					<table class="table table-bordered">
+						<thead>
+							<tr>
+								<th scope="col">Received From Drone</th>
+								<th scope="col">Value</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<th scope="row">MISSION STATUS</th>
+								<td><span id="missionstatusli" style="color: red;"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">Hall Value</th>
+								<td><span id="hallvalueli"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">LED Action</th>
+								<td><span id="ledaction"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">WiFi Strength</th>
+								<td><span id="wifistrength"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">Pitch</th>
+								<td><span id="pitchli"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">Roll</th>
+								<td><span id="rollli"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">Yaw</th>
+								<td><span id="yawli"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">Battery</th>
+								<td><span id="batteryli"></span>%</td>
+							</tr>
+							<tr>
+								<th scope="row">altitude</th>
+								<td><span id="altitudeli"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">Position</th>
+								<td>x: <span id="posx"></span><br> y: <span id="posy"></span><br> z: <span
+										id="posz"></span></td>
+							</tr>
+						</tbody>
+					</table>
+					<table class="table table-bordered">
+						<thead>
+							<tr>
+								<th scope="col">Sent To Drone</th>
+								<th scope="col">Value</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<th scope="row">DRONE STATUS<br>(ARMED=1000 DISARMED=1900)</th>
+								<td><span id="dronestatusli" style="color: red;"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">PPM (Y T R P A/D)</th>
+								<td><span id="ppmli"></span></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div class="card mb-3">
+				<div class="card-header">
+					<h3>Send Command to ESP32</h3>
+				</div>
+				<div class="card-body">
+					<button id="armdisarmbtn" class="btn btn-danger">DISARMED</button>
+					<button id="btnOn" class="btn btn-outline-primary">Turn On LED</button>
+					<button id="btnOff" class="btn btn-outline-primary">Turn Off LED</button>
+					<br><br>
+
+					<!-- yaw input -->
+					<div class="slidecontainer">
+						<input type="range" min="1000" max="2000" value="1000" step="10" class="slider" id="yawinput">
+						<p>YAW: <span id="yawinputval"></span></p>
+					</div>
+					<!-- throttle input -->
+					<div class="slidecontainer">
+						<input type="range" min="1000" max="2000" value="1000" step="10" class="slider" id="throttleinput">
+						<p>THROTTLE: <span id="throttleinputval"></span></p>
+					</div>
+					<!-- roll input -->
+					<div class="slidecontainer">
+						<input type="range" min="1000" max="2000" value="1000" step="10" class="slider" id="rollinput">
+						<p>ROLL: <span id="rollinputval"></span></p>
+					</div>
+					<!-- pitch input -->
+					<div class="slidecontainer">
+						<input type="range" min="1000" max="2000" value="1000" step="10" class="slider" id="pitchinput">
+						<p>PITCH: <span id="pitchinputval"></span></p>
+					</div>
+				</div>
+			</div>
+			
+			<div class="card mb-2">
+				<div class="card-header">
+					<h3>Display Files from FireBase</h3>
+				</div>
+				<div class="card-body">
+					<div id="disp"></div>
+					<!-- <button id="retrieveimg" class="btn btn-outline-primary">Get Image</button> -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		var firebaseConfig = {
+			apiKey: "AIzaSyAOoDI0ZMIci3jOol9yLKMP7f0x5RQ34l0",
+			authDomain: "recipeappdjango.firebaseapp.com",
+			databaseURL: "https://recipeappdjango-default-rtdb.firebaseio.com",
+			projectId: "recipeappdjango",
+			storageBucket: "recipeappdjango.appspot.com",
+			messagingSenderId: "439529214802",
+			appId: "1:439529214802:web:ea4881111111ddd53e608b",
+			measurementId: "G-V2SBLFY749"
+		};
+		// Initialize Firebase
+		firebase.initializeApp(firebaseConfig);
+
+		// GLOBAL VARIABLES
+		var dronestatus = 1000,
+			ppm = '',
+			ppmarr = [],
+			// socket = io.connect('https://8c25c54f7c05.ngrok.io');
+			socket = io.connect('http://100.26.17.230:3000');
+
+		//-----------SOCKET CONNECTION-----------
+		socket.on('data', (datas) => {
+			signalstrength = datas.context.signalstrength;
+
+			ppm = datas.context.ppm;
+			ppmarr = ppm.split(' ');
+			dronestatus = ppmarr[4];
+
+			pitch = datas.context.pitch;
+			roll = datas.context.roll;
+			yaw = datas.context.yaw;
+
+			document.getElementById('ppmli').innerHTML = ppm;
+			document.getElementById('dronestatusli').innerHTML = dronestatus;
+			document.getElementById('hallvalueli').innerHTML = datas.context.hallValue;
+			document.getElementById('ledaction').innerHTML = datas.context.ledaction;
+			document.getElementById('wifistrength').innerHTML = signalstrength + ' dBm = ' + signalConvert(
+				signalstrength);
+			document.getElementById('batteryli').innerHTML = datas.context.status;
+			document.getElementById('missionstatusli').innerHTML = datas.context.missionstatus;
+
+			document.getElementById('pitchli').innerHTML = pitch;
+			document.getElementById('rollli').innerHTML = roll;
+			document.getElementById('yawli').innerHTML = yaw;
+			// document.getElementById('pitchinput').placeholder = pitch;
+			// document.getElementById('rollinput').placeholder = roll;
+			// document.getElementById('yawinput').placeholder = yaw;
+
+			document.getElementById('altitudeli').innerHTML = datas.context.altitude;
+			document.getElementById('posx').innerHTML = datas.context.x;
+			document.getElementById('posy').innerHTML = datas.context.y;
+			document.getElementById('posz').innerHTML = datas.context.z;
+
+			var clicked = false;
+			document.getElementById('armdisarmbtn').onclick = function () {
+				if (!clicked && (dronestatus == 1000)) {
+					clicked = true;
+					ppmarr[4] = 1900;
+					var ppmarrtostring = ppmarr.join(' ');
+					firebase.database().ref('drone_one/RC/ppm').set(ppmarrtostring);
+					document.getElementById('armdisarmbtn').innerHTML = 'ARMED';
+					document.getElementById('armdisarmbtn').className = 'btn btn-success';
+				} else {
+					clicked = false;
+					ppmarr[4] = 1000;
+					ppmarrtostring = ppmarr.join(' ');
+					firebase.database().ref('drone_one/RC/ppm').set(ppmarrtostring);
+					document.getElementById('armdisarmbtn').innerHTML = 'DISARMED';
+					document.getElementById('armdisarmbtn').className = 'btn btn-danger';
+				}
+			}
+
+			// YAW RANGE SLIDER
+			var yawslider = document.getElementById("yawinput");
+			var yawoutput = document.getElementById("yawinputval");
+			yawslider.value = ppmarr[0];
+			yawoutput.innerHTML = yawslider.value;
+
+			yawslider.oninput = function() {
+				ppmarr[0] = this.value;
+				yawoutput.innerHTML = ppmarr[0];
+				var ppmarrtostring = ppmarr.join(' ');
+				firebase.database().ref('drone_one/RC/ppm').set(ppmarrtostring);
+			}
+
+			// THROTTLE RANGE SLIDER
+			var throttleslider = document.getElementById("throttleinput");
+			var throttleoutput = document.getElementById("throttleinputval");
+			throttleslider.value = ppmarr[1];
+			throttleoutput.innerHTML = throttleslider.value;
+
+			throttleslider.oninput = function() {
+				ppmarr[1] = this.value;
+				throttleoutput.innerHTML = ppmarr[1];
+				var ppmarrtostring = ppmarr.join(' ');
+				firebase.database().ref('drone_one/RC/ppm').set(ppmarrtostring);
+			}
+
+			// ROLL RANGE SLIDER
+			var rollslider = document.getElementById("rollinput");
+			var rolloutput = document.getElementById("rollinputval");
+			rollslider.value = ppmarr[2];
+			rolloutput.innerHTML = rollslider.value;
+
+			rollslider.oninput = function() {
+				ppmarr[2] = this.value;
+				rolloutput.innerHTML = ppmarr[2];
+				var ppmarrtostring = ppmarr.join(' ');
+				firebase.database().ref('drone_one/RC/ppm').set(ppmarrtostring);
+			}
+
+			// PITCH RANGE SLIDER
+			var pitchslider = document.getElementById("pitchinput");
+			var pitchoutput = document.getElementById("pitchinputval");
+			pitchslider.value = ppmarr[3];
+			pitchoutput.innerHTML = pitchslider.value;
+
+			pitchslider.oninput = function() {
+				ppmarr[3] = this.value;
+				pitchoutput.innerHTML = ppmarr[3];
+				var ppmarrtostring = ppmarr.join(' ');
+				firebase.database().ref('drone_one/RC/ppm').set(ppmarrtostring);
+			}
+
+		});
+		
+
+		//--------------------------FUNCTIONS--------------------------
+
+		document.getElementById('btnOn').onclick = function () {
+			firebase.database().ref('drone_one/status/ledaction').set('turn-on');
+		}
+		document.getElementById('btnOff').onclick = function () {
+			firebase.database().ref('drone_one/status/ledaction').set('turn-off');
+		}
+
+		// var clicked = false;
+		// document.getElementById('armdisarmbtn').onclick = function () {
+		// 	if (!clicked && (dronestatus == 0)) {
+		// 		clicked = true;
+		// 		firebase.database().ref('drone_one/RC/ppm4').set(1);
+		// 	} else {
+		// 		clicked = false;
+		// 		firebase.database().ref('drone_one/RC/ppm4').set(0);
+		// 	}
+		// }
+
+		function signalConvert(signalstrength) {
+			if (signalstrength >= -30)
+				return 'Amazing';
+			else if (signalstrength < -30 && signalstrength >= -67)
+				return 'Very Good';
+			else if (signalstrength < -67 && signalstrength >= -70)
+				return 'Good';
+			else if (signalstrength < -70 && signalstrength >= -80)
+				return 'Okay';
+			else if (signalstrength < -80 && signalstrength > -90)
+				return 'Not Good';
+			else if (signalstrength <= -90)
+				return 'Unusable';
+		}
+
+		// LIVE VIDEO FUNCTIONALITY
+		// navigator.mediaDevices.getUserMedia({
+		// 	video: {
+		// 		width: 500,
+		// 		height: 500
+		// 	}
+		// })
+		// .then(stream => {
+		// 	document.getElementById('vid').srcObject = stream;
+		// });
+
+		
+
+		
+
+
+
+		//----------------GET IMAGES FROM FIREBASE-STORAGE-----------------
+		var storageRef = firebase.storage().ref("mission/000/images/"); // Tutorial1_Quiz1_100593657_70077.jpg
+		storageRef.listAll().then(function (result) {
+			result.items.forEach(function (imageRef) {
+				imageRef.getDownloadURL().then(function (url) {
+					// let dispurl = document.createElement('img');
+					// dispurl.src = url;
+					// dispurl.style.width = '200px';
+					// dispurl.style.height = '200px';
+					// document.getElementById('disp').append(dispurl);
+				});
+			});
+		}).catch(function (error) {
+
+		});
+	</script>
+</body>
+
+</html>
