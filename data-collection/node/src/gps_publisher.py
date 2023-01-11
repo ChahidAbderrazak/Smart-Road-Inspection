@@ -13,7 +13,6 @@ from lib_jetson import SIM7600X_4G_sensors
 
 ###### ROS packages
 import rospy
-from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
 
 str_msg= String()
@@ -29,7 +28,9 @@ while not rospy.is_shutdown():
         dict_GPS=SIM7600X_4G_sensors.get_gps_data()
         str_msg.data= str(dict_GPS)
         str_pub.publish(str_msg)
-        rospy.loginfo("GPS data "+ str(idx) + " : " + str(dict_GPS))
+        #print('updating the position')
+        if idx%100==1:
+            rospy.loginfo("GPS data "+ str(idx) + " : " + str(dict_GPS))
         # rate.sleep()
 
     except Exception as e:

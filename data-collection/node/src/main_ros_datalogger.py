@@ -26,9 +26,8 @@ from cv_bridge import CvBridge
 import time
 import numpy as np
 
-# devces intilization
+# devices intilization
 bridge = CvBridge()  ## 3D camera 
-CSI_cam = cv2.VideoCapture(1)	
 
 def save_road_camera_data():
     global data_root, dict_fr_list, dict_frame, configuration, car_location, sensor_frame, dict_fr_list, scene_count
@@ -45,7 +44,6 @@ def save_road_camera_data():
         sensor_frame+=1
     except Exception as e:
         print('\n error: cannot save the '+  sensor_name+ ' sensor!') ; print(' Exception:', e)
-    
 
 def color_callback(color_msg_data):
     global color_img
@@ -65,19 +63,44 @@ def save_3D_camera_data(color_img, depth_img):
         # update mission file
         dict_frame=add_data_to_pipeline(sensor_frame)
         sensor_frame+=1
-        # save RGB image
-        dict_frame=save_image(sensor_name=sensor_name, frame=color_img, sensor_frame=sensor_frame)
-        sensor_frame+=1
-        # save depth image
-        dict_frame=add_data_to_pipeline(sensor_frame)
-        dict_frame=save_image(sensor_name=sensor_name, frame=depth_img, sensor_frame=sensor_frame, tag='depth')
+        # save RGB/depth images
+        dict_frame=save_3D_image(sensor_name=sensor_name, rgb_frame=color_img, depth_frame=depth_img, sensor_frame=sensor_frame)
         sensor_frame+=1
     except Exception as e:
         print('\n error: cannot save the published ROS data [ sensor= '+  sensor_name+ '] !') ; print(' Exception:', e)
 
+def save_camera_data(frame, sensor_name):
+    global data_root, dict_fr_list, dict_frame, configuration, car_location, sensor_frame, dict_fr_list, scene_count
+    try:
+        # update mission file
+        dict_frame=add_data_to_pipeline(sensor_frame)
+        sensor_frame+=1
+        # save RGB image
+        dict_frame=save_image(sensor_name=sensor_name, frame=frame, sensor_frame=sensor_frame)
+        sensor_frame+=1
+    except Exception as e:
+        print('\n error: cannot save the camera data [ sensor= '+  sensor_name+ '] !') ; print(' Exception:', e)
+
+def right_camera_callback(image_msg):
+    global right_cam_frame
+    right_cam_frame = bridge.imgmsg_to_cv2(image_msg, desired_encoding='passthrough')
+
+def left_camera_callback(image_msg): 
+    global left_cam_frame   
+    left_cam_frame = bridge.imgmsg_to_cv2(image_msg, desired_encoding='passthrough')
+
+def save_lane_marker_data():
+    global right_cam_frame, left_cam_frame
+    # save right-sided camera
+    save_camera_data(right_cam_frame, sensor_name='RIGHT_CAMERA')
+
+    # save left-sided camera
+    save_camera_data(left_cam_frame, sensor_name='LEFT_CAMERA')
+
 def scan_callback(scan_msg_data):
     global scan_ranges
     scan_ranges= np.asarray(scan_msg_data.ranges) #save scan as np array
+
 
 def save_lidar_data(scan_ranges):
     global car_location, sensor_frame, dict_fr_list
@@ -133,7 +156,6 @@ def save_imu_data():
 
     except Exception as e:
         print('\n error: waiting for the '+  sensor_name+ ' sensor RoS data!') ; print(' Exception:', e)
-
 
 def add_data_to_pipeline(frame):
     global car_location, sensor_frame, dict_frame, dict_fr_list, scene_count
@@ -199,8 +221,16 @@ init('Serial')
 ###-----------------------  3D CAMERA  -----------------------###
 color_sub= rospy.Subscriber("/camera/color/image_raw", Image, color_callback)
 depth_sub= rospy.Subscriber("/camera/depth/image_rect_raw", Image, depth_callback)
+color_img, depth_img=None, None
+###---------------------  SIDE camera   ----------------------###
+cam_right_sub= rospy.Subscriber("/cam_right", Image, right_camera_callback)
+right_cam_frame=None
+cam_left_sub= rospy.Subscriber("/cam_left", Image, left_camera_callback)
+left_cam_frame=None
+
 ###-------------------------  LIDAR   ------------------------###
 scan_sub= rospy.Subscriber("/scan", LaserScan, scan_callback)
+scan_ranges=None
 ###-------------------------  GPS   ------------------------###
 gps_sub= rospy.Subscriber("/gps_location", String, gps_callback)
 dict_GPS={}
@@ -211,34 +241,32 @@ IMU_dict={}
 # intialization 
 node_name= "HAIS_Jetson_node_"+configuration["vehicle"]
 rospy.init_node(node_name) 
-# rate_slow = rospy.Rate(fs)
-
+rate  = rospy.Rate(1) # HZ
 
 #Start listening for subscriptions without halting the program flow
 t1= threading.Thread(target=rospy.spin) #thread for rospy.spin
 t1.start() 
 rospy.loginfo('HAIS Node [' +node_name + '] Initialized '+str(fs)+'Hz')
+idx=0
 while not rospy.is_shutdown():
-    try:
-        # save CSI camera sensor
-        save_road_camera_data()
+    idx+=1
+    # save 3D camera: RGB/depth images
+    save_3D_camera_data(color_img, depth_img)
+    
+    # save side cameras: RGB
+    save_lane_marker_data()
 
-        # # save LIDAR sensor
-        # save_lidar_data(scan_ranges)
+    # save LIDAR sensor
+    save_lidar_data(scan_ranges)
 
-        # save 3D camea: RGB/depth images
-        save_3D_camera_data(color_img, depth_img)
+    # save IMU sensor
+    save_imu_data()
 
-        # save IMU sensor
-        save_imu_data()
-
-        # save mission file
-        save_mission_json_file()
-
-    except Exception as e:
-        print('\n error in the datalogger loop!') ; print(' Exception:', e)
-    except KeyboardInterrupt:
-        break
+    # save mission file
+    save_mission_json_file()
+    if idx%100==0:
+        print('\n\n')
+        rospy.loginfo("Node collected: "+ str(idx) + " samples ")
 
 ## terminate thread
 t1.join()

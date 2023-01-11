@@ -1,18 +1,23 @@
 import sys, os
 import cv2
+fs=5 #1  																				# sampling frequancy in Hz 
 ###### Sensor
 PORT_NAME='/dev/ttyUSB0'													# Lidar ports
 scan_type='normal' #'express'# 										# lidar scanning mode
-
 ###### intialize paramaters
-configuration= {"vehicle": "car1", 
+if os.path.exists('/home/pi'):
+	configuration= {"vehicle": "car1", 
 								"node": "Node1", 
 								"location": "Oshawa", 
-								"description": "HAIS- datalogger for road Inspection"}
+								"description": "HAIS-Pi datalogger for road Inspection"}
+	data_root = "/home/pi/Desktop/upload"    				# RPi: storage path on local device
 
-fs=5 #1  																				# sampling frequancy in Hz 
-data_root = "/home/pi/Desktop/upload"    				# RPi: storage path on local device
-# data_root = "/home/hais/Desktop/upload"     # Jetson; storage path on local device
+else:
+	configuration= {"vehicle": "car1", 
+								"node": "Node2", 
+								"location": "Oshawa", 
+								"description": "HAIS-Jetson datalogger for road Inspection"}
+	data_root = "/home/hais/Desktop/upload"     # Jetson; storage path on local device
 
 # intialize global variables
 dict_frame = {}  																# dictionary of sensor data corresponding to a single frame

@@ -121,7 +121,6 @@ def save_lidar_file(sensor_name, lidar_d ,sensor_frame):
     
     return dict_frame
 
-
 def save_image(sensor_name, frame, sensor_frame, tag=''):
     global  data_root, dict_fr_list, dict_frame, configuration, scene_count, car_location
     filename_strg=str(get_sensor_filename(sensor_name, sensor_frame, tag=tag)) + ".jpg"
@@ -140,8 +139,32 @@ def save_image(sensor_name, frame, sensor_frame, tag=''):
     dict_frame["filename"]=str(os.path.join("sweeps", sensor_name, filename_strg))
     dict_frame["meta_data"]=""
 
-    
     return dict_frame
+
+
+def save_3D_image(sensor_name, rgb_frame, depth_frame, sensor_frame):
+    global  data_root, dict_fr_list, dict_frame, configuration, scene_count, car_location
+    RGB_filename_strg=str(get_sensor_filename(sensor_name, sensor_frame)) + ".jpg"
+    depth_filename_strg=RGB_filename_strg[:-4] + "_depth.png"
+    # save the RGB  frame in an image file
+    image_save_path=os.path.join(data_root, "sweeps", sensor_name, RGB_filename_strg)
+    cv2.imwrite(image_save_path, rgb_frame)
+    # save the RGB  frame in an image file
+    image_save_path=os.path.join(data_root, "sweeps", sensor_name, depth_filename_strg)
+    cv2.imwrite(image_save_path, depth_frame)
+    
+    dict_frame["description"]=configuration["description"]
+    dict_frame["timestamp"]=get_timestamp()
+    dict_frame["scene"]=scene_count
+    dict_frame["sensor_name"]=sensor_name
+    dict_frame["position"]={"Translation": car_location, 
+                            "Rotation": []}
+    dict_frame["calibration"]={"Translation": [], "Rotation": [], "Camera_intrinsic": ""}
+    dict_frame["fileformat"]="jpg"
+    dict_frame["filename"]=str(os.path.join("sweeps", sensor_name, RGB_filename_strg))
+    dict_frame["meta_data"]={"depth_filename":depth_filename_strg}
+    return dict_frame
+
 
 def save_IMU_file(sensor_name, IMU_data):
     global data_root, dict_fr_list, dict_frame, configuration, sensor_frame, scene_count, car_location

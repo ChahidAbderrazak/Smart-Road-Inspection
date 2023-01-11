@@ -34,7 +34,8 @@ while not rospy.is_shutdown():
         # print('\n - car_location =', car_location)
         str_msg.data= str(IMU_dict)
         str_pub.publish(str_msg)
-        rospy.loginfo("IMU data "+ str(idx) + " : " + str(IMU_dict))
+        if idx%100==1:
+            rospy.loginfo("IMU data "+ str(idx) + " : " + str(IMU_dict))
         # rate.sleep()
 
     except Exception as e:

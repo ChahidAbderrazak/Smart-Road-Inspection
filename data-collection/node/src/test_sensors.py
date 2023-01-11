@@ -83,6 +83,6 @@ def run_Jetson_testing():
 
 
 if __name__ == "__main__":
-	run_RPi_testing()
-	# run_Jetson_testing()
+	# run_RPi_testing()
+	run_Jetson_testing()
     

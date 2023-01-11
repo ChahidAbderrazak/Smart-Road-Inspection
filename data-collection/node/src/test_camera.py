@@ -22,11 +22,13 @@ def test_camera(cam_id):
 			cv2.imwrite(filename, frame)
 			# Display the resulting frame
 			cv2.imshow('Camera'+str(), frame)
-
 		except Exception as e:
 			print('\n error: camera port ['+str(cam_id)+']') ; print(' Exception:', e)
+			break
 		except KeyboardInterrupt:
 			break
+		
+		break
 				
 	# After the loop release the cap object
 	vid.release()
@@ -36,5 +38,5 @@ def test_camera(cam_id):
 if __name__ == "__main__":
 	print('\n\n --- Testing sensors')
 	for k in range(10):
-		test_camera(0)
+		test_camera(k)
     
