@@ -413,10 +413,10 @@ def run_HAIS_visualizer():
 	DMAX = 100
 	IMIN = 0
 	IMAX = 50
-	root= "/media/abdo2020/DATA1/Datasets/data-demo/demo-hais-data"
-	root= '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak'
-	root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-12/Oshawa-roads/mission2'
-	root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
+	root= "/media/abdo2020/DATA1/data/raw-data/data-demo/demo-hais-data"
+	root= '/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak'
+	root='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads/mission2'
+	root='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
 	lidar = HAIS_visualizer(root, disp=False)
 	# vizualise lidar image
 	print('Visualize collected the mission ')

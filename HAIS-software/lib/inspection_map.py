@@ -219,7 +219,21 @@ def draw_polylines(points, metrics, map, horison=2):
 			line.add_to(map)
 			i+=horison-1
 
-
+def open_map_html(path):
+	import webbrowser
+	import os
+	path=path.replace('\\', '/')
+	if path[0]=='.' or path[0]=='/':
+		path=path[1:]
+	abs_path='/'+path
+	for suffix in [os.getcwd()]:
+		path_=os.path.join(suffix, path)
+		if os.path.exists(path_):
+			abs_path=path_
+			break
+	# 1st method how to open html files in chrome using
+	filename='file:///'+ abs_path
+	webbrowser.open_new_tab(filename)
 
 def visualize_map(inspection_dict, map_path):
 	"""	
@@ -240,26 +254,34 @@ def visualize_map(inspection_dict, map_path):
 	myMap.save(map_path)
 	print(f'\n - The inspectin map is saved in : \n {map_path}')
 
+	# open the map in the browser
+	open_map_html(map_path)
+
 
 def visualize_list_roads_ispection():
-	map_path='bin/maps/inspection_map.html'
-	data_foler='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-12/Oshawa-roads/mission2'
-	data_foler='/home/abdo2020/Desktop/HAIS_DATABASE/GPS-calibration'
-	data_foler='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge'
-	data_foler='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/road'
-	data_foler='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/road/ERC-parking'
-
+	maps_root='bin/maps'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads/mission2'
+	dataroot='/home/abdo2020/Desktop/HAIS_DATABASE/GPS-calibration'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road/ERC-parking'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2'
+	
 	# load HAIS data
-	inspect_filename=os.path.join(data_foler, 'inspection_dic.json')
+	inspect_filename=os.path.join(dataroot, 'inspection_dic.json')
 	if not os.path.exists(inspect_filename):
-		print(f'\n Error: inspection file not foud: \n {inspect_filename}')
-	inspection_dict=utils.load_json(inspect_filename)[0]
-
-	# # demo
-	# inspection_dict={'lon': [-78.8977848, -78.8980208, -78.8992868, -78.8996731, -78.8961326, -78.892592, -78.8914548, -78.8877212, -78.8840948], 
-	# 								'lat': [43.9455189, 43.9461678, 43.9462296, 43.9472801, 43.9480217, 43.9454571, 43.9446692, 43.9420581, 43.9395551],
-	# 								'metric': [ 0, 0, 2, 2, 2, 1, 4, 4, 2]
-	# 								}
+		print(f'\n Error: inspection file not found: \n {inspect_filename}')
+		sys.exit(0)
+	else:
+		print(f'\n Loading the inspection_dict: \n {inspect_filename}')
+		inspection_dict=utils.load_json(inspect_filename)
+		try:
+			inspection_dict=inspection_dict[0]
+		except:
+			print('The inspection_dict is loaded successsfully!!')
+	# define the html map filepath
+	map_path=os.path.join(maps_root, 'inspection_map' +os.path.basename(dataroot)+'.html')
 
 	# save the visualized map
 	visualize_map(inspection_dict, map_path=map_path)

@@ -28,6 +28,7 @@ class HAIS_node:
 			:param verbose: Whether to print status messages during load.
 			:param map_resolution: Resolution of maps (meters).
 			"""
+			print(f'\n - Preparing the database: \n{dataroot}')
 			self.dataroot=dataroot
 			self.version = version
 			self.verbose = verbose
@@ -65,7 +66,7 @@ class HAIS_node:
 			return config
 
 		except Exception as e:
-			print(f'\n\n {e}')
+			print(f'\n\n Exception: {e}')
 			sys.exit(0)
 
 	def display(self):
@@ -224,10 +225,18 @@ class HAIS_node:
 			print(f'\n - Building the database stucture of scene ({scene_name}) [{scene_id+1}/{len(scene_files_list)}]. Please wait ...')
 			sample_filename = self.get_table_path('sample') 
 			prev_sample=''
+			err_sample=0
 			for id, sample in enumerate(tqdm(scene_data)):
 				if sample!={}:
 					# get sensor data
-					sensor_name= sample["sensor_name"] 
+					
+					try:
+						sensor_name= sample["sensor_name"] 
+					except Exception as e:
+						err_sample+=1
+						print(f' flag: sample = {sample} \n - err_sample={err_sample}')
+						continue
+
 					try:
 						current_scene=sample["scene"]
 					except:
@@ -457,20 +466,23 @@ class HAIS_node:
 			return 0
 
 	def load_json(self, filename):
+		
 		try:
 			if os.path.exists(filename):
 				import json
-				f = open(filename,)
-				data = json.load(f)
+				with open(filename) as f:
+					data = json.load(f)
 				f.close()
+				return data
+
 			else:
-				data=[]
-			return data
+				msg =f'\n\n Error: The JSON file <{filename}> cannot be cound!!'
+				raise Exception(msg)
+
 		except:
 			msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!'
 			print(msg)
-			# raise ValueError(msg)
-			return []
+			raise ValueError(msg)
 
 	def save_json(self, json_string, filename):
 		import json
@@ -714,8 +726,13 @@ class HAIS_node:
 
 if __name__ == '__main__':
 	# raw-data folder
-	dataroot="/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak"
-	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-12-12/road-and-mark'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads/mission2'
+	dataroot='/home/abdo2020/Desktop/HAIS_DATABASE/GPS-calibration'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road/ERC-parking'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2'
 	version='v1.0'
 	# Load the collected inspection sensors dataset
 	raw_data = HAIS_node(dataroot=dataroot, version=version)

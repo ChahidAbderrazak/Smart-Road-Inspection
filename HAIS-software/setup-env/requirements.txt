@@ -1,6 +1,9 @@
-############ General packages
+
+
+############ Deep learning packages
 tqdm
-glob2
+torch
+tensorflow
 
 ############ Firebase packages
 pyrebase
@@ -27,10 +30,6 @@ folium
 scikit-learn 
 # geopandas
 
-############ Deep learning packages
-tqdm
-torch
-tensorflow
 
 ############ Annotation packages
 # nuscens
@@ -40,6 +39,10 @@ PyQt5
 opencv-contrib-python==4.1.2.30
 paramiko
 # folium
+
+############ General packages
+tqdm
+glob2
 
 ############ labelme Annotation packages
 video-cli

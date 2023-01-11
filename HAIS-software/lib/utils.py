@@ -805,6 +805,9 @@ def refine_segment_statistic(segments, img, mean_th=0.2, std_th=0.2, nb_defect_s
 def segment_image_DSP(img0, n_segments=1000, compactness=10, mean_th=0.3, std_th=0.9, nb_defect_segment=3, disp=1):
     # Adaptive Equalization
     from skimage import exposure
+    from skimage.util import img_as_float
+    print(f' imgsize={img0.shape}')
+    img0=img_as_float(img0)
     img = exposure.equalize_adapthist(img0, clip_limit=0.03)
     # Convert the image to grayscale
     img_gray=rgb2gray(img)

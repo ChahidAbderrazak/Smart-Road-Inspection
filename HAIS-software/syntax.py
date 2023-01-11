@@ -1,11 +1,11 @@
 from lib import hais_database, dji_drone, utils
-
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pylops
 
 def deblur_gray_image(imblur):
+	import pylops
 	Nz, Nx = imblur.shape
 
 	# Blurring guassian operator
@@ -133,17 +133,44 @@ def visualize_deblured_images(imblur, imdeblur, imdeblurfista, imdeblurtv, imdeb
 	plt.show()
 
 
+def load_json(filename):
+	try:
+		if os.path.exists(filename):
+			import json
+			with open(filename) as f:
+				data = json.load(f)
+			f.close()
+			return data
+
+		else:
+			msg =f'\n\n Error: The JSON file <{filename}> cannot be cound!!'
+			raise Exception(msg)
+			
+	except:
+		msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!'
+		print(msg)
+		raise ValueError(msg)
+
+
+
 if __name__ == '__main__':
-	# img_path='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/good-roads/road1.jpeg'
-	img_path='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-31/HAIS_DATABASE-medium-speed/sweeps/CSI_CAMERA/2022-10-31-17h-32min-16sec__CSI_CAMERA__1.jpg'
-	imblur =  utils.load_image(img_path)
+	# # img_path='/media/abdo2020/DATA1/data/raw-dataset/data-demo/road-conditions-google/good-roads/road1.jpeg'
+	# img_path='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed/sweeps/CSI_CAMERA/2022-10-31-17h-32min-16sec__CSI_CAMERA__1.jpg'
+	# imblur =  utils.load_image(img_path)
 
-	imdeblur=imdeblurfista=imdeblurtv=imdeblurtv1=np.empty_like(imblur)
-	#  Debluring
-	print(f'\n\n ==> Image debluring ... \n ')
+	# imdeblur=imdeblurfista=imdeblurtv=imdeblurtv1=np.empty_like(imblur)
+	# #  Debluring
+	# print(f'\n\n ==> Image debluring ... \n ')
 
-	for k in range(3):
-		print('.')
-		im =  imblur[:,:,k]
-		imdeblur[:,:,k], imdeblurfista[:,:,k], imdeblurtv[:,:,k], imdeblurtv1[:,:,k]=deblur_gray_image(im)
-	visualize_deblured_images(imblur, imdeblur, imdeblurfista, imdeblurtv, imdeblurtv1)
+	# for k in range(3):
+	# 	print('.')
+	# 	im =  imblur[:,:,k]
+	# 	imdeblur[:,:,k], imdeblurfista[:,:,k], imdeblurtv[:,:,k], imdeblurtv1[:,:,k]=deblur_gray_image(im)
+	# visualize_deblured_images(imblur, imdeblur, imdeblurfista, imdeblurtv, imdeblurtv1)
+
+	# load Json
+	filename='/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2/info.json'
+	dict_=load_json(filename)
+	print(dict_)
+
+

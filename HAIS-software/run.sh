@@ -20,15 +20,9 @@ conda activate $env_name
 # python  lib/inspection_algorithm.py
 
 
-# Run lane inspection algorithm 
-echo && echo && echo  "--> Run the lane marker inspection algorithm"
-python  lib/inspection_algorithm.py
-
-#######################  VISUALIZATION MODULE ##########################
-
-# # Road conditions map
-# echo && echo && echo  "--> Visualize the road conditions map"
-# python lib/inspection_map.py
+# # Run lane inspection algorithm 
+# echo && echo && echo  "--> Run the lane marker inspection algorithm"
+# python  lib/inspection_algorithm.py
 
 #######################  DATABASE MODULE ##########################
 
@@ -36,9 +30,17 @@ python  lib/inspection_algorithm.py
 # echo && echo && echo  "--> Build and generate structures HAIS-database "
 # python lib/dji_drone.py
 
-# # Build Nuscene-like database  using HAIS database stucture
-# echo && echo  "--> Build Nuscene-like database  using HAIS database stucture "
-# python lib/hais_database.py
+# Build Nuscene-like database  using HAIS database stucture
+echo && echo  "--> Build Nuscene-like database  using HAIS database stucture "
+python lib/hais_database.py
+
+
+######################  VISUALIZATION MODULE ##########################
+
+# Road conditions map
+echo && echo && echo  "--> Visualize the road conditions map"
+python lib/inspection_map.py
+
 
 #######################  HAIS SOFTWARE ##########################
 

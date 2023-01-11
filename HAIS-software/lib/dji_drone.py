@@ -155,7 +155,7 @@ def build_Hais_data_strucure(dataroot, ext='.SRT'):
 
 ################################################################################
 def test_drone_data_preparation():
-	dataroot='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
 	# Build the predefined data structure od HAIS node
 	build_Hais_data_strucure(dataroot)
 

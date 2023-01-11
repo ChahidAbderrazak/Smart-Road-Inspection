@@ -53,13 +53,13 @@ def  explore_database(dataroot, version):
 if __name__ == "__main__":
 
 	version='v1.0'
-	root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node'
-	# root='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-drone'
+	root='/media/abdo2020/DATA1/data/raw-dataset/hais-node'
+	# root='/media/abdo2020/DATA1/data/raw-dataset/hais-drone'
 	list_datasets=utils.getListOfFiles(root, ext='json', path_pattern='info.json') 
 	dataroot_list=[ os.path.dirname(path) for path in list_datasets if 'medium-speed' not in path]
 	dataroot_list.sort()
 	input(f' --> list of {len(dataroot_list)} available collected data : \n{dataroot_list}')
-	# dataroot_list=['/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-10-11/UOIT-parking-Abderrazak']
+	# dataroot_list=['/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak']
 	for dataroot in dataroot_list:
 		# Create the  HAIS database
 		create_HAIS_database(dataroot=dataroot, version=version)

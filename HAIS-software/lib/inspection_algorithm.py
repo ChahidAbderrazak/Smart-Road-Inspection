@@ -135,12 +135,19 @@ def inspection_patch_matching(img_path, hole_patch_root, patch_size=(256,256), d
 def evalute_damage(damage_mask_rgb, th=[0.08, 0.11]):
     from skimage.color import rgb2gray
     # evaluate the damage
-    damage_mask= rgb2gray(damage_mask_rgb)
+    damage_mask= rgb2gray(damage_mask_rgb)    
     zeros= len(np.where(damage_mask==0)[0])
+
+    n,m=damage_mask.shape
+    all_pixels= len(np.where(damage_mask>0)[0])
+    all_pixels=n*m
+    if all_pixels==0:
+        all_pixels=1
+
     deep= len(np.where(damage_mask<=th[0])[0])-zeros
     small = len(np.where(damage_mask>th[1])[0])  
-    all_pixels= len(np.where(damage_mask>0)[0])
-    medium = all_pixels - deep -small
+    
+    medium = all_pixels - deep -small - zeros
     # print(f'\n - zeros={zeros}, \n - small={small}, \n - deep={deep}, \n - all_pixels={all_pixels} \n - medium={medium}') 
     deep=int(100*deep/all_pixels)
     medium=int(100*medium/all_pixels)
@@ -329,7 +336,7 @@ def segmenting_road(img, disp=False):
 
     return road_mask
 
-##### LANE Reflection ceoficient
+#%%##### LANE Reflection ceoficient
 import cv2
 class ShapeDetector:
     def __init__(self):
@@ -478,25 +485,45 @@ def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
 
     return reflection_coef, image, lane, lane_mrk_mask
 
-#########################################################################################
+#%%#########################################################################################
 def main_DSP_segmentation():
     import cv2
     from glob import glob
-    from skimage.util import img_as_float
 
-    img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/good-roads/'#hole/'#cracks/'#
+    # img_folder='/media/abdo2020/DATA1/data/raw-dataset/data-demo/road-conditions-google/good-roads/'#hole/'#cracks/'#
+    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads/'
+
     n_segments=200
     compactness=10
     mean_th=0.3
     std_th=2.0
     nb_defect_segment=2
-
-    for img_path in glob(os.path.join(img_folder,'*')):#[1:2]:#
+    img_ext='.jpg'
+    ##############
+    data_name=os.path.dirname(img_folder)
+    out_video=f'results/dsp_road_segmentation_{data_name}.mp4'
+    resize=(800,500)
+    # inspect the images
+    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, resize)
+    list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
+    list_images.sort()
+    print(f'\n - Found images =  {len(list_images)} images')
+    for img_path in list_images:#[1:2]:#
         # Load the image
-        img =img_as_float( cv2.imread(img_path))
+        img =cv2.imread(img_path)
         # DSP-base segmentation 
-        dsp_color_mask1 = utils.segment_image_DSP(img, n_segments=n_segments, compactness=compactness, mean_th=mean_th, \
-        std_th=std_th, nb_defect_segment=nb_defect_segment, disp=1)
+        road_mask = utils.segment_image_DSP(img, n_segments=n_segments, compactness=compactness, mean_th=mean_th, \
+        std_th=std_th, nb_defect_segment=nb_defect_segment, disp=0)
+        # show mask
+        # road_seg=cv2.addWeighted(img, 1, road_mask, 0.8, 0)
+        road_seg=road_mask
+
+        # Display the diagnosed frame
+        cv2.imshow('road segentation',road_seg)
+        # save the video
+        # out.write(road_seg)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
 def main_patch_matching_inspection():
 	
@@ -509,14 +536,15 @@ def main_patch_matching_inspection():
     hole_patch_root='bin/holes-patches' 
     hole_patch_root='bin/holes-patches/test' 
 
-    # img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/road-conditions-google/hole/'#good-roads/'#cracks/'#
+    # img_folder='/media/abdo2020/DATA1/data/raw-dataset/road-conditions-google/hole/'#good-roads/'#cracks/'#
     img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-hais-data/HAIS_DATABASE-medium-speed'# ERC-parking'#   
 
     # list the existing images
     img_ext='.jpg'
-    out_video='results/dsp_road_inspection_results.mp4'
+    ##############
+    data_name=os.path.dirname(img_folder)
+    out_video=f'results/dsp_road_inspection_{data_name}.mp4'
     resize=(500,500)
-
     # inspect the images
     out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, resize)
     list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
@@ -544,15 +572,20 @@ def main_patch_matching_inspection():
 
 def main_image_variation_inspection():
 
-    detect_th=0.75
-    factor=1
-    Min_box_area=100
+    bright_th=0
+    erosion_tol=1
+    cnt_th=[5, 300]
+    cnt_size_ratio=0.1
     from glob import glob
     import cv2
-    img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-hais-data/HAIS_DATABASE-medium-speed'# ERC-parking'#   
+    img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-hais-data/HAIS_DATABASE-medium-speed'
+    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
+    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads'
     # list the existing images
     img_ext='.jpg'
-    out_video='results/dsp_variation_road_inspection_results.mp4'
+    ##############
+    data_name=os.path.dirname(img_folder)
+    out_video=f'results/dsp_variation_road_inspection_{data_name}.mp4'
     resize=(800,500)
     # inspect the images
     out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, resize)
@@ -561,7 +594,10 @@ def main_image_variation_inspection():
     print(f'\n - Found images =  {len(list_images)} images')
     for img_path in list_images[5:]:#:#
         # variation based inspection
-        damage_img, mask, nb_damages, dict_damage = inspection_diff(img_path, disp=False)
+        damage_img, mask, nb_damages, dict_damage = \
+            inspection_diff(img_path, bright_th=bright_th,
+                            erosion_tol=erosion_tol, cnt_th=cnt_th, 
+                            cnt_size_ratio=cnt_size_ratio, disp=False)
         
         # Display the diagnosed frame
         damage_img = cv2.resize(damage_img, resize) 
@@ -586,9 +622,12 @@ def main_lanemarker_inspection():
     import cv2
     # load image
     img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-lane-mark' 
-    img_folder='/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/hais-node/2022-12-12/road-and-mark/sweeps/RIGHT_CAMERA'
+    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark/sweeps/RIGHT_CAMERA'
+    ##############
+    data_name=os.path.dirname(img_folder)
+    out_video=f'results/lane_marker_{data_name}.mp4'
     resize=(500,500)
-    out_video='results/lane_marker_results.mp4'
+
     # inspect the images
     out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'),10, resize)
     for k, img_path in enumerate(glob(os.path.join(img_folder,'*'))):#enumerate([1:2]):#
@@ -616,7 +655,6 @@ def main_lanemarker_inspection():
 
 if __name__ == '__main__':
     # syntax()
-
     ### DSP-based road inspection
     # main_patch_matching_inspection()
     main_image_variation_inspection()
@@ -624,9 +662,5 @@ if __name__ == '__main__':
     # # DSP-based road segmentation
     # main_DSP_segmentation()
 
-    # # road lane inspection
+    ### road lane inspection
     # main_lanemarker_inspection()
-
-
-
-# %%
