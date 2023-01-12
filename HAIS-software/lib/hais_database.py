@@ -189,7 +189,22 @@ class HAIS_node:
 			self.create_database_root()
 			self.build_database_tables()
 
+	def check_gps_position_format(self, translation):
+		'''
+		Checking the position in decimal degrees format and range from -90 to 90 for latitude and -180 to 180 for longitude.
+		'''
+		# latitude
+		if np.abs( float(translation[0]) )>90:
+			translation[0]=translation[0]/100
+
+		# longitude
+		if np.abs( float(translation[1]) )>180:
+			translation[1]=translation[1]/100	
+
 	def build_database_tables(self):
+		'''
+		Build Nuscenes-like DB
+		'''
 		# check the mission file 		
 		if not os.path.exists(self.scenes_path):
 			msg=f'\n\n - The sensors data file [{ self.scenes_path}] does not  exist!! \
@@ -243,6 +258,9 @@ class HAIS_node:
 						current_scene=sample["frame"]
 					timestamp = int(float(sample['timestamp'])*1000000)
 					rotation, translation =sample["position"]["Rotation"], sample["position"]["Translation"]
+					self.check_gps_position_format(translation)
+					# print(f'flag: translation={translation}')
+
 					is_key_frame = True
 					sensor_channel= sensor_name
 					sensor_modality, fileformat = self.get_sensor_modality(sensor_name), sample['fileformat'] #
@@ -312,9 +330,9 @@ class HAIS_node:
 
 					# inspection table
 					if not sample_data_token in inspect_table['token']:
-						road_metric = random.randint(0, 4)
-						inspect_table['lon'].append(translation[0])
-						inspect_table['lat'].append(translation[1])
+						road_metric = 0#random.randint(0, 4)
+						inspect_table['lat'].append(translation[0])
+						inspect_table['lon'].append(translation[1])
 						inspect_table['alt'].append(translation[2])
 						inspect_table['token'].append(sample_data_token)
 						inspect_table['metric'].append(road_metric)
@@ -726,12 +744,16 @@ class HAIS_node:
 
 if __name__ == '__main__':
 	# raw-data folder
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads/mission2'
-	dataroot='/home/abdo2020/Desktop/HAIS_DATABASE/GPS-calibration'
+	##-------------------  DRONE -------------------
 	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge'
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road'
 	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road/ERC-parking'
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
+
+	##-------------------  NODE -------------------
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak'
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark'
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2'
 	version='v1.0'
 	# Load the collected inspection sensors dataset

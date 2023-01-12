@@ -260,12 +260,16 @@ def visualize_map(inspection_dict, map_path):
 
 def visualize_list_roads_ispection():
 	maps_root='bin/maps'
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads/mission2'
-	dataroot='/home/abdo2020/Desktop/HAIS_DATABASE/GPS-calibration'
+	##-------------------  DRONE -------------------
 	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge'
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road'
 	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road/ERC-parking'
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
+
+	##-------------------  NODE -------------------
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak'
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark'
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2'
 	
 	# load HAIS data
@@ -281,7 +285,7 @@ def visualize_list_roads_ispection():
 		except:
 			print('The inspection_dict is loaded successsfully!!')
 	# define the html map filepath
-	map_path=os.path.join(maps_root, 'inspection_map' +os.path.basename(dataroot)+'.html')
+	map_path=os.path.join(maps_root, 'inspection_Map_' +os.path.basename(dataroot)+'.html')
 
 	# save the visualized map
 	visualize_map(inspection_dict, map_path=map_path)
