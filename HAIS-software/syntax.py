@@ -1,9 +1,13 @@
 from lib import hais_database, dji_drone, utils
 import os
-
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
+import osmnx as ox
+# ox.config(use_cache=True, log_console=True)
+ox.config(log_console=True, log_file=True, use_cache=True,
+						data_folder='temp/data', logs_folder='temp/logs',
+						imgs_folder='temp/imgs', cache_folder='temp/cache')
 def deblur_gray_image(imblur):
 	import pylops
 	Nz, Nx = imblur.shape
@@ -152,6 +156,73 @@ def load_json(filename):
 		raise ValueError(msg)
 
 
+def gps_location_distance( point1, point2):
+	from math import sin, cos, sqrt, asin, radians
+	lat1 = point1[0]
+	lon1 = point1[1]
+	lat2 = point2[0]
+	lon2 = point2[1]
+
+# from math import radians, cos, sin, asin, sqrt
+	"""
+	Calculate the great circle distance in kilometers between two points 
+	on the earth (specified in decimal degrees)
+	"""
+	# convert decimal degrees to radians 
+	lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+	# haversine formula 
+	dlon = lon2 - lon1 
+	dlat = lat2 - lat1 
+	a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+	c = 2 * asin(sqrt(a)) 
+	r = 6371 # Radius of earth in kilometers. Use 3956 for miles. Determines return value units.
+	return c * r *1000
+
+def get_map_center_dist(df, df_new):
+	ave_lt = int( 10e4*sum(df['lat'])/len(df) )/10e4
+	ave_lg = int( 10e4*sum(df['lon'])/len(df) )/10e4
+	map_center_point=(ave_lt, ave_lg)
+	df_fuse=pd.concat([df, df_new], ignore_index=True, sort=False)
+	max_dist=0
+	for ind_new in df_fuse.index:
+		point_new=(df_fuse['lat'][ind_new], df_fuse['lon'][ind_new])
+		#Compute the distance in meters
+		distance = gps_location_distance( point_new, map_center_point)
+		if max_dist<distance:
+			max_dist=distance
+	return map_center_point, 100+int(distance/1000)
+
+def update_inspection_dict(inspection_path, new_inspection_path, min_dist=1):
+	inspection_dict=load_json(inspection_path)
+	inspection_dict2=load_json(new_inspection_path)
+	df_new = pd.DataFrame(inspection_dict2)
+
+	df = pd.DataFrame(inspection_dict)
+	map_center_point, radius=get_map_center_dist(df, df_new)
+	#get the location graph
+	print(f'\n --> creating/downloading Map:  \
+	 \n\t - center= {map_center_point} \
+	 \n\t - dist= {radius} km \
+	 \ntHis will take some minutes. Please wait :)...')
+	graph = ox.graph_from_point(map_center_point, dist=radius, network_type="drive")
+	nodes, edges = ox.graph_to_gdfs(graph)
+	max_dist=0
+	min_dist=np.inf
+	for ind_new in df_new.index[:5]:
+		point_new=(df_new['lat'][ind_new], df_new['lon'][ind_new])
+		# find the closed node
+		osmid = ox.nearest_nodes(graph, X=point_new[0], Y=point_new[1])
+		closest_node=nodes.loc[osmid]#[nodes['osmid']==osmid]
+		point_= (closest_node['y'], closest_node['x'])
+		distance = gps_location_distance( point_new, point_)
+		if max_dist<distance:
+			max_dist=distance
+		if min_dist>distance:
+			min_dist=distance	
+		# print(f'\n\n - point_new={point_new} --> {point_} \n - distance={distance}')
+		# print(f'\n - closest_node [osmid={osmid}]: \n{closest_node}')
+	print(f'\n\n - max_dist={max_dist} m , min_dist={min_dist} m\n - distance={distance} m')
 
 if __name__ == '__main__':
 	# # img_path='/media/abdo2020/DATA1/data/raw-dataset/data-demo/road-conditions-google/good-roads/road1.jpeg'
@@ -168,9 +239,32 @@ if __name__ == '__main__':
 	# 	imdeblur[:,:,k], imdeblurfista[:,:,k], imdeblurtv[:,:,k], imdeblurtv1[:,:,k]=deblur_gray_image(im)
 	# visualize_deblured_images(imblur, imdeblur, imdeblurfista, imdeblurtv, imdeblurtv1)
 
-	# load Json
-	filename='/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2/info.json'
-	dict_=load_json(filename)
-	print(dict_)
+	# update inspection dict
+	filename0='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed/inspection_dic.json' 
+	filename1='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark/inspection_dic.json' #
+	# filename1='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed/inspection_dic.json' 
+
+	update_inspection_dict(inspection_path=filename0, new_inspection_path=filename1)
+
+
+	# import pandas as pd
+	# import geopandas
+	# import matplotlib.pyplot as plt
+	# import geopandas as gd
+	# from shapely.geometry import Point
+	# from shapely.ops import nearest_points
+	# df = pd.DataFrame(inspection_dict)
+	# df['id'] = [k for k in range(len(df))]
+	# df=df.rename(columns={"lon": "Longitude", "lat": "Latitude", "alt": "Altitude"}, errors="raise")
+	# df1 = gd.GeoDataFrame(	df, geometry=gd.points_from_xy(df.Longitude, df.Latitude))
+	# df1['centroid'] = df1.centroid
+	# print( f'\n map has {len(df)} nodes:\n', df1.head() )
+
+	# df = pd.DataFrame(inspection_dict2)
+	# df=df.rename(columns={"lon": "Longitude", "lat": "Latitude"}, errors="raise")
+	# df2 = gd.GeoDataFrame(	df, geometry=gd.points_from_xy(df.Longitude, df.Latitude))
+	# df2['centroid'] = df2.centroid
+
+ 
 
 

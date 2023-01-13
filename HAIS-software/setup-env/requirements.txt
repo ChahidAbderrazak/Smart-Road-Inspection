@@ -28,7 +28,12 @@ pillow
 osmnx==1.1.2
 folium
 scikit-learn 
-# geopandas
+geopandas
+
+##### GUI packages
+PyQt5
+napari[pyqt5]
+multiprocess
 
 
 ############ Annotation packages

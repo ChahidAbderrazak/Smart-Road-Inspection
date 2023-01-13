@@ -8,13 +8,12 @@ import pandas as pd
 import matplotlib.animation as animation
 import geopandas as gpd
 import osmnx as ox
-ox.config(log_console=True, use_cache=True)
+ox.config(use_cache=True, log_console=True)
 
 try:
     from lib import utils
 except:
     import utils
-
 
 class HAIS_map(object):
 	'''Class manaing the inspection visualization'''
@@ -52,6 +51,7 @@ class HAIS_map(object):
 			list_coord.append([self.graph.nodes[node_id]['x'], self.graph.nodes[node_id]['y']])
 		
 		input(f'\n - list_coord = {list_coord}')
+		
 	def viz_location_map(self):
 		# Plot in map
 		fig, self.ax = plt.subplots()#figsize=(12,8))

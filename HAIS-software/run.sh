@@ -2,11 +2,11 @@
 clear
 eval "$($(which conda) 'shell.bash' 'hook')"
 echo  "--> Activating conda environment"
-env_name=hais-node-env2
+env_name=xct-cpu-env #hais-node-env2
 conda activate $env_name
 
 #######################        SYNTAX      ##########################
-
+# python quick.py
 # python syntax.py
 
 #######################  SENSORS FUNCTIONS ##########################
@@ -30,25 +30,27 @@ conda activate $env_name
 # echo && echo && echo  "--> Build and generate structures HAIS-database "
 # python lib/dji_drone.py
 
-# Build Nuscene-like database  using HAIS database stucture
-echo && echo  "--> Build Nuscene-like database  using HAIS database stucture "
-python lib/hais_database.py
+# # Build Nuscene-like database  using HAIS database stucture
+# echo && echo  "--> Build Nuscene-like database  using HAIS database stucture "
+# python lib/hais_database.py
 
 
 ######################  VISUALIZATION MODULE ##########################
 
-# Road conditions map
-echo && echo && echo  "--> Visualize the road conditions map"
-python lib/inspection_map.py
+# # Road conditions map
+# echo && echo && echo  "--> Visualize the road conditions map"
+# python lib/inspection_map.py
 
 
 #######################  HAIS SOFTWARE ##########################
 
-# # run the main script
-# echo && echo " #################################################" 
-# echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
-# echo " #################################################" && echo 
+# run the main script
+echo && echo " #################################################" 
+echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
+echo " #################################################" && echo 
 
 # python main.py
+python main_gui.py --cfg config/config.yml 
+
 
 conda deactivate 

@@ -41,7 +41,6 @@ def update_json(json_string, filename):
     combined_list= old_list + json_string
     save_json(combined_list, filename)
 
-
 def pkl_to_dict(filename):
 	import pickle
 	open_file = open(filename, "rb")
@@ -72,6 +71,66 @@ def get_file_tag(path):
 def get_folder_tag(path):
     TAG = os.path.basename(os.path.dirname(os.path.dirname(path))) + '--' + os.path.basename(os.path.dirname(path))
     return TAG
+
+def parent_folder(file_path, n=1): 
+    for k in range(n): 
+        file_path=os.path.dirname(file_path)
+        if file_path=='': 
+            return file_path
+    return os.path.basename(file_path)
+
+def get_extension(filename): 
+    return os.path.splitext(filename)[1][1: ]
+
+def getListOfFiles(dirName, ext, path_pattern='', allFiles=list()): 
+    '''
+      For the given path, search for the List of all files in the directory tree of extention <ext> 
+    '''
+    from re import search
+    # create a list of file and sub directories 
+    # names in the given directory 
+    listOfFile=os.listdir(dirName)
+    # Iterate over all the entries
+    for entry in listOfFile: 
+        # Create full path
+        fullPath=os.path.join(dirName, entry)
+        # If entry is a directory then get the list of files in this directory 
+        if os.path.isdir(fullPath) : 
+            allFiles=allFiles + getListOfFiles(fullPath, ext=ext, path_pattern=path_pattern)
+        else: 
+            # txt_list_files=[i for i in fullPath if ]
+            extension=os.path.splitext(fullPath)[1][1: ]
+            if extension==ext and search(path_pattern, fullPath) : 
+              allFiles.append(fullPath) 
+    # print(f'\n dirName[{ext}]={dirName}\n allFiles={allFiles}')           
+    return list(set(allFiles)) 
+
+def getListOfFolders(dirName, ext, path_pattern='', allFolders=list()): 
+    '''
+      For the given path, search for the List of all files in the directory tree of extention <ext> 
+    '''
+    from re import search
+    # create a list of file and sub directories 
+    if ext[0]=='.':
+        ext=ext[1:]
+    # names in the given directory 
+    listOfFolder=os.listdir(dirName)
+    # Iterate over all the entries
+    for entry in listOfFolder: 
+        # Create full path
+        fullPath=os.path.join(dirName, entry)
+        # If entry is a directory then get the list of folders in this directory 
+        if os.path.isdir(fullPath): 
+            allFolders=allFolders + getListOfFolders(fullPath, ext=ext, path_pattern=path_pattern)
+        else: 
+            # txt_list_folders=[i for i in fullPath if ]
+            extension=os.path.splitext(fullPath)[1][1: ]
+            if extension==ext and search(path_pattern, fullPath): 
+                allFolders.append(os.path.dirname(fullPath) )
+                break
+    # print(f'\n dirName[{ext}]={dirName}\n allFolders={allFolders}')           
+    return list(set(allFolders)) 
+
 
 def load_image(path):
     import numpy as np

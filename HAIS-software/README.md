@@ -58,5 +58,4 @@ Integrate bridge inspection in drones with cameras
 # Acknowledgement
 
 The proposed method used some other existing preprocessing packages which were adapted with/without modifications. The main ressources are cited as follows:
-*  [source1](https://github.com/)
-* 
+* [PyQT5 image viewer](https://gist.github.com/acbetter/32c575803ec361c3e82064e60db4e3e0)
