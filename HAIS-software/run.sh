@@ -2,7 +2,7 @@
 clear
 eval "$($(which conda) 'shell.bash' 'hook')"
 echo  "--> Activating conda environment"
-env_name=xct-cpu-env #hais-node-env2
+env_name=hais-node-env2 #xct-cpu-env #
 conda activate $env_name
 
 #######################        SYNTAX      ##########################
@@ -13,7 +13,7 @@ conda activate $env_name
 # echo && echo && echo  "--> Test sensors functions"
 # python lib/sensors.py
 
-#######################  INSPECTION MODULE ##########################
+######################  INSPECTION MODULE ##########################
 
 # # Run the DSP Based inspection algorithm 
 # echo && echo && echo  "--> Run the DSP Based inspection algorithm"
@@ -35,7 +35,7 @@ conda activate $env_name
 # python lib/hais_database.py
 
 
-######################  VISUALIZATION MODULE ##########################
+# #####################  VISUALIZATION MODULE ##########################
 
 # # Road conditions map
 # echo && echo && echo  "--> Visualize the road conditions map"

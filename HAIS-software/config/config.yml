@@ -1,7 +1,7 @@
 
 DATA: # real
   # data_root: '/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/upload' 
-  data_root: '/media/abdo2020/DATA1/data/raw-dataset' 
+  # data_root: '/media/abdo2020/DATA1/data/raw-dataset/hais-node' 
   data_root: '/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark' 
 
   # data_root: 'data'
@@ -13,7 +13,7 @@ INSPECTION:
   erosion_tol : 2       # erosion tolerance in mask refinement
 
 ANNOTATION:
-  annotation_directory: '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project'
+  annotation_directory: '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/automated-annotations'
   Min_box_area: 50
   with_masks : True
 

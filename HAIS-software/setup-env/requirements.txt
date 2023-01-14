@@ -1,28 +1,39 @@
-
-
-############ Deep learning packages
-tqdm
+##### Deep learning packages
+#pytorch 
 torch
+torchvision
 tensorflow
+torchviz
+albumentations
+ensemble-boxes
+tensorboard
 
 ############ Firebase packages
 pyrebase
 requests>=2.26
-numpy
-opencv-python
 scp
 pynput
 
-############ Image deblurring packages
+##### preprocessing packages
+Pillow
+# opencv-python
+# opencv-python-headless 
+# tifffile
+sklearn
+scikit-image>=0.19.1
+imutils
 pylops
 
-############ Inspection packages
-matplotlib
-pandas
-scipy
-scikit-image
-imutils
-pillow
+##### Loading data packages
+pynrrd
+nibabel
+
+##### GUI packages
+PyQt5
+napari[pyqt5]
+magicgui
+multiprocess
+fury
 
 ############ Visualization packages
 osmnx==1.1.2
@@ -30,24 +41,28 @@ folium
 scikit-learn 
 geopandas
 
-##### GUI packages
-PyQt5
-napari[pyqt5]
-multiprocess
-
 
 ############ Annotation packages
 # nuscens
 nuscenes-devkit==1.1.9
 #UltimateLabeling
-PyQt5
 opencv-contrib-python==4.1.2.30
 paramiko
 # folium
-
-############ General packages
-tqdm
-glob2
-
-############ labelme Annotation packages
+# labelme Annotation packages
 video-cli
+
+##### General packages
+PyYAML
+matplotlib
+numpy==1.21
+pandas
+glob2
+progressbar
+tqdm
+seaborn
+
+# testing code package
+pytest
+
+

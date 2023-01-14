@@ -662,5 +662,5 @@ if __name__ == '__main__':
     # # DSP-based road segmentation
     # main_DSP_segmentation()
 
-    ### road lane inspection
-    # main_lanemarker_inspection()
+    ## road lane inspection
+    main_lanemarker_inspection()

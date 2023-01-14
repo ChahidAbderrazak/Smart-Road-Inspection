@@ -16,13 +16,12 @@ except:
     from lib import HAIS
 		
 #############################	RUN the GUI	############################
-from PyQt5 import Qt
 from PyQt5.QtWidgets import QApplication
 #%%######################### MAIN	######################
 def prepare_parser(): 
 	import numpy as np
 	from argparse import ArgumentParser
-	parser=ArgumentParser(description='DSP-based CT inspection')
+	parser=ArgumentParser(description='Highways inspection')
 	parser.add_argument(
 				"--cfg", 
 				default="../config/config.yml", 

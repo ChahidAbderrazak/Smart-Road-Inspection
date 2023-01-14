@@ -86,6 +86,9 @@ def getListOfFiles(dirName, ext, path_pattern='', allFiles=list()):
     '''
       For the given path, search for the List of all files in the directory tree of extention <ext> 
     '''
+    if ext[0]=='.':
+        ext=ext[1:]
+        
     from re import search
     # create a list of file and sub directories 
     # names in the given directory 

@@ -99,8 +99,8 @@ class HAIS_map(object):
 		list_coodinate = []
 		for k in range(Nroutes):
 			start_point, dest_point = self.get_random_point()
-			print(f'\n flag sim: start_point={start_point}')
-			input(f'\n flag sim: dest_point={dest_point}')
+			# print(f'\n flag sim: start_point={start_point}')
+			# input(f'\n flag sim: dest_point={dest_point}')
 			# get the earest node to the locations
 			start = ox.nearest_nodes(self.graph, X=start_point[0],Y=start_point[1])
 			dest = ox.nearest_nodes(self.graph, X=dest_point[0],Y=dest_point[1])
@@ -180,18 +180,20 @@ def generate_random_roads_ispection():
 	# visualize the road conditions
 	map.viz_road_conditions(list_inspected_roads)
 
-
-
 #########################  folium Visualization ##############################
 from pandas import *
 import numpy as np
 from matplotlib import cm
 import folium
+from folium import plugins
 from IPython.display import HTML, display
+
+def rectify_route_positions(points_list):
+		return [(i,j) for (i,j) in points_list if i!=-1 and j!=-1]
 
 def draw_polylines(points, metrics, map, horison=2):
 		available_colors = ['gray', 'red', 'coral', 'orange', 'aquamarine2', 'green']
-		inspect_status = ['Just scanned','Bad roard', '', 'Meduim roard', '', 'Good roard']
+		inspect_status = ['Scanned','Bad roard', '', 'Meduim roard', '', 'Good roard']
 		# add ledend
 		lgd_txt = '<span style="color: {col};">{txt}</span>'
 		cur_metrics=np.unique(metrics)
@@ -212,8 +214,14 @@ def draw_polylines(points, metrics, map, horison=2):
 		while i < len(metrics)-horison:
 			metrics_list=metrics[i:i+horison]
 			points_list=points[i:i+horison]
+			points_list=rectify_route_positions(points_list)
+			if metrics[i]==-1 or len(points_list) <2:
+				# print(f'\n - the road segment line{i} is ignored !!!\n - color={metrics[i]} \n - points={points[i]}')
+				i+=horison-1
+				continue
+
 			avg_metric=int( np.mean(metrics_list) )
-			curr=available_colors[avg_metric+1]
+			curr=available_colors[avg_metric]
 			# print(f'\n - points_list={points_list} ,  metrics_list={metrics_list} ---> {avg_metric}')
 			line = folium.PolyLine(points_list, color=curr, weight=8, opacity=0.8)
 			line.add_to(map)
@@ -235,21 +243,56 @@ def open_map_html(path):
 	filename='file:///'+ abs_path
 	webbrowser.open_new_tab(filename)
 
-def visualize_map(inspection_dict, map_path):
-	"""	
-	inspection_dict={'lon': [-78.8977848, -78.8980208, -78.8992868, -78.8996731, -78.8961326, -78.892592, -78.8914548, -78.8877212, -78.8840948], 
-									'lat': [43.9455189, 43.9461678, 43.9462296, 43.9472801, 43.9480217, 43.9454571, 43.9446692, 43.9420581, 43.9395551],
-									'metric': [ 0, 0, 2, 2, 2, 1, 4, 4, 2]
-									}
-	"""
+def visualize_map(list_missions, maps_root):
+	# load HAIS data
+	lat_coord, lon_coord, metric_list=[],[],[]
+	cnt=0
+	print(f'\n - The map will show {len(list_missions)} missions. Please wait :) ...')
+	for dataroot in list_missions:
+		list_files=utils.getListOfFiles(dataroot, ext='.json', path_pattern='inspection_dic.json')
+		for inspect_filename in list_files:
+			# inspect_filename=os.path.join(dataroot, 'inspection_dic.json')
+			if not os.path.exists(inspect_filename):
+				print(f'\n Error: inspection file not found: \n {inspect_filename}')
+				# sys.exit(0)
+				continue
+			else:
+				# print(f'\n Loading the inspection_dict: \n {inspect_filename}')
+				inspection_dict=utils.load_json(inspect_filename)
+				try:
+					inspection_dict=inspection_dict[0]
+				except:
+					print('The inspection_dict is loaded successsfully!!')
 
-	df = DataFrame(inspection_dict)
-	ave_lt = sum(df['lat'])/len(df)
-	ave_lg = sum(df['lon'])/len(df)
+				# upadte the map routes
+				lat_coord+=inspection_dict['lat']+[-1]
+				lon_coord+=inspection_dict['lon']+[-1]
+				metric_list+=inspection_dict['metric']+[-1]
+				cnt+=1
+
+	# define the html map filepath
+	if cnt>1:
+		map_path=os.path.join(maps_root, 'inspection_Map_all_node.html')
+	else:
+		map_path=os.path.join(maps_root, 'inspection_Map_' +os.path.basename(dataroot)+'.html')
+
+	inspection_routes={	'lat':lat_coord,
+											'lon':lon_coord,
+											'metric':metric_list}
+
+	df = DataFrame(inspection_routes)
+	df = DataFrame(inspection_routes)
 	points = zip(df['lat'], df['lon'])
 	points = list(points)
+	# intialize the ap
+	df2 = df.drop(df[(df.lat==-1) & (df.lon==-1)].index)
+	ave_lt = sum(df2['lat'])/len(df2)
+	ave_lg = sum(df2['lon'])/len(df2)
 	myMap = folium.Map(location=[ave_lt, ave_lg], zoom_start=10) 
+
+	# draw the routes
 	draw_polylines(points, df['metric'].values, myMap)
+
 	# save map to html file
 	myMap.save(map_path)
 	print(f'\n - The inspectin map is saved in : \n {map_path}')
@@ -257,47 +300,34 @@ def visualize_map(inspection_dict, map_path):
 	# open the map in the browser
 	open_map_html(map_path)
 
-
-def visualize_list_roads_ispection():
+#%%####################### MAIN 
+def run_visualize_nodes_inspection():
 	maps_root='bin/maps'
 	##-------------------  DRONE -------------------
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge'
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road/ERC-parking'
+	# list_missions=['/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge',
+	# 							'/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road/ERC-parking']
 
 	##-------------------  NODE -------------------
-	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak'
-	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
-	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
-	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
-	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark'
-	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2'
+	list_missions=[	'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak',
+									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all',
+									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed',
+									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' ,
+									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark',
+									'/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2']
 	
-	# load HAIS data
-	inspect_filename=os.path.join(dataroot, 'inspection_dic.json')
-	if not os.path.exists(inspect_filename):
-		print(f'\n Error: inspection file not found: \n {inspect_filename}')
-		sys.exit(0)
-	else:
-		print(f'\n Loading the inspection_dict: \n {inspect_filename}')
-		inspection_dict=utils.load_json(inspect_filename)
-		try:
-			inspection_dict=inspection_dict[0]
-		except:
-			print('The inspection_dict is loaded successsfully!!')
-	# define the html map filepath
-	map_path=os.path.join(maps_root, 'inspection_Map_' +os.path.basename(dataroot)+'.html')
-
+	
 	# save the visualized map
-	visualize_map(inspection_dict, map_path=map_path)
+	visualize_map(list_missions, maps_root=maps_root)
 
 
 											
 if __name__ == '__main__':
+
 	# # genrate  Nroutes randomly inspected roads 
 	# generate_random_roads_ispection()
 
 	# Visuaise a list of inspected roads
-	visualize_list_roads_ispection()
+	run_visualize_nodes_inspection()
 
 
 
