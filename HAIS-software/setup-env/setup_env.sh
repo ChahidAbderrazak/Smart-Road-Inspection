@@ -1,6 +1,6 @@
 #!/bin/bash
 env_name=hais-node-env2
-python_version=3.7
+python_version=3.8
 eval "$($(which conda) 'shell.bash' 'hook')"
 
 #####################################################

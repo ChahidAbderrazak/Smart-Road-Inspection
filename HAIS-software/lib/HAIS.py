@@ -24,7 +24,7 @@ import napari
 from PyQt5 import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QFormLayout, QLabel, QMessageBox, \
 														QLineEdit, QFileDialog, QPushButton, QDialog, QCheckBox, QVBoxLayout,\
-														QLabel, QSizePolicy, QScrollArea, QMessageBox, QComboBox
+														QLabel, QSizePolicy, QScrollArea, QMessageBox, QComboBox, QGridLayout
 # from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QFont, QPalette, QColor, QImage, QPixmap, QPalette, QPainter
 from PyQt5.QtCore import * #QObject, pyqtSignal, QThread
@@ -84,9 +84,15 @@ class HAIS_GUI(QWidget):
 			self.input_data_button.clicked.connect(self.get_image_path)
 
 			# Run data inspection 
-			self.button_run_frame_inspection=QPushButton('Run frame by frame inspection') 
-			self.button_run_frame_inspection.setFont(QFont("Times", 10, QFont.Bold))
-			self.button_run_frame_inspection.clicked.connect(self.inspect_frame_by_frame)
+			self.frame_step=1
+			self.button_previous_frame_inspection=QPushButton('inspect previous frame ') 
+			self.button_previous_frame_inspection.setFont(QFont("Times", 10, QFont.Bold))
+			self.button_previous_frame_inspection.clicked.connect(self.inspect_previous_frame)
+
+			self.button_next_frame_inspection=QPushButton('inspect next frame ') 
+			self.button_next_frame_inspection.setFont(QFont("Times", 10, QFont.Bold))
+			self.button_next_frame_inspection.clicked.connect(self.inspect_next_frame)
+
 			self.button_run_inspection=QPushButton('Run all frames inspection') 
 			self.button_run_inspection.setFont(QFont("Times", 10, QFont.Bold))
 			self.button_run_inspection.clicked.connect(self.inspection_thread)
@@ -101,7 +107,7 @@ class HAIS_GUI(QWidget):
 			self.show_road_condition=QCheckBox("road conditon")
 
 			# Annotation verification
-			self.button_inteactive_annotation=QPushButton('Verify the annotation mask') 
+			self.button_inteactive_annotation=QPushButton('Inteactive visualization') 
 			self.button_inteactive_annotation.setFont(QFont("Times", 10, QFont.Bold))
 			self.button_inteactive_annotation.clicked.connect(self.napari_mask_verification)
 
@@ -143,41 +149,33 @@ class HAIS_GUI(QWidget):
 			self.create_database_formGroupBox()
 			self.create_nodes_formGroupBox()
 			self.nodes_formGroupBox.setVisible(False)
+			self.create_execution_formGroupBox()
 			self.setVisible_inspection_widgets(False)
 
 			self.create_visualization_formGroupBox()
 			self.visualization_formGroupBox.setVisible(False)
 
-			self.create_annotation_formGroupBox()
-			self.annotation_formGroupBox.setVisible(False)
+			
 
 			# Compile the maun GUI layout
 			mainLayout=QVBoxLayout()
 			mainLayout.addWidget(self.database_formGroupBox)
 			mainLayout.addWidget(self.nodes_formGroupBox)
 			mainLayout.addWidget(self.image_ID)
-			# mainLayout.addWidget(self.imageLabel)
 			mainLayout.addWidget(self.scrollArea)
-			mainLayout.addWidget(self.button_run_frame_inspection)
-			mainLayout.addWidget(self.button_run_inspection)
+			mainLayout.addWidget(self.execution_formGroupBox)
 			mainLayout.addWidget(self.visualization_formGroupBox)
-			mainLayout.addWidget(self.annotation_formGroupBox)
 			self.setLayout(mainLayout)
 			self.setWindowTitle("Browse the collected data")
 			self.setWindowTitle('HAIS-Inspection')
 			self.setWindowIcon(QIcon('files/icon_hais.png'))
-			self.setGeometry(100, 100, 640, 100)
+			self.setGeometry(1, 1, 580, 1200)
 			# self.setWindowFlags(
 			# 		Qt.WindowCloseButtonHint
 			# )
 			self.show()
 
 #%%############## GUI Routines ######################
-	def setVisible_inspection_widgets(self, enable):
-		self.scrollArea.setVisible(enable)
-		# self.imageLabel.setVisible(enable)
-		self.image_ID.setVisible(enable)
-		self.button_run_inspection.setVisible(enable)
 
 	def display(self): 
 		print(f'\n\n##################### 	Running GUI based inspection	########################')
@@ -229,7 +227,6 @@ class HAIS_GUI(QWidget):
 			# self.inspection_formGroupBox.setVisible(True)
 			self.setVisible_inspection_widgets(True)
 			self.visualization_formGroupBox.setVisible(True)
-			self.annotation_formGroupBox.setVisible(False)
 			# show the first file
 			self.file_index=0
 			self.image_path=self.list_files[self.file_index]
@@ -238,17 +235,28 @@ class HAIS_GUI(QWidget):
 			msg=f'\n - No files are found in the database: \n - sensor={self.sensor_name} \n - folder ={self.sensor_folder}'
 			QMessageBox.information(self, "Empty data folder Viewer", msg)
 
-	def inspect_frame_by_frame(self):
-		try:
-			# Run the inspection algorithm on one image
-			self.inspection_image(self.image_path)
+	def inspect_previous_frame(self):
+		self.frame_step=-1
+		# get the next image path
+		self.update_image_path()
+		# run the inspection
+		self.inspect_image(self.image_path)
 
-			# get the next image path
-			self.file_index+=1
-			self.image_path= self.list_files[self.file_index]
-		except Exception as e:
-			QMessageBox.warning(self, "Error", e)
+	def inspect_next_frame(self):
+		self.frame_step=1
+		# get the next image path
+		self.update_image_path()
+		# run the inspection
+		self.inspect_image(self.image_path)
+
+	def update_image_path(self):
+		# get the next image path
+		self.file_index+=self.frame_step
+		if self.file_index<0:
+			self.file_index=len(self.list_files)-1
+		elif self.file_index>=len(self.list_files):
 			self.file_index=0
+		self.image_path= self.list_files[self.file_index]
 
 	def show_inspection_map(self):
 		if self.show_all_nodes.isChecked(): # show all nodes
@@ -317,20 +325,34 @@ class HAIS_GUI(QWidget):
 		layout.addRow(QLabel("Sensor: "), self.list_sensors_combo)
 		self.nodes_formGroupBox.setLayout(layout)
 
+	def setVisible_inspection_widgets(self, enable):
+		self.scrollArea.setVisible(enable)
+		# self.imageLabel.setVisible(enable)
+		self.image_ID.setVisible(enable)
+		self.execution_formGroupBox.setVisible(enable)
+
+	def create_execution_formGroupBox(self): 
+		self.execution_formGroupBox=QGroupBox("Inspection")
+		self.save_annotations=QCheckBox("Save annotations")
+		self.save_annotations.setChecked(False)
+		layout=QGridLayout()
+		layout.addWidget(self.save_annotations, 0,0)
+		layout.addWidget(self.button_previous_frame_inspection, 1,0)
+		layout.addWidget(self.button_next_frame_inspection, 1,1)
+		layout.addWidget(self.button_run_inspection, 2, 0, 1, 2)
+		self.execution_formGroupBox.setLayout(layout)
+
 	def create_visualization_formGroupBox(self): 
-		self.visualization_formGroupBox=QGroupBox("Inspection Visualization")
-		layout=QFormLayout()
-		layout.addRow(self.show_all_nodes, self.forcasting)
-		layout.addRow(self.show_lanemarker, self.show_road_condition)
-		layout.addRow(self.button_visualize)
+		self.visualization_formGroupBox=QGroupBox("Visualization")
+		layout=QGridLayout()
+		layout.addWidget(self.show_all_nodes, 0,0)
+		layout.addWidget(self.forcasting, 0,1)
+		layout.addWidget(self.show_lanemarker, 0,2)
+		layout.addWidget(self.show_road_condition, 0,3)
+		layout.addWidget(self.button_visualize, 2, 0, 1, 4)
+		layout.addWidget(self.button_inteactive_annotation, 3, 0, 1, 4)
 		self.visualization_formGroupBox.setLayout(layout)
 	
-	def create_annotation_formGroupBox(self): 
-		self.annotation_formGroupBox=QGroupBox("Inteactive Annotation")
-		layout=QFormLayout()
-		layout.addRow(self.button_inteactive_annotation)
-		self.annotation_formGroupBox.setLayout(layout)
-
 	def showdialog_information(self, title, message): 
 		msg=QMessageBox()
 		msg.setWindowTitle(title)
@@ -355,7 +377,7 @@ class HAIS_GUI(QWidget):
 		return reply
 
 #%%############## Road inspection ######################
-	def get_data_path(self): 
+	def browse_data_path(self): 
 		# open select folder dialog
 		if self.data_source.isChecked()==True: 
 				data_path=QFileDialog.getOpenFileName(self, f'Select a mission file ', self.root_folder, "Images (*.png *.jpeg *.jpg *.bmp )")[0]
@@ -367,18 +389,16 @@ class HAIS_GUI(QWidget):
 		return data_path
 
 	def get_image_path(self): 
-			self.image_path=self.get_data_path()
+			self.image_path=self.browse_data_path()
 			if self.image_path=='':
 				return 0
 			
 			# process the slected data
 			self.input_data_button.setText(self.image_path)
 			if os.path.isdir(self.image_path):
-
 				## Hide the insection and annotatin widgets
 				self.setVisible_inspection_widgets(False)
 				self.visualization_formGroupBox.setVisible(False)
-				self.annotation_formGroupBox.setVisible(False)
 
 				# uodate the new nodes/mission/sensors
 				self.explore_nodes_and_missions(self.image_path)
@@ -438,7 +458,13 @@ class HAIS_GUI(QWidget):
 		self.on_node_selection()		
 		self.list_missions_combo.setCurrentIndex(1)
 		self.on_mission_selection()
-		self.list_sensors_combo.setCurrentIndex(2)
+		# find images/camera sensors
+		idx_list=[i  for i in range(self.list_sensors_combo.count()) if 'CAM' in self.list_sensors_combo.itemText(i)]
+		idx=2
+		if len(idx_list)>0:
+			idx=idx_list[0]
+
+		self.list_sensors_combo.setCurrentIndex(idx)
 		self.on_sensor_selection()
 		# how/hide dropdowns
 		self.nodes_formGroupBox.setVisible(True)
@@ -456,7 +482,7 @@ class HAIS_GUI(QWidget):
 		self.worker.finished.connect(self.thread.quit)
 		self.worker.finished.connect(self.worker.deleteLater)
 		self.thread.finished.connect(self.thread.deleteLater)
-		self.worker.progress.connect(self.run_inspection_image_sequences)
+		self.worker.progress.connect(self.run_inspect_image_sequences)
 		# Step 6: Start the thread
 		self.thread.start()
 
@@ -477,11 +503,11 @@ class HAIS_GUI(QWidget):
 		my_sample = nusc.get('sample', my_scene['first_sample_token'])
 		print(f'\n\n ==> First sample of the scene: \n {my_sample}')
 
-	def run_inspection_image_sequences(self, n):
+	def run_inspect_image_sequences(self, n):
 		img_path=self.list_files[n]
 		N=len(self.list_files)
 		progress=f"[{n+1}/{N}]({int(100*n/N)}%)"
-		self.inspection_image(img_path, progress)
+		self.inspect_image(img_path, progress)
 
 		if n==N-1:
 			self.setEnabled(True)
@@ -492,17 +518,23 @@ class HAIS_GUI(QWidget):
 			self.button_run_inspection.setStyleSheet("background-color : red")
 			self.setEnabled(True)
 
+	def get_image_id(self, filepath):
+		filepath=os.path.basename(filepath)
+		file_id=os.path.splitext(filepath)[0]
+		return file_id
 
-	def inspection_image(self, img_path, progress=''):
+	def inspect_image(self, img_path, progress=''):
+
+		image_id=self.get_image_id(img_path)
 		self.image_ID.setText(f"{progress}\t fileID=" + os.path.basename(img_path))
-		self.annotation_formGroupBox.setVisible(False)
 		if '3D' in self.sensor_name or 'CSI' in self.sensor_name:
+			mudule_name='Road_damages_segmentation'
 			# variation based inspection
-			out_image, mask, nb_damages, dict_damage = \
+			out_image, image_RGB, mask, nb_damages, dict_damage = \
 					inspection_algorithm.inspection_diff(	img_path, bright_th=bright_th,
 																							erosion_tol=erosion_tol, cnt_th=cnt_th, 
 																							cnt_size_ratio=cnt_size_ratio, disp=False)
-		
+
 			# Display the diagnosed frame
 			out_image = cv2.resize(out_image, resize) 
 			n,m, _=out_image.shape
@@ -513,11 +545,12 @@ class HAIS_GUI(QWidget):
 							0.6, color, 2)
 
 		elif self.sensor_name=='RIGHT_CAMERA' or self.sensor_name=='LEFT_CAMERA':
-			# DSP-based road segmentation
-			reflection_coef, out_image, lane, lane_mrk_mask=inspection_algorithm.lane_inspection(img_path, disp=0)#, bright_th=bright_th)
+			mudule_name='Lanemarker_segmentation'
+			# run Lanemarker reflectivity
+			reflection_coef, lanemarker_img, image_RGB, mask=inspection_algorithm.lane_inspection(img_path, disp=0)#, bright_th=bright_th)
 
 			# Display the diagnosed frame
-			out_image = cv2.resize(out_image, resize) 
+			out_image = cv2.resize(lanemarker_img, resize) 
 			n,m, _=out_image.shape
 			if reflection_coef<0.2:
 					color=(0,0,255)
@@ -532,6 +565,10 @@ class HAIS_GUI(QWidget):
 			print(msg)
 			return
 	
+		# export annotation:  the mask and image
+		if self.save_annotations.isChecked():
+			self.save_image_and_mask(mudule_name, self.node_name, self.mission_name, 
+															self.sensor_name, image_id, image_RGB, mask)
 		
 		# visualize the image
 		self.visualize_image(out_image)
@@ -544,7 +581,30 @@ class HAIS_GUI(QWidget):
 		# 	raise e
 
 		# enable annotation 
-		self.annotation_formGroupBox.setVisible(True)
+
+	def save_image_and_mask(self, mudule_name, node_name, mission_name, sensor_name, image_id, image, mask):
+		if len(np.unique(mask))>1: # ignore empty or full masks
+			mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+			mask[mask!=0]=255
+			# print(f'\n flag: gray_mask shape={mask.shape}, segments={np.unique(mask)}')
+			dst_folder=os.path.join(self.annotation_directory, node_name, f'{mission_name}__{sensor_name}')
+			# save the image
+			image_folder=os.path.join(dst_folder, 'images')
+			utils.create_new_directory(image_folder)
+			cv2.imwrite(os.path.join(image_folder, image_id + ".jpg"), image)
+
+			# save the mask
+			mask_folder=os.path.join(dst_folder, 'masks')
+			utils.create_new_directory(mask_folder)
+			cv2.imwrite(os.path.join(mask_folder, image_id + ".png"), mask)
+
+			print(f'\n - the {sensor_name} annotations are saved in :\n{dst_folder}')
+		else:
+			print(f'\n - the {sensor_name} annotations are ignored \
+							\n - mask segments={np.unique(mask)}')
+
+
+
 
 	def napari_mask_verification(self): 
 		global tool_name
@@ -560,7 +620,7 @@ class App(QWidget):
 		self.disp=1
 		# instanciate the HAIS	GUI
 		self.HAIS=HAIS_GUI(config_file=config_file, disp=self.disp)
-
+		
 #%%#
 def set_GUI_style(app): 
 		# Force the style to be the same on all OSs: 
@@ -620,8 +680,8 @@ def Napari_GUI(image_path, mask_path, annotation_directory='annotations', pyqt_g
 	annotation_directory=os.path.join(annotation_directory, 'dataset', scan_name)
 
 	# load input data an masks if availlable
-	img_ref	=load_image(image_path)
-	img_input=load_image(mask_path)
+	img_ref	=utils.load_image(image_path)
+	img_input=utils.load_image(mask_path)
 
 	# run the napari GUI
 	napari.gui_qt()

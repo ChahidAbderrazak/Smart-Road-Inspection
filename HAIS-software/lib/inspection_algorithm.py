@@ -294,7 +294,7 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
     damage_img=cv2.addWeighted(image_RGB, 1, damage_mask, 0.8, 0)
     # utils.show_two_image(image_RGB, damage_img, img_title=f'Road inspection[{nb_cnts} damages]', figsize = (8,8))
 
-    return damage_img, damage_mask, nb_cnts, dict_damage
+    return damage_img, image_RGB, damage_mask, nb_cnts, dict_damage
 
 def segmenting_road(img, disp=False):
     from skimage import data, segmentation, color
@@ -479,11 +479,13 @@ def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
     # print(f'\n - reflection_coef= {reflection_coef}')
 
     reflection_coef*=(len(pixels)/(n*m))
+    lanemarker_img=cv2.addWeighted(image, 1, lane_mrk_mask, 0.8, 0)
+
     # print(f'\n - reflection_coef= {reflection_coef}')
     if disp>0:
         utils.show_two_image(image, lane, img_title=f'lane mark image [reflection coefficient ={reflection_coef:.2f}]', figsize = (8,8))
 
-    return reflection_coef, image, lane, lane_mrk_mask
+    return reflection_coef, lanemarker_img, image, lane_mrk_mask
 
 #%%#########################################################################################
 def main_DSP_segmentation():
@@ -594,7 +596,7 @@ def main_image_variation_inspection():
     print(f'\n - Found images =  {len(list_images)} images')
     for img_path in list_images[5:]:#:#
         # variation based inspection
-        damage_img, mask, nb_damages, dict_damage = \
+        damage_img, image_RGB, mask, nb_damages, dict_damage = \
             inspection_diff(img_path, bright_th=bright_th,
                             erosion_tol=erosion_tol, cnt_th=cnt_th, 
                             cnt_size_ratio=cnt_size_ratio, disp=False)
@@ -632,7 +634,7 @@ def main_lanemarker_inspection():
     out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'),10, resize)
     for k, img_path in enumerate(glob(os.path.join(img_folder,'*'))):#enumerate([1:2]):#
         # DSP-based road segmentation
-        reflection_coef, image, lane, lane_mrk_mask=lane_inspection(img_path, disp=0)#, bright_th=bright_th)
+        reflection_coef, lanemarker_img, image, lane_mrk_mask=lane_inspection(img_path, disp=0)#, bright_th=bright_th)
 
         # Display the diagnosed frame
         image = cv2.resize(image, resize) 
