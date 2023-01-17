@@ -192,6 +192,7 @@ class HAIS_database:
 		if not os.path.exists(self.scenes_path):
 			msg=f'\n\n - The sensors data file [{ self.scenes_path}] does not  exist!! \
 				\n Please check the file <config/config.json> config[DATA]'
+			print(msg)
 			raise Exception(msg)
 			# return 
 		# Build log table + new entry 
@@ -462,8 +463,8 @@ class HAIS_database:
 				data=[]
 
 			return len(data)+1
-		except:
-			msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!! '
+		except Exception as e:
+			msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!! \n Exception: {e}'
 			print(msg)
 			return 0
 
@@ -479,10 +480,11 @@ class HAIS_database:
 
 			else:
 				msg =f'\n\n Error: The JSON file <{filename}> cannot be found!!'
+				print(msg)
 				raise Exception(msg)
 
-		except:
-			msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!'
+		except Exception as e:
+			msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!! \n Exception: {e}'
 			print(msg)
 			raise ValueError(msg)
 
@@ -760,6 +762,9 @@ class HAIS_database:
 		self.inspect_json_file=os.path.join(self.dataroot, 'inspection_dic.json')
 		self.inspection_dict=self.load_json(self.inspect_json_file)
 		self.ego_idx=0
+		self.ego_token=self.inspection_dict['token'][self.ego_idx]
+		self.sample_token=self.ego_token.split('_f')[0]
+		self.my_sample = self.nusc.get('sample', self.sample_token)
 		return 
 
 	def update_inspection_dict(self, module_name, values_metric):
@@ -770,42 +775,66 @@ class HAIS_database:
 		self.save_json(self.inspection_dict, self.inspect_json_file)
 
 	def get_file_path_ego(self, sensor_name, n=0):
-		self.ego_idx+=n
 		try:
 			ego_token=self.inspection_dict['token'][self.ego_idx]
+			print(f'\n ego_token={ego_token}')
 		except Exception as e:
-			print(f'\n error in loading the ego token!!!\, Exception={e}')
-			self.ego_idx=0
+			print(f'\n error in loading the ego token [{self.ego_idx}]!!!\n Exception={e}')
+			if n==1:
+				self.ego_idx=0
+			else:
+				self.ego_idx=-1
 			return '', [-1, -1,-1]
-		self.sample_token=ego_token.split('_f')[0]
-		filename, car_position=self.get_file_path(sensor_name, n=0)
-		if filename=='':
-			filename, car_position = self.get_file_path_ego(sensor_name, n=n)
-		# input(f'\n self.sample_token={self.sample_token}\n\n filename={filename}')
-		return filename, car_position
+		self.ego_idx+=n
+		self.ego_pos = self.nusc.get('ego_pose', ego_token)
+		car_position=self.ego_pos["translation"]
+		self.my_sample_data = self.nusc.get('sample_data', ego_token)
+		filename=self.my_sample_data['filename']
+		# print(f'\n flag: ego_token={ego_token}')
+		if sensor_name in filename:
+			return filename, car_position
+		else:
+			self.sample_data=self.my_sample_data['sample_token']
+			filename, car_position = self.get_file_path(sensor_name, n=n)
+			if filename!='':
+				return filename, car_position
+			else :
+				return self.get_file_path_ego(sensor_name, n=n)
+
+		# if 
+		# # self.sample_token=ego_token.split('_f')[0]
+		# filename, car_position=self.get_file_path(sensor_name, n=n)
+		# frame_step=n*len(self.my_sample['data'])
+		# self.ego_idx+=n
+		# # if filename=='':
+		# # 	filename, car_position = self.get_file_path_ego(sensor_name, n=n)
+		# # # input(f'\n self.sample_token={self.sample_token}\n\n filename={filename}')
+		# return filename, car_position
 
 	def get_file_path(self, sensor_name, n=1):
 		# input(f'\n self.my_sample={self.my_sample}\n sensor_name={sensor_name} ')
+		if self.sample_token=='':
+			# print(f'\n flag: n= {n} --> sample token ={self.sample_token} \n self.my_sample={self.my_sample}')
+			return '', [-1,-1,-1]
+		self.my_sample = self.nusc.get('sample', self.sample_token)
 		if n==1:
 			self.sample_token=self.my_sample['next']
 		elif n==-1:
 			self.sample_token=self.my_sample['prev']
+		# input(f'\n n={n} --> self.sample_token={self.sample_token}')
 
-		if self.sample_token=='':
-			return '', [-1,-1,-1]
+		# input(f'\n self.my_sample={self.my_sample}\n sensor_name={sensor_name} ')
+		sensors_list=self.my_sample['data']
+		if sensor_name in sensors_list.keys():
+			sensor_data_sample=self.nusc.get('sample_data', self.my_sample['data'][sensor_name])
+			filename=os.path.join(self.dataroot, sensor_data_sample['filename'])
+			ego_pos=self.nusc.get('ego_pose', sensor_data_sample['ego_pose_token'])
+			car_position=ego_pos["translation"]
+			# input(f'\n filename={filename}\n\n ego_pos={ego_pos}')
+			return filename, car_position
 		else:
-			self.my_sample = self.nusc.get('sample', self.sample_token)
-			# input(f'\n self.my_sample={self.my_sample}\n sensor_name={sensor_name} ')
-			sensors_list=self.my_sample['data']
-			if sensor_name in sensors_list.keys():
-				sensor_data_sample=self.nusc.get('sample_data', self.my_sample['data'][sensor_name])
-				filename=os.path.join(self.dataroot, sensor_data_sample['filename'])
-				ego_pos=self.nusc.get('ego_pose', sensor_data_sample['ego_pose_token'])
-				car_position=ego_pos["translation"]
-				# input(f'\n self.sample_token={self.sample_token}\n\n ego_pos={ego_pos}')
-				return filename, car_position
-			else:
-				return '', [-1,-1,-1]
+			return self.get_file_path(sensor_name, n=n) 
+			# return '', [-1,-1,-1]
 
 	def get_list_sensors(self):
 		self.my_scene=self.nusc.scene[0]
@@ -842,9 +871,9 @@ if __name__ == '__main__':
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak'
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
-	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark'
-	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark'
+	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
 	version='v1.0'
 
 	# load/create the database structure from the collected inspection sensors dataset
@@ -855,10 +884,19 @@ if __name__ == '__main__':
 	list_sensors=DB.get_list_sensors()
 	sensor_name= 'CSI_CAMERA' #'RIGHT_CAMERA'
 	# filename, car_position=DB.get_file_path(sensor_name, n=1)
-	for n in range(7):
-		filename, car_position=DB.get_file_path_ego(sensor_name, n=-1)
-		print(f'\n filename={filename}')
-		
+	files_list=[]
+	cnt=0
+	while True:	
+	# for n in range(800):
+		# filename, car_position=DB.get_file_path(sensor_name, n=1)
+		filename, car_position=DB.get_file_path_ego(sensor_name, n=1)
+		# print(f'\n filename={filename}')
+		files_list.append(filename)
+		cnt+=1
+		if filename=='':
+			break
+	print(f'\n cnt={cnt} \n unique file = {len(np.unique(files_list))}')
+	print(f'\n first={files_list[0]} \nlast = {files_list[-2]} \n sample token={DB.sample_token}')
 	# lon=DB.inspection_dict['lon']
 	# values_metric=[k for k in range(len(lon))]
 	# module_name="landmaerk"

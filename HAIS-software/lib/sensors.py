@@ -259,21 +259,22 @@ class HAIS_visualizer(object):
 					import cv2 
 					try:
 						img=cv2.imread(filename)
-					except:
-						print(f'\n - Error: with in loading the image file: \n {filename}')
+					except Exception as e:
+						print(f'\n - Error: with in loading the image file: \n {filename}\n Exception: {e}')
 						continue
 					try:
 						if self.disp:
 							self.update_plot_camera(img)
-					except:
-						print(f'\n error with the image: {img} of file {filename}')
+					except Exception as e:
+						print(f'\n error with the image: {img} of file {filename}\n Exception: {e}')
 						continue
 
 				elif scan['sensor_name']=='IMU_SENSOR':
 					new_=scan['meta_data']
 					try:
 						[lat, lng, alt]=scan['position']['Translation']
-					except:
+					except Exception as e:
+						print(f'\n Exception: {e}')
 						continue
 					# calibrate ofset
 					# offset=[37.82922, -35.33007, 0]

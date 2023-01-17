@@ -19,6 +19,7 @@ def get_model_instance(model_name):
 
     except:
         msg = "The instanciation  of model architecture named <" +  model_name + ">  is not found"
+        print(msg)
         raise Exception(msg)
 
 ######################## MODELS #########################

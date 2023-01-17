@@ -78,7 +78,7 @@ def push_data_to_firebase(config, dict_fr_list_push, simulation_parameters):
             'simulation_parameters.pkl')
         flag = 1
 
-    except:
+    except Exception as e:
         for dict in dict_fr_list_push:
             filename_strg, dir_storage = get_file_names(config, fr=str(dict['frame']))
             dict_to_pkl(filename_strg, dict)

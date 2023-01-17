@@ -19,8 +19,8 @@ def load_json(filename):
 		else:
 			data=[]
 		return data
-	except:
-		msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!'
+	except Exception as e:
+		msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!\n Exception: {e}'
 		print(msg)
 		# raise ValueError(msg)
 		return []
@@ -32,8 +32,8 @@ def save_json(json_string, filename):
 		with open(filename, 'w') as outfile:
 			json.dump(json_string, outfile, indent=2)
 			return 0
-	except:
-		print(f'\n\n - error in saving {filename}')
+	except Exception as e:
+		print(f'\n\n - error in saving {filename}\n Exception: {e}')
 		return 1
 
 def update_json(json_string, filename):
@@ -144,8 +144,9 @@ def load_image(path):
         img = cv2.imread(path)
         # print(f' The selected image file is [{path}] of size {img.shape}')
         return img
-    except:
-        msg = '\n Error: the image path ' + path + 'cannot be loaded!!!!'
+    except Exception as e :
+        msg = '\n Error: the image path ' + path + f'cannot be loaded!!!!\n Exception: {e}'
+        print(msg)
         raise Exception(msg)
     
 
@@ -156,8 +157,9 @@ def save_image(img, filename):
 		try:
 			cv2.imwrite(filename, img)
 			# im.save(filename)
-		except:
-			msg = f'\n Cannot save [{filename}]. The format is unsupported!!! '
+		except Exception as e:
+			msg = f'\n Cannot save [{filename}]. The format is unsupported!!! \n Exception: {e}'
+			print(msg)
 			raise Exception(msg)
 
 def normalize_image(img):
@@ -347,6 +349,7 @@ def save_array_to_2rgb(arr, filename, scale=255):
         img.save(filename, "JPEG")
     else:
         msg = f'\n\n--> Error: the input array dimension [{arr.shape}] is not a 2D image!!!'
+        print(msg)
         raise Exception(msg)
 
 def save_array_to_gray(arr, filename, scale=255):

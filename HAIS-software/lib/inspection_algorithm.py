@@ -275,9 +275,7 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
         import numpy as np
         import matplotlib.pyplot as plt
         from scipy import ndimage
-
         I =  I.astype(np.float64)
-
         #-Derivative x
         Kx = -1*np.array([[-1,0,1]])
         Fx = ndimage.convolve(I, Kx)
@@ -285,10 +283,8 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
         #-Derivative y
         Ky = -1*np.array([[-1],[0],[1]])
         Fy = ndimage.convolve(I, Ky)
-
         #--Magnitute
         magnitude = np.sqrt(Fx**2 + Fy**2) # G
-
         return magnitude
 
     if disp:
@@ -303,6 +299,7 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
 
     # load the image
     image_RGB = utils.load_image(img_path)
+   
     # convert to gray scale
     diff_RGB=image_RGB.copy()
     # image difference

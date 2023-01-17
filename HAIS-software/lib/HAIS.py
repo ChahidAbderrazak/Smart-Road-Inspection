@@ -350,11 +350,13 @@ class HAIS_GUI(QWidget):
 		# retreive list of files
 		
 		if self.enable_nscene:
-			image_path, self.car_position=self.DB.get_file_path_ego(self.sensor_name, n=0)
-	
-		self.list_files=[path for path in glob(os.path.join(self.sensor_folder, '*')) if os.path.isfile(path)]
+			self.nb_data_samples=len(self.DB.inspection_dict['token'])
+			self.list_files=[path for path in glob(os.path.join(self.sensor_folder, '*')) if os.path.isfile(path)]
+		else:
+			self.list_files=[path for path in glob(os.path.join(self.sensor_folder, '*')) if os.path.isfile(path)]
+			self.nb_data_samples=len(self.list_files)
 
-		if len(self.list_files)>0:
+		if self.nb_data_samples>0:
 			print(f'\n - {self.sensor_name} sensor has {len(self.list_files)} files.')
 			# self.inspection_formGroupBox.setVisible(True)
 			self.setVisible_inspection_widgets(True)
@@ -386,7 +388,7 @@ class HAIS_GUI(QWidget):
 			filename, self.car_position=self.DB.get_file_path_ego(self.sensor_name, n=self.frame_step)
 			# print(f'\n flag: \n n={self.file_index}\n filename={filename}')
 			if filename!='':
-				self.image_path=filename
+				self.image_path=os.path.join(self.dataroot, filename)
 		else:
 			# get the next image path
 			self.file_index+=self.frame_step
@@ -440,8 +442,9 @@ class HAIS_GUI(QWidget):
 			with open(config_file, 'r') as stream: 
 				config=yaml.safe_load(stream)
 			return config
-		except: 
-			msg=f'\n\n Error: The config file [{config_file}] cannot be read correctly OR is not found!!'
+		except Exception as e: 
+			msg=f'\n\n Error: The config file [{config_file}] cannot be read correctly OR is not found!! \n Exception: {e}'
+			print(msg)
 			raise Exception(msg)
 
 	def btnstate(self, b): 	 
@@ -614,7 +617,7 @@ class HAIS_GUI(QWidget):
 		self.thread = QThread()
 		# Step 3: Create a worker object
 		self.worker = Worker()
-		self.worker.N=len(self.list_files)
+		self.worker.N=self.nb_data_samples
 		# Step 4: Move worker to the thread
 		self.worker.moveToThread(self.thread)
 		# Step 5: Connect signals and slots
@@ -638,7 +641,7 @@ class HAIS_GUI(QWidget):
 		self.DB.update_inspection_dict(self.module_name, values_metric)
 
 	def run_inspect_image_sequences(self, n):
-		N=len(self.list_files)
+		N=self.nb_data_samples #len(self.list_files)
 		progress=f"[{n+1}/{N}]({int(100*n/N)}%)"
 		try:
 			if self.enable_nscene:
@@ -656,7 +659,6 @@ class HAIS_GUI(QWidget):
 			# print(f'\n report out_metric={out_metric}')
 			self.out_metric_arr[n]=int(out_metric)
 			
-			
 			if n==N-1:# n==50: #
 				self.setEnabled(True)
 				self.button_run_inspection.setText('Run all frames inspection')
@@ -666,11 +668,7 @@ class HAIS_GUI(QWidget):
 
 				# update the insepction report
 				self.save_inspection_dict()
-
-
 				return
-
-				
 			elif n==0:
 				self.button_run_inspection.setText('Please wait till the process is done ...')
 				self.button_run_inspection.setStyleSheet("background-color : red")
@@ -686,10 +684,9 @@ class HAIS_GUI(QWidget):
 		return file_id
 
 	def inspect_image(self, img_path, progress=''):
-		try:
+		# try:
 			# refresh the algorithm values
 			self.refresh_preferences_values()
-
 			image_id=self.get_image_id(img_path)
 			msg=f"{progress}\t fileID=" + os.path.basename(img_path)
 			self.image_ID.setText(msg)
@@ -735,10 +732,10 @@ class HAIS_GUI(QWidget):
 			self.visualize_image(out_image)
 			return  out_metric
 	
-		except Exception as e:
-			print(f'\n\n - Error in running the inspection.')
-			QMessageBox.warning(self, "Error in running the inspection", f'{e}')
-			raise e
+		# except Exception as e:
+		# 	print(f'\n\n - Error in running the inspection.')
+		# 	# QMessageBox.warning(self, "Error in running the inspection", f'{e}')
+		# 	# raise e
 
 	def save_image_and_mask(self, node_name, trip_name, sensor_name, image_id, image, mask):
 		if len(np.unique(mask))>1: # ignore empty or full masks
