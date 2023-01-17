@@ -13,6 +13,12 @@ pyrebase
 requests>=2.26
 scp
 pynput
+######## Web API packages
+fastapi 
+uvicorn
+python-multipart
+Pyrebase
+# Flask
 
 ##### preprocessing packages
 Pillow
@@ -57,10 +63,13 @@ PyYAML
 matplotlib
 numpy==1.21
 pandas
+scipy
+PyYAML
 glob2
 progressbar
 tqdm
 seaborn
+multiprocess
 
 # testing code package
 pytest

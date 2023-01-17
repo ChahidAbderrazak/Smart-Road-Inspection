@@ -193,7 +193,7 @@ def get_map_center_dist(df, df_new):
 			max_dist=distance
 	return map_center_point, 100+int(distance/1000)
 
-def update_inspection_dict(inspection_path, new_inspection_path, min_dist=1):
+def fuse_inspection_dict_maps(inspection_path, new_inspection_path, min_dist=1):
 	inspection_dict=load_json(inspection_path)
 	inspection_dict2=load_json(new_inspection_path)
 	df_new = pd.DataFrame(inspection_dict2)
@@ -209,7 +209,7 @@ def update_inspection_dict(inspection_path, new_inspection_path, min_dist=1):
 	nodes, edges = ox.graph_to_gdfs(graph)
 	max_dist=0
 	min_dist=np.inf
-	for ind_new in df_new.index[:5]:
+	for ind_new in df_new.index:
 		point_new=(df_new['lat'][ind_new], df_new['lon'][ind_new])
 		# find the closed node
 		osmid = ox.nearest_nodes(graph, X=point_new[0], Y=point_new[1])
@@ -223,6 +223,44 @@ def update_inspection_dict(inspection_path, new_inspection_path, min_dist=1):
 		# print(f'\n\n - point_new={point_new} --> {point_} \n - distance={distance}')
 		# print(f'\n - closest_node [osmid={osmid}]: \n{closest_node}')
 	print(f'\n\n - max_dist={max_dist} m , min_dist={min_dist} m\n - distance={distance} m')
+
+
+
+def get_sensor_data_from_location(inspection_dict, picked_location):
+	import pandas as pd
+	import geopandas
+	import matplotlib.pyplot as plt
+	import geopandas as gd
+	from shapely.geometry import Point
+	from shapely.ops import nearest_points
+	df = pd.DataFrame(inspection_dict)
+	print( f'\n\n df row ={df.iloc[:3]}')
+
+	df['id'] = [k for k in range(len(df))]
+	df=df.rename(columns={"lon": "Longitude", "lat": "Latitude", "alt": "Altitude"}, errors="raise")
+	gdf = gd.GeoDataFrame(	df, geometry=gd.points_from_xy(df.Longitude, df.Latitude))
+	# df1['centroid'] = gdf.centroid
+	# print( f'\n map info :  {len(df)} nodes, prperties ={gdf.columns}:\n {gdf.head()}')
+	print( f'\n\n gdf row ={gdf.iloc[:3]}')
+
+	# unary union of the gdf geomtries 
+	pts3 = gdf.geometry.unary_union
+	point=(picked_location['lon'], picked_location['lat'])
+	def near(point, pts=pts3):
+			# find the nearest point and return the corresponding Place value
+			nearest = gdf.geometry == nearest_points(point, pts)[1]
+			return nearest
+	#  get the nearest point
+	nearest= gdf.apply(lambda row: near(row.geometry), axis=1)
+	print( f'\n\n point= {point} nearest={nearest}')
+	# df = pd.DataFrame(inspection_dict2)
+	# df=df.rename(columns={"lon": "Longitude", "lat": "Latitude"}, errors="raise")
+	# df2 = gd.GeoDataFrame(	df, geometry=gd.points_from_xy(df.Longitude, df.Latitude))
+	# df2['centroid'] = df2.centroid
+	sample_token=''
+	print(f'\n output sample_token={sample_token}')
+	return sample_token
+
 
 if __name__ == '__main__':
 	# # img_path='/media/abdo2020/DATA1/data/raw-dataset/data-demo/road-conditions-google/good-roads/road1.jpeg'
@@ -244,27 +282,13 @@ if __name__ == '__main__':
 	filename1='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark/inspection_dic.json' #
 	# filename1='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed/inspection_dic.json' 
 
-	update_inspection_dict(inspection_path=filename0, new_inspection_path=filename1)
+	# fuse_inspection_dict_maps(inspection_path=filename0, new_inspection_path=filename1)
 
-
-	# import pandas as pd
-	# import geopandas
-	# import matplotlib.pyplot as plt
-	# import geopandas as gd
-	# from shapely.geometry import Point
-	# from shapely.ops import nearest_points
-	# df = pd.DataFrame(inspection_dict)
-	# df['id'] = [k for k in range(len(df))]
-	# df=df.rename(columns={"lon": "Longitude", "lat": "Latitude", "alt": "Altitude"}, errors="raise")
-	# df1 = gd.GeoDataFrame(	df, geometry=gd.points_from_xy(df.Longitude, df.Latitude))
-	# df1['centroid'] = df1.centroid
-	# print( f'\n map has {len(df)} nodes:\n', df1.head() )
-
-	# df = pd.DataFrame(inspection_dict2)
-	# df=df.rename(columns={"lon": "Longitude", "lat": "Latitude"}, errors="raise")
-	# df2 = gd.GeoDataFrame(	df, geometry=gd.points_from_xy(df.Longitude, df.Latitude))
-	# df2['centroid'] = df2.centroid
+	# load the inspection coordinates
+	inspection_path='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed/inspection_dic.json' 
+	inspection_dict=load_json(inspection_path)
+	sample_token=get_sensor_data_from_location(inspection_dict, picked_location={"lat":43.931097, "lon":-78.867443})
 
  
-
+  
 

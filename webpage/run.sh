@@ -1,6 +1,6 @@
 #!/bin/bash
 eval "$($(which conda) 'shell.bash' 'hook')"
-conda activate hais-node-env3
+conda activate hais-node-env
 ############################################################
 
 # echo "Running HAIS webserver"

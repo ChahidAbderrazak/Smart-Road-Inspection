@@ -199,23 +199,23 @@
       <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
           <h1 class="h3">Inspection Nodes
-
-                <select id="NodeName" multiple="multiple">
-                  <option value="1" >node1</option>
-                  <option value="2">node2</option>
-                  <option value="3" >node3</option>
-                  <option value="4">node4</option>
-                  <option value="5">node5</option>
-                  <option value="6">node6</option>
+              <select id="NodeName" multiple="multiple">
+                <option value="node1" selected >node1</option>
+                <option value="node2">node2</option>
+                <option value="node3" >node3</option>
+                <option value="node4">node4</option>
+                <option value="node5">node5</option>
+                  <option value="node6">node6</option>
               </select>
-              Road classes
+              Highway conditions 
               <select id="roadClass" multiple="multiple">
-                <option class=gray value="0" >undefined</option>
-                <option class=green value="1"> excelent roads</option>
-                <option class=lightgreen value="2" >good roads</option>
-                <option class=orange value="3">medium roads</option>
-                <option class=red  value="4">bad roads</option>
+                <option class=gray value="0" selected>Scanned road</option>
+                <option class=green value="3"selected> Good roard</option>
+                <option class=orange value="2"selected>Meduim roard</option>
+                <option class=red  value="1"selected>Bad roard</option>
               </select>
+              
+              <button id="show-inspections" type="button" class="btn btn-lg btn-primary btn-block" >Show nodes</button>
 
           </h1>
           <div class="btn-toolbar mb-2 mb-md-0">
@@ -224,26 +224,39 @@
           </div>
         </div>
         <div id="map" style="width: 1800px; height: 500px;"></div>
+
+        
         <script>
 
-          // --------------------------------------- color the road classes  ------------------------------------
-          document.getElementById("roadClass").addEventListener("change", function() {
-                this.className = this.value;
-            });
-          
-          let selected = localStorage.getItem("selected");
-          let roadClass = document.getElementById("roadClass");
+// ############################### EVENTS  ###############################
+      function plot_nodes_list(selectObject) {
+                let numberSelected = 0;
+                for (let i = 0; i < selectObject.options.length; i++) {
+                    if (selectObject.options[i].selected) {
+                      numberSelected++;
+                      console.log(`- plotting node: ${selectObject.options[i].value} `);
+                      var selected_node = selectObject.options[i].value;
+                      fetch_coordinates(selected_node)
+                      }
+                    }
+                return numberSelected;
+              }
 
-          if (selected) {
-              roadClass.selectedIndex = selected;
-              roadClass.className = roadClass.value;
+        const btn = document.getElementById('show-inspections');
+
+        btn.addEventListener('click', () => {
+          // const NodeName = document.selectNodes.NodeName;
+          const NodeName =this.NodeName
+          // plot the selected nodes
+          plot_nodes_list(NodeName);
+        });
+
+          // ---------------------------- Onclick nodes selection -----------------------------------------------
+          function request_nodes_damage_classes(e) {
+            var index = 'node1';
+            console.log(`- selection ${e}: indx= ${this.selectedIndex}  node= ${this.NodeName}  class=${this.className} `);
+            fetch_coordinates(index)
           }
-
-          roadClass.addEventListener("change", function() {
-              localStorage.setItem("selected", this.selectedIndex);
-              this.className = this.value;
-          });
-
 
          // ----------------------------------  Sensor data popup  -----------------------------------------
           popup_msg = "";
@@ -252,12 +265,12 @@
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           }).addTo(map);
-
           const popup = L.popup()
             .setLatLng([51.513, -0.09])
             .setContent('Click on the road to visualise the sensors data')
             .openOn(map);
         
+// ############################### FUNCTIONS  ###############################
           // ---------------------------- Onclick data exploration -----------------------------------------------
           function onMapClick(e) {
             var res={'CSI_CAMERA': "../static/tmp/cam.jpg", 
@@ -281,40 +294,51 @@
           map.on('click', onMapClick);
 
           // ----------------------------- Fetsch the route coordinates ----------------------------------------------
-          var index = 'node1';
           function getColor(x) {
-            return x < 0     ?    'rgb(44, 40, 40)':
-                  x < 1     ?   'rgb(244, 11, 11)':
-                  x < 2     ?   'rgb(230, 81, 26)':
-                  x < 3     ?   'rgb(169, 224, 87)':
-                  'rgb(11, 93, 11)' ;
+            return x <= 0     ?    'gray':
+                  x <= 1     ?   'red':
+                  x <= 2     ?   'orange':
+                  x <= 3     ?   'green':
+                  'green' ;
           };
-          fetch(`/get_routes/${index}`)
-            .then(function (response) {
-                return response.text();
-            }).then(function (text) {
-                // console.log('Retreived road:');
-                // console.log(text); 
-                // get the route coordinate and color
-                var latlngs = [];
-                var roads_color = [];
-                resObj = JSON.parse(text)
-                console.log('lat coordinates:');
-                console.log(resObj.alt); 
-                for (i = 1; i < resObj.alt.length; i++) {
-                  latlngs = []
-                  latlngs.push([resObj.lon[i-1], resObj.lat[i-1] ]);
-                  latlngs.push([resObj.lon[i], resObj.lat[i] ]);
-                  roads_color.push(getColor(resObj.metric[i]));
-                  x=resObj.metric[i]
-                  var polyline = L.polyline(latlngs, {color: getColor(x), weight: 8}).addTo(map); //, lineCap: 'square'
-                }
-                // // console.log('Retreived road coordinates:');
-                // // console.log(latlngs); 
-                // var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
-                // zoom the map to the polyline
-                map.fitBounds(polyline.getBounds());
-            });                
+
+          // function getColor(x) {
+          //   return x < 0     ?    'rgb(44, 40, 40)':
+          //         x < 1     ?   'rgb(244, 11, 11)':
+          //         x < 2     ?   'rgb(230, 81, 26)':
+          //         x < 3     ?   'rgb(169, 224, 87)':
+          //         'rgb(11, 93, 11)' ;
+          // };
+          
+          function fetch_coordinates(index){
+            fetch(`/get_routes/${index}`)
+              .then(function (response) {
+                  return response.text();
+              }).then(function (text) { 
+                  console.log(`Retreived road of node ${index} :`);
+                  console.log(text); 
+                  // get the route coordinate and color
+                  var latlngs = [];
+                  var roads_color = [];
+                  resObj = JSON.parse(text)
+                  console.log('lat coordinates:');
+                  console.log(resObj.alt); 
+                  for (i = 1; i < resObj.alt.length; i++) {
+                    latlngs = []
+                    latlngs.push([resObj.lon[i-1], resObj.lat[i-1] ]);
+                    latlngs.push([resObj.lon[i], resObj.lat[i] ]);
+                    roads_color.push(getColor(resObj.metric[i]));
+                    x=resObj.metric[i]
+                    var polyline = L.polyline(latlngs, {color: getColor(x), weight: 8}).addTo(map); //, lineCap: 'square'
+                  }
+                  // // console.log('Retreived road coordinates:');
+                  // // console.log(latlngs); 
+                  // var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
+                  // zoom the map to the polyline
+                  map.fitBounds(polyline.getBounds());
+              });   
+            };             
+        
         </script>  
     </main>
     </div>

@@ -7,10 +7,10 @@ conda activate $env_name
 # conda activate hais-node-env2  
 
 #######################        SYNTAX      ##########################
-# python quick.py
+python store.py
 # python syntax.py
 
-#######################  SENSORS FUNCTIONS ##########################
+######################  SENSORS FUNCTIONS ##########################
 # echo && echo && echo  "--> Test sensors functions"
 # python lib/sensors.py
 
@@ -31,9 +31,9 @@ conda activate $env_name
 # echo && echo && echo  "--> Build and generate structures HAIS-database "
 # python lib/dji_drone.py
 
-# Build Nuscene-like database  using HAIS database stucture
-echo && echo  "--> Build Nuscene-like database  using HAIS database stucture "
-python lib/hais_database.py
+# # Build Nuscene-like database  using HAIS database stucture
+# echo && echo  "--> Build Nuscene-like database  using HAIS database stucture "
+# python lib/hais_database.py
 
 
 # #####################  VISUALIZATION MODULE ##########################

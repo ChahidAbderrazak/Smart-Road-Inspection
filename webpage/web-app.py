@@ -11,7 +11,7 @@ from lib.Autils_classification import predict_image
 
 app = FastAPI()
 download_path=os.path.join(os.getcwd(),'download')
-
+# download_path='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31'
 try:
     app.mount("/static", StaticFiles(directory="static"), name="static")
     templates = Jinja2Templates(directory="templates/")
@@ -130,6 +130,14 @@ def  get_routes(node_name):
     f=open(os.path.join(download_path,node_name,'inspection_dic.json'))
     data=json.load(f)
     return data
+
+@app.route('/get_popup_data/<string:ego_token>/')
+def  get_popup_data(ego_token):
+    print(f'\n ego_token={ego_token}')
+    # f=open(os.path.join(download_path,node_name,'inspection_dic.json'))
+    # data=json.load(f)
+    return data
+
 
 from typing import Union
 from fastapi import FastAPI

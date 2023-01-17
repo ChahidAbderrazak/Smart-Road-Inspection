@@ -348,12 +348,10 @@ class HAIS_GUI(QWidget):
 			return
 		self.sensor_folder=os.path.join(self.dataroot, 'sweeps', self.sensor_name)
 		# retreive list of files
-		
+		self.list_files=[path for path in glob(os.path.join(self.sensor_folder, '*')) if os.path.isfile(path)]
 		if self.enable_nscene:
 			self.nb_data_samples=len(self.DB.inspection_dict['token'])
-			self.list_files=[path for path in glob(os.path.join(self.sensor_folder, '*')) if os.path.isfile(path)]
 		else:
-			self.list_files=[path for path in glob(os.path.join(self.sensor_folder, '*')) if os.path.isfile(path)]
 			self.nb_data_samples=len(self.list_files)
 
 		if self.nb_data_samples>0:

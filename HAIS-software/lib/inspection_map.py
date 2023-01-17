@@ -24,7 +24,7 @@ class HAIS_map(object):
 		self.radius=radius
 		self.route_list = []
 		self.route_colors = []
-		self.available_colors = ['red', 'salmon', 'orange', 'yellow', 'green']
+		self.available_colors = ['red', 'salmon', 'orange', 'yellow', 'green', 'green']
 		self.max_St = max_St               # maximun streets annotation to visualise (eg: -1 for all)
 		# initializethe map  the graph
 		self.initialize_location_map()
@@ -252,13 +252,14 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 	# average status horison
 	horison=2
 	# define te colors and inspection status:
-	available_colors = ['gray', 'red',  'orange',  'green'] # ['gray', 'red', 'coral', 'orange', 'aquamarine2', 'green']
+	available_colors = ['gray', 'red',  'orange',  'green', 'green'] # ['gray', 'red', 'coral', 'orange', 'aquamarine2', 'green']
 	if show_lanemarker:
-		inspect_status = ['Scanned lanemarkers','Low reflectivity',  'Meduim reflectivity', 'Good reflectivity']
+		inspect_status = ['Scanned lanemarkers','Low reflectivity',  'Meduim reflectivity', 'Good reflectivity', 'Excellent reflectivity']
 	else:
-		inspect_status = ['Scanned road','Bad roard', 'Meduim roard', 'Good roard']
+		inspect_status = ['Scanned road','Bad roard', 'Meduim roard', 'Good roard', 'Excellent roard']
 	# load HAIS data
-	lat_coord, lon_coord, metric_list=[],[],[]
+	lat_coord, lon_coord, token_coord, metric_list=[],[],[], []
+	raod_coord,lanemarker_coord = [], []
 	cnt=0
 	print(f'\n - The map will show {len(list_missions)} missions. Please wait :) ...')
 	for dataroot in list_missions:
@@ -280,6 +281,13 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 				# upadte the map routes
 				lat_coord+=inspection_dict['lat']+[-1]
 				lon_coord+=inspection_dict['lon']+[-1]
+				token_coord+=inspection_dict['token']+['']
+				raod_coord+=inspection_dict['metric']+['']
+				try:
+					lanemarker_coord+=inspection_dict['Lanemarker']+['']
+				except:
+					print(f'\n Lanemarker data does not exsit!!')
+					pass
 				if show_lanemarker:
 					metric_list+=inspection_dict['Lanemarker']+[-1]
 					# print('landmaker status: \n',inspection_dict['Lanemarker'] )
@@ -295,6 +303,9 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 
 	inspection_routes={	'lat':lat_coord,
 											'lon':lon_coord,
+											'token':lat_coord,
+											'road':lon_coord,
+											'Lanemarker':lat_coord,
 											'metric':metric_list}
 
 	df = DataFrame(inspection_routes)
@@ -305,7 +316,7 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 	df2 = df.drop(df[(df.lat==-1) & (df.lon==-1)].index)
 	ave_lt = sum(df2['lat'])/len(df2)
 	ave_lg = sum(df2['lon'])/len(df2)
-	myMap = folium.Map(location=[ave_lt, ave_lg], zoom_start=10) 
+	myMap = folium.Map(location=[ave_lt, ave_lg], zoom_start=20) 
 	# draw the routes
 	print(f'\n metrics={np.unique(metrics)}')
 	draw_polylines(points, metrics, myMap, available_colors, inspect_status, horison=horison)
@@ -317,6 +328,7 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 	# open the map in the browser
 	open_map_html(map_path)
 
+
 #%%####################### MAIN 
 def run_visualize_nodes_inspection():
 	maps_root='bin/maps'
@@ -325,19 +337,19 @@ def run_visualize_nodes_inspection():
 	# 							'/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road/ERC-parking']
 
 	##-------------------  NODE -------------------
-	list_missions=[	'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak',
-									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all',
-									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed',
-									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' ,
-									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark',
-									'/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2']
-	
+	# list_missions=[	'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak',
+	# 								'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all',
+	# 								'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed',
+	# 								'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' ,
+	# 								'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark',
+	# 								'/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2']
+
+	list_missions=[	'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed',
+									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed']
 	
 	# save the visualized map
 	visualize_map(list_missions, maps_root=maps_root)
 
-
-											
 if __name__ == '__main__':
 
 	# # genrate  Nroutes randomly inspected roads 
