@@ -13,7 +13,7 @@ import os.path as osp
 import numpy as np
 from glob import glob
 
-class HAIS_node:
+class HAIS_database:
 	"""
 	Database class for HAIS-bot to store compatible data structue with the nuScenes database structure.
 	"""
@@ -28,17 +28,15 @@ class HAIS_node:
 			:param verbose: Whether to print status messages during load.
 			:param map_resolution: Resolution of maps (meters).
 			"""
-			print(f'\n - Preparing the database: \n{dataroot}')
 			self.dataroot=dataroot
 			self.version = version
 			self.verbose = verbose
+			self.nusc=None
 			self.config_file=os.path.join(self.dataroot, 'info.json')
 			self.config=self.load_config()
 			self.node_name=self.config["vehicle"]
-			# If Drone, build the predefined data structure od HAIS node
-			self.convert_drone_database()
-			# building the json tables
-			self.create_database_table()
+			# load/create database
+			self.load_create_database()
 			# display
 			self.display()
 
@@ -71,7 +69,7 @@ class HAIS_node:
 
 	def display(self):
 		print(f'\n########################################################')
-		print(f'##            Creating the  HAIS database              ')
+		print(f'##            HAIS database              ')
 		print(f"## - Node= {self.node_name} 	")
 		print(f"## - dataset= {self.version} 	\n## - root= {self.dataroot}")
 		print(  f'########################################################')
@@ -144,15 +142,15 @@ class HAIS_node:
 						print("{} {},".format(len(getattr(self, table)), table))
 				print("Done loading in {:.3f} seconds.\n======".format(time.time() - start_time))
 
-	def create_database_root(self):
+	def create_database_folder_structure(self):
 		import shutil
-		# 
 		DIR=osp.join(self.dataroot, self.version)
 		if not os.path.exists(DIR):
 				os.makedirs(DIR)
 		else:
 			shutil.rmtree(DIR) 
 			os.makedirs(DIR)
+			os.remove(osp.join(self.dataroot, 'inspection_dic.json'))
 			print(f'\n Warrning: the old {self.version} database is removed and replaced by a new one!! \n')
 
 	def pkl_to_dict(self, filename):
@@ -174,21 +172,6 @@ class HAIS_node:
 			self.lidarseg_idx2name_mapping[lidarseg_category['index']] = lidarseg_category['name']
 			self.lidarseg_name2idx_mapping[lidarseg_category['name']] = lidarseg_category['index']
 
-	def create_database(self):
-		'''
-		Creation of a structured HAIS database
-		'''
-		try:
-			# display
-			print(f'\n - Creating the structured HAIS database')
-			print(f'\t - Sensor folder={self.scenes_path} ')
-			self.build_database_tables()
-			
-		except:
-			# create the database root
-			self.create_database_root()
-			self.build_database_tables()
-
 	def check_gps_position_format(self, translation):
 		'''
 		Checking the position in decimal degrees format and range from -90 to 90 for latitude and -180 to 180 for longitude.
@@ -208,8 +191,9 @@ class HAIS_node:
 		# check the mission file 		
 		if not os.path.exists(self.scenes_path):
 			msg=f'\n\n - The sensors data file [{ self.scenes_path}] does not  exist!! \
-				\n Please check the file <config/config.json> '
+				\n Please check the file <config/config.json> config[DATA]'
 			raise Exception(msg)
+			# return 
 		# Build log table + new entry 
 		log_filename = self.get_table_path('log')
 		log_table = self.load_json(log_filename)
@@ -494,7 +478,7 @@ class HAIS_node:
 				return data
 
 			else:
-				msg =f'\n\n Error: The JSON file <{filename}> cannot be cound!!'
+				msg =f'\n\n Error: The JSON file <{filename}> cannot be found!!'
 				raise Exception(msg)
 
 		except:
@@ -507,10 +491,10 @@ class HAIS_node:
 		try:
 			# Using a JSON string
 			with open(filename, 'w') as outfile:
-				json.dump(json_string, outfile,indent=2)
+				json.dump(json_string, outfile, indent=2)
 				return 0
-		except:
-			print(f'\n\n - error in saving {filename}')
+		except Exception as e:
+			print(f'\n\n - error in saving {filename}\n Exception: {e}')
 			return 1
 
 	def pkl_to_dict(self, filename):
@@ -742,6 +726,112 @@ class HAIS_node:
 			}
 		return entry
 
+#%%	#################	 Main methods	 ################# 
+
+	def load_create_database(self):
+		'''
+		Creation of a structured HAIS database
+		'''
+		try:
+			print(f'\n - Loading the Nuscenes database ...')
+			from nuscenes.nuscenes import NuScenes
+			self.nusc = NuScenes(version=self.version, dataroot=self.dataroot, verbose=self.verbose)
+			my_scene=self.nusc.scene[0]
+			print(f'\n\n ==> List of recorded scenes: \n ')
+			self.nusc.list_scenes()
+			if self.verbose:
+				print(f'\n - The Nuscnesdatabase is already created.')
+			
+		except Exception as e:
+			# display
+			if self.verbose:
+				print(f'\n - Building the Nuscenes database ...')
+				print(f'\t - dataset root={self.dataroot} ')
+			# create the database root
+			self.create_database_folder_structure()
+			# If Drone, build the predefined data structure od HAIS node
+			self.convert_drone_database()
+			# convert the colected data to Nuscnes database 
+			self.build_database_tables()
+			# create the Nuscenes DB object
+			self.nusc = NuScenes(version=self.version, dataroot=self.dataroot, verbose=True)
+	
+		# laod the inspection dict
+		self.inspect_json_file=os.path.join(self.dataroot, 'inspection_dic.json')
+		self.inspection_dict=self.load_json(self.inspect_json_file)
+		self.ego_idx=0
+		return 
+
+	def update_inspection_dict(self, module_name, values_metric):
+		new_inspct_dict={module_name:[]}
+		self.inspection_dict.update(new_inspct_dict)
+		self.inspection_dict[module_name]=values_metric
+		# print(f'\n - self.inspection_dict={self.inspection_dict}')
+		self.save_json(self.inspection_dict, self.inspect_json_file)
+
+	def get_file_path_ego(self, sensor_name, n=0):
+		self.ego_idx+=n
+		try:
+			ego_token=self.inspection_dict['token'][self.ego_idx]
+		except Exception as e:
+			print(f'\n error in loading the ego token!!!\, Exception={e}')
+			self.ego_idx=0
+			return '', [-1, -1,-1]
+		self.sample_token=ego_token.split('_f')[0]
+		filename, car_position=self.get_file_path(sensor_name, n=0)
+		if filename=='':
+			filename, car_position = self.get_file_path_ego(sensor_name, n=n)
+		# input(f'\n self.sample_token={self.sample_token}\n\n filename={filename}')
+		return filename, car_position
+
+	def get_file_path(self, sensor_name, n=1):
+		# input(f'\n self.my_sample={self.my_sample}\n sensor_name={sensor_name} ')
+		if n==1:
+			self.sample_token=self.my_sample['next']
+		elif n==-1:
+			self.sample_token=self.my_sample['prev']
+
+		if self.sample_token=='':
+			return '', [-1,-1,-1]
+		else:
+			self.my_sample = self.nusc.get('sample', self.sample_token)
+			# input(f'\n self.my_sample={self.my_sample}\n sensor_name={sensor_name} ')
+			sensors_list=self.my_sample['data']
+			if sensor_name in sensors_list.keys():
+				sensor_data_sample=self.nusc.get('sample_data', self.my_sample['data'][sensor_name])
+				filename=os.path.join(self.dataroot, sensor_data_sample['filename'])
+				ego_pos=self.nusc.get('ego_pose', sensor_data_sample['ego_pose_token'])
+				car_position=ego_pos["translation"]
+				# input(f'\n self.sample_token={self.sample_token}\n\n ego_pos={ego_pos}')
+				return filename, car_position
+			else:
+				return '', [-1,-1,-1]
+
+	def get_list_sensors(self):
+		self.my_scene=self.nusc.scene[0]
+		self.sample_token=self.my_scene['first_sample_token']
+		self.my_sample = self.nusc.get('sample', self.sample_token)
+		# print(f'\n\n ==> First sample of the scene: \n {my_sample}')
+		sensors=self.my_sample['data']
+		list_sensors=list(sensors.keys())
+		return list_sensors
+
+	def explore_database(self):
+
+		my_scene=self.nusc.scene[0]
+		print(f'\n\n ==> List of recorded scenes: \n ')
+		self.nusc.list_scenes()
+
+		print(f'\n\n ==> First scene: \n {my_scene}')
+
+		my_sample = self.nusc.get('sample', my_scene['first_sample_token'])
+		print(f'\n\n ==> First sample of the scene: \n {my_sample}')
+
+		sensors=my_sample['data']
+		list_sensors=self.get_list_sensors()
+		print(f'\n\n ==> List of sensors: \n {list_sensors}')
+
+
 if __name__ == '__main__':
 	# raw-data folder
 	##-------------------  DRONE -------------------
@@ -753,11 +843,28 @@ if __name__ == '__main__':
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
-	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark'
-	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark'
+	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
 	version='v1.0'
-	# Load the collected inspection sensors dataset
-	raw_data = HAIS_node(dataroot=dataroot, version=version)
 
-	# create the database structure
-	raw_data.create_database()
+	# load/create the database structure from the collected inspection sensors dataset
+	DB = HAIS_database(dataroot=dataroot, version=version, verbose=True)
+	# explore the database
+	DB.explore_database()
+	# list sensors names
+	list_sensors=DB.get_list_sensors()
+	sensor_name= 'CSI_CAMERA' #'RIGHT_CAMERA'
+	# filename, car_position=DB.get_file_path(sensor_name, n=1)
+	for n in range(7):
+		filename, car_position=DB.get_file_path_ego(sensor_name, n=-1)
+		print(f'\n filename={filename}')
+		
+	# lon=DB.inspection_dict['lon']
+	# values_metric=[k for k in range(len(lon))]
+	# module_name="landmaerk"
+	# DB.update_inspection_dict(module_name, values_metric)
+	
+
+
+
+ 

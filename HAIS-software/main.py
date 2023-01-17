@@ -12,7 +12,7 @@ def convert_measurment_to_database(dataroot):
 
 def create_HAIS_database(dataroot, version='v0.0'):
 	# Load the collected inspection sensors dataset
-	raw_data = hais_database.HAIS_node(dataroot=dataroot, version=version)
+	raw_data = hais_database.HAIS_database(dataroot=dataroot, version=version)
 
 	# create the database structure
 	raw_data.create_database()

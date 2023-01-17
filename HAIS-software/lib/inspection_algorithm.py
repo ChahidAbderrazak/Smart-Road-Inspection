@@ -84,9 +84,10 @@ def resize_image(src_image, size):
 
 def inspection_patch_matching(img_path, hole_patch_root, patch_size=(256,256), detect_th=0.75, disp=True):
     '''
-    DSP-based road inspection using patch matching
+    patch matching-based road inspection   
     '''
-    print(f'\n ===>  DSP-based road inspection')
+    print(f'\n ===>  Patch matching-based road inspection:  \
+            \n - patch_size={patch_size}, detect_th={detect_th} ')
     import numpy as np
     import matplotlib.pyplot as plt
     from glob import glob
@@ -148,14 +149,17 @@ def evalute_damage(damage_mask_rgb, th=[0.08, 0.11]):
     small = len(np.where(damage_mask>th[1])[0])  
     
     medium = all_pixels - deep -small - zeros
-    # print(f'\n - zeros={zeros}, \n - small={small}, \n - deep={deep}, \n - all_pixels={all_pixels} \n - medium={medium}') 
-    deep=int(100*deep/all_pixels)
-    medium=int(100*medium/all_pixels)
-    small=int(100*small/all_pixels)
+    meter_pixels=0.01*all_pixels
+    # print(f'\n - zeros={zeros}, \n - small={small}, \n - deep={deep}, \n - medium={medium} , \n - all_pixels={all_pixels} , \n - meter_pixels={meter_pixels} ') 
+    deep=int(100*deep/meter_pixels)
+    medium=int(100*medium/meter_pixels)
+    small=int(100*small/meter_pixels)
 
     dict={  'deep':f'{deep}%',
             'medium':f'{medium}%',
             'small':f'{small}%'}
+    # import time
+    # time.sleep(2)
     return dict
 
 def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1, 
@@ -238,17 +242,33 @@ def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1,
     mask[image>150]=0
     # evaluate the damage
     dict_damage=evalute_damage(mask)
-    print(f' damage report={dict_damage}')
+    # print(f' damage report={dict_damage}')
     # display
     if disp:
         utils.show_two_image(image, mask,img_title=f'road damages', figsize = (8,8))
 
     return lane, mask, nb_cnts, dict_damage
 
+def get_road_diagnosis(nb_damages, dict_damage):
+    deep=float(dict_damage['deep'].replace('%', ''))
+    medium=float(dict_damage['medium'].replace('%', ''))
+    small=float(dict_damage['small'].replace('%', ''))
+    if  deep>5:
+        out_metric=1
+        color=(0,0,255)
+    elif medium>10:
+        out_metric=2
+        color=(0,255,255)
+    else:
+        out_metric=3
+        color=(0,255,0)
+
+    return out_metric, color
+
 def inspection_diff(img_path, bright_th=0, erosion_tol=1, 
                     cnt_th=[5, 300], cnt_size_ratio=0.1, disp=True):
     '''
-    DSP-based road inspection using image derivatives
+    image variation-based road inspection  
     '''
     def image_diff(I):
         import cv2
@@ -271,7 +291,10 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
 
         return magnitude
 
-    print(f'\n ===>  DSP-based road inspection')
+    if disp:
+        print(f'\n ===>  image variation-based road inspection: \
+            \n - bright_th={bright_th}, erosion_tol={erosion_tol} \
+            \n - cnt_th={erosion_tol}, cnt_size_ratio={cnt_size_ratio}')
     import numpy as np
     import matplotlib.pyplot as plt
     from glob import glob
@@ -290,7 +313,8 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
     _, damage_mask, nb_cnts, dict_damage = residual_thresholding(image_RGB, diff_RGB, bright_th=bright_th, 
                                                    erosion_tol=erosion_tol, blur_size=(0, 0), cnt_th=cnt_th, 
                                                     cnt_size_ratio=cnt_size_ratio, disp=disp)
-    print(f'\n - nb damagges =  {nb_cnts}')
+    if disp:
+        print(f'\n - nb damagges =  {nb_cnts}')
     damage_img=cv2.addWeighted(image_RGB, 1, damage_mask, 0.8, 0)
     # utils.show_two_image(image_RGB, damage_img, img_title=f'Road inspection[{nb_cnts} damages]', figsize = (8,8))
 
@@ -459,6 +483,18 @@ def image_thresholding(image, bright_th=160, erosion_tol=1,
     lane_mrk_mask[cimg == 255]=image[cimg == 255]
     return lane, lane_mrk_mask, nb_cnts
 
+def get_lanemarker_diagnosis(reflection_coef):
+    if reflection_coef<0.2:
+        color=(0,0,255)
+        out_metric=1
+    elif reflection_coef<0.6:
+        color=(255,0,255)
+        out_metric=2
+    else:
+        color=(255, 255, 255)
+        out_metric=3
+    return out_metric, color
+    
 def lane_inspection(img_path, bright_th=160, erosion_tol=1, disp=1):
     import cv2
     # Load the image
@@ -580,9 +616,9 @@ def main_image_variation_inspection():
     cnt_size_ratio=0.1
     from glob import glob
     import cv2
-    img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-hais-data/HAIS_DATABASE-medium-speed'
+    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
     img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
-    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads'
+    # img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads'
     # list the existing images
     img_ext='.jpg'
     ##############
@@ -600,12 +636,13 @@ def main_image_variation_inspection():
             inspection_diff(img_path, bright_th=bright_th,
                             erosion_tol=erosion_tol, cnt_th=cnt_th, 
                             cnt_size_ratio=cnt_size_ratio, disp=False)
-        
+        # get diagnosis
+        out_metric, color= get_road_diagnosis(nb_damages, dict_damage)
         # Display the diagnosed frame
         damage_img = cv2.resize(damage_img, resize) 
         n,m, _=damage_img.shape
         if nb_damages>1:
-            color=(0,0,0)
+            # color=(0,0,0)
             cv2.putText(damage_img, f'{nb_damages} damages: {str(dict_damage)}', 
             (int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
                 0.6, color, 2)
@@ -635,14 +672,11 @@ def main_lanemarker_inspection():
     for k, img_path in enumerate(glob(os.path.join(img_folder,'*'))):#enumerate([1:2]):#
         # DSP-based road segmentation
         reflection_coef, lanemarker_img, image, lane_mrk_mask=lane_inspection(img_path, disp=0)#, bright_th=bright_th)
-
-        # Display the diagnosed frame
+        # get diagnosis
+        out_metric, color= get_lanemarker_diagnosis(reflection_coef)
         image = cv2.resize(image, resize) 
         n,m, _=image.shape
-        if reflection_coef<0.2:
-            color=(0,0,255)
-        else:
-            color=(255, 255, 255)
+        # Display the diagnosed frame
         cv2.putText(image, f'frame{k}:  reflection coef={reflection_coef:.2}', 
                     (int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
                      0.8, color, 2)
@@ -664,5 +698,5 @@ if __name__ == '__main__':
     # # DSP-based road segmentation
     # main_DSP_segmentation()
 
-    ## road lane inspection
-    main_lanemarker_inspection()
+    # ## road lane inspection
+    # main_lanemarker_inspection()

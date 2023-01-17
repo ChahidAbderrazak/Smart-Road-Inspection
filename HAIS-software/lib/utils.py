@@ -142,11 +142,12 @@ def load_image(path):
     # filename, file_extension = os.path.splitext(path)
     try:
         img = cv2.imread(path)
+        # print(f' The selected image file is [{path}] of size {img.shape}')
+        return img
     except:
         msg = '\n Error: the image path ' + path + 'cannot be loaded!!!!'
         raise Exception(msg)
-    # print(f' The selected image file is [{path}] of size {img.shape}')
-    return img
+    
 
 def save_image(img, filename):
 		import numpy as np

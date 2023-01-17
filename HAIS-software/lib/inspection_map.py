@@ -191,22 +191,22 @@ from IPython.display import HTML, display
 def rectify_route_positions(points_list):
 		return [(i,j) for (i,j) in points_list if i!=-1 and j!=-1]
 
-def draw_polylines(points, metrics, map, horison=2):
-		available_colors = ['gray', 'red', 'coral', 'orange', 'aquamarine2', 'green']
-		inspect_status = ['Scanned','Bad roard', '', 'Meduim roard', '', 'Good roard']
+def draw_polylines(points, metrics, map, available_colors, inspect_status, horison=2):
 		# add ledend
 		lgd_txt = '<span style="color: {col};">{txt}</span>'
 		cur_metrics=np.unique(metrics)
+		cur_metrics=[k for k in cur_metrics if k!=-1]
+		print(f'\n flag: cur_metrics={cur_metrics}')
 		for k in range(len(cur_metrics)):
 				name, color = inspect_status[k], available_colors[k]
-				if name =='':
+				if name =='' :
 					continue
 				fg = folium.FeatureGroup(name= lgd_txt.format( txt= name, col= color))
 				map.add_child(fg)
 		folium.map.LayerControl('topleft', collapsed= False).add_to(map)
 
 		# Need to have a corresponding color for each point
-		if len(np.unique(metrics))> len(available_colors):
+		if len(np.unique(cur_metrics))> len(available_colors):
 			print(f'\n error: The defined {len(available_colors)} colors are not enough for {len(np.unique(metrics))} inspection cases ')
 			raise ValueError
 		# add inspection labels
@@ -221,7 +221,12 @@ def draw_polylines(points, metrics, map, horison=2):
 				continue
 
 			avg_metric=int( np.mean(metrics_list) )
-			curr=available_colors[avg_metric]
+			try:
+				curr=available_colors[avg_metric]
+			except Exception as e:
+				print(f'\n avg_metric={avg_metric}')
+				print(f'\n error in coloring the map segment !!!\n Exception={e}')
+				sys.exit(0)
 			# print(f'\n - points_list={points_list} ,  metrics_list={metrics_list} ---> {avg_metric}')
 			line = folium.PolyLine(points_list, color=curr, weight=8, opacity=0.8)
 			line.add_to(map)
@@ -243,7 +248,15 @@ def open_map_html(path):
 	filename='file:///'+ abs_path
 	webbrowser.open_new_tab(filename)
 
-def visualize_map(list_missions, maps_root):
+def visualize_map(list_missions, maps_root, show_lanemarker=False):
+	# average status horison
+	horison=2
+	# define te colors and inspection status:
+	available_colors = ['gray', 'red',  'orange',  'green'] # ['gray', 'red', 'coral', 'orange', 'aquamarine2', 'green']
+	if show_lanemarker:
+		inspect_status = ['Scanned lanemarkers','Low reflectivity',  'Meduim reflectivity', 'Good reflectivity']
+	else:
+		inspect_status = ['Scanned road','Bad roard', 'Meduim roard', 'Good roard']
 	# load HAIS data
 	lat_coord, lon_coord, metric_list=[],[],[]
 	cnt=0
@@ -267,7 +280,11 @@ def visualize_map(list_missions, maps_root):
 				# upadte the map routes
 				lat_coord+=inspection_dict['lat']+[-1]
 				lon_coord+=inspection_dict['lon']+[-1]
-				metric_list+=inspection_dict['metric']+[-1]
+				if show_lanemarker:
+					metric_list+=inspection_dict['Lanemarker']+[-1]
+					# print('landmaker status: \n',inspection_dict['Lanemarker'] )
+				else:
+					metric_list+=inspection_dict['metric']+[-1]
 				cnt+=1
 
 	# define the html map filepath
@@ -281,17 +298,17 @@ def visualize_map(list_missions, maps_root):
 											'metric':metric_list}
 
 	df = DataFrame(inspection_routes)
-	df = DataFrame(inspection_routes)
 	points = zip(df['lat'], df['lon'])
 	points = list(points)
-	# intialize the ap
+	metrics=df['metric'].values
+	# intialize the map
 	df2 = df.drop(df[(df.lat==-1) & (df.lon==-1)].index)
 	ave_lt = sum(df2['lat'])/len(df2)
 	ave_lg = sum(df2['lon'])/len(df2)
 	myMap = folium.Map(location=[ave_lt, ave_lg], zoom_start=10) 
-
 	# draw the routes
-	draw_polylines(points, df['metric'].values, myMap)
+	print(f'\n metrics={np.unique(metrics)}')
+	draw_polylines(points, metrics, myMap, available_colors, inspect_status, horison=horison)
 
 	# save map to html file
 	myMap.save(map_path)

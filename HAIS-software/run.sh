@@ -2,8 +2,9 @@
 clear
 eval "$($(which conda) 'shell.bash' 'hook')"
 echo  "--> Activating conda environment"
-env_name=hais-node-env2 #xct-cpu-env #
+env_name=hais-node-env2  
 conda activate $env_name
+# conda activate hais-node-env2  
 
 #######################        SYNTAX      ##########################
 # python quick.py
@@ -15,9 +16,9 @@ conda activate $env_name
 
 ######################  INSPECTION MODULE ##########################
 
-# # Run the DSP Based inspection algorithm 
-# echo && echo && echo  "--> Run the DSP Based inspection algorithm"
-# python  lib/inspection_algorithm.py
+# Run the DSP Based inspection algorithm 
+echo && echo && echo  "--> Run the DSP Based inspection algorithm"
+python  lib/inspection_algorithm.py
 
 
 # # Run lane inspection algorithm 
@@ -44,13 +45,13 @@ conda activate $env_name
 
 #######################  HAIS SOFTWARE ##########################
 
-# run the main script
-echo && echo " #################################################" 
-echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
-echo " #################################################" && echo 
+# # run the main script
+# echo && echo " #################################################" 
+# echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
+# echo " #################################################" && echo 
 
-# python main.py
-python main_gui.py --cfg config/config.yml 
+# # python main.py
+# python main_gui.py --cfg config/config.yml 
 
 
 conda deactivate 
