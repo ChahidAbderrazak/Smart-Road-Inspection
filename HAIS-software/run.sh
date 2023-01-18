@@ -7,7 +7,7 @@ conda activate $env_name
 # conda activate hais-node-env2  
 
 #######################        SYNTAX      ##########################
-python store.py
+# python store.py
 # python syntax.py
 
 ######################  SENSORS FUNCTIONS ##########################
@@ -45,13 +45,13 @@ python store.py
 
 #######################  HAIS SOFTWARE ##########################
 
-# # run the main script
-# echo && echo " #################################################" 
-# echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
-# echo " #################################################" && echo 
+# run the main script
+echo && echo " #################################################" 
+echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
+echo " #################################################" && echo 
 
-# # python main.py
-# python main_gui.py --cfg config/config.yml 
+# python main.py
+python main_gui.py --cfg config/config.yml 
 
 
 conda deactivate 

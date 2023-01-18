@@ -1,4 +1,4 @@
-import os, json
+import os, json, shutil, time
 from typing import List
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -8,9 +8,19 @@ from PIL import Image
 from io import BytesIO
 import numpy as np 
 from lib.Autils_classification import predict_image
+from lib import utils_hais
+
+
+# download_path=os.path.join(os.getcwd(),'download')
+download_path='/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download'
+max_dist=10   # maximal distance for the data to be displayed
+full_inspection_dict_path= os.path.join(os.path.dirname(download_path),'database', 'inspection_dic.json')
+# picked_location={"lat":43.937092, "lon":-78.867443}
+# dict_sensor=utils_hais.search_node_in_DB(download_path,	picked_location, disp=True)
+# print(f'\n sensor dict={dict_sensor}')
 
 app = FastAPI()
-download_path=os.path.join(os.getcwd(),'download')
+
 # download_path='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31'
 try:
     app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -124,38 +134,61 @@ def form_post(request: Request):
     return templates.TemplateResponse('contact.html', context={'request': request, 'image_path': image_path})
 
 
-### Ahamd API 
-@app.route('/get_routes/<string:node_name>/')
-def  get_routes(node_name):
-    f=open(os.path.join(download_path,node_name,'inspection_dic.json'))
-    data=json.load(f)
-    return data
-
-@app.route('/get_popup_data/<string:ego_token>/')
-def  get_popup_data(ego_token):
-    print(f'\n ego_token={ego_token}')
-    # f=open(os.path.join(download_path,node_name,'inspection_dic.json'))
-    # data=json.load(f)
-    return data
-
-
-from typing import Union
-from fastapi import FastAPI
-from pydantic import BaseModel
-
-class Item(BaseModel):
-    name: str
-    description: Union[str, None] = None
-    price: float
-    tax: Union[float, None] = None
-
-
 @app.get("/get_routes/{node_name}")
 async def read_user_me(node_name):
     print(f'\n requestd node is : {node_name}')
     f=open(os.path.join(download_path,node_name,'inspection_dic.json'))
     data=json.load(f)
     classes= np.unique(data['metric'])
-    print(f'\n - requestd node is : {node_name} \n - inspected road classes= {classes}')
+    # print(f'\n - requestd node is : {node_name} \
+    #         \n - inspected road classes= {classes} \
+    #         \n data ={data}')
     return data
 
+
+@app.get("/get_sensor_data/{location_str}")
+async def get_sensor_data(location_str):
+    #Clear the temporary folder of the sensor data
+    tmp_dir='static/tmp'
+    utils_hais.clean_directory(tmp_dir)
+
+    # get the closly collected data tothe picked location
+    location=location_str.split('__')
+    picked_location={"lat":float(location[0]), "lon":float(location[1])}
+    print(f'\n the picked location data is : {picked_location}')
+    dict_sensor=utils_hais.search_node_in_DB(database_root=download_path, picked_location=picked_location, max_dist=max_dist)
+    # copy the files locally
+    copy_senso_data(dict_sensor, tmp_dir)
+    # flag: serialize the json [quick solution as the <dict_sensor> does not POST correctly ]
+    data = serialize_sensor_dict(dict_sensor)
+    print(f'\n sensor data={data}')
+    return data
+
+def copy_senso_data(dict_sensor, tmp_dir):
+    
+    try:
+        dst_cam= os.path.join(tmp_dir, os.path.basename(dict_sensor['camera']) )
+        shutil.copy(dict_sensor['camera'], dst_cam) 
+        shutil.copy(dict_sensor['camera'], os.path.join(tmp_dir,'cam.jpg') )
+    except Exception as e: 
+        dst_cam=''
+        print(f'\n Error in loading the camera data!! \n Exception: {e}')
+    dict_sensor['camera']=dst_cam
+    # lidar
+    
+    try: 
+        dst_lidar= os.path.join(tmp_dir, os.path.basename(dict_sensor['lidar']) ) 
+        shutil.copy(dict_sensor['lidar'], dst_lidar) 
+        shutil.copy(dict_sensor['lidar'], os.path.join(tmp_dir,"lidar.gif")) 
+    except Exception as e:
+        dst_lidar='' 
+        print(f'\n Error in loading the lidar data!! \n Exception: {e}')
+    dict_sensor['lidar']=dst_lidar
+    
+def serialize_sensor_dict(dict_sensor):
+    tmp_filename='temp/dict_sensor.json'
+    utils_hais.save_json(dict_sensor, tmp_filename)
+    f=open(tmp_filename)
+    data=json.load(f)
+    
+    return data
