@@ -1,5 +1,5 @@
 {
-  "camera": "static/tmp/2022-10-31-17h-22min-33sec__CSI_CAMERA__523.jpg",
-  "Kenematics": "| ACCX Angle=-130 || ACCY Angle=-178 || GRYX Angle=10 || GYRY Angle=-215 || GYRZ Angle=-396 || CFangleX Angle=-178 || HEADING=209 || tiltCompensatedHeading=243 || kalmanX=-130 || kalmanY=-178 |",
+  "camera": "static/tmp/2022-10-31-17h-31min-47sec__CSI_CAMERA__1.jpg",
+  "Kenematics": "| ACCX Angle=45 || ACCY Angle=-44 || GRYX Angle=0 || GYRY Angle=0 || GYRZ Angle=0 || CFangleX Angle=-27 || HEADING=45 || tiltCompensatedHeading=32 || kalmanX=13 || kalmanY=-13 |",
   "lidar": ""
 }

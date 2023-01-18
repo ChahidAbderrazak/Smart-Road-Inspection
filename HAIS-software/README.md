@@ -16,6 +16,16 @@ Figue: The road inspection algorithms flowchart
 
 
 # Instructions
+0. **Setup the Firebase storage**
+
+https://console.firebase.google.com/u/0/
+
+```
+$ conda create -n hais-node-env python=3.7 conda -y 
+$ conda activate hais-node-env
+$ pip install -r setup-env/requirements.txt 
+```
+
 1. **Setup the conda environment**
 ```
 $ conda create -n hais-node-env python=3.7 conda -y 
