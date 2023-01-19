@@ -777,7 +777,7 @@ class HAIS_database:
 	def get_file_path_ego(self, sensor_name, n=0):
 		try:
 			ego_token=self.inspection_dict['token'][self.ego_idx]
-			print(f'\n ego_token={ego_token}')
+			# print(f'\n ego_token={ego_token}')
 		except Exception as e:
 			print(f'\n error in loading the ego token [{self.ego_idx}]!!!\n Exception={e}')
 			if n==1:

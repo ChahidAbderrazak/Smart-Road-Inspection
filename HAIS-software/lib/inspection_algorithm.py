@@ -133,34 +133,93 @@ def inspection_patch_matching(img_path, hole_patch_root, patch_size=(256,256), d
         plot_dsp_detection(road_hole_RGB, image, matching_score, mask, detection_list)
     return image, image_RGB, matching_score, mask
 
-def evalute_damage(damage_mask_rgb, th=[0.08, 0.11]):
+def evaluate_damage(damage_mask_rgb, th=[0.8, 0.11]):
     from skimage.color import rgb2gray
     # evaluate the damage
     damage_mask= rgb2gray(damage_mask_rgb)    
     zeros= len(np.where(damage_mask==0)[0])
+    # display
+    # if True: # flag
+    #     utils.show_two_image(damage_mask, damage_mask,img_title=f'damage mask', figsize = (8,8))
 
     n,m=damage_mask.shape
     all_pixels= len(np.where(damage_mask>0)[0])
     all_pixels=n*m
     if all_pixels==0:
         all_pixels=1
-
-    deep= len(np.where(damage_mask<=th[0])[0])-zeros
-    small = len(np.where(damage_mask>th[1])[0])  
+    print(f'\n damage_mask seg boundries: [min={np.min(damage_mask)}, max= {np.max(damage_mask)}] \n th= {th}')
     
-    medium = all_pixels - deep -small - zeros
-    meter_pixels=0.01*all_pixels
-    # print(f'\n - zeros={zeros}, \n - small={small}, \n - deep={deep}, \n - medium={medium} , \n - all_pixels={all_pixels} , \n - meter_pixels={meter_pixels} ') 
-    deep=int(100*deep/meter_pixels)
-    medium=int(100*medium/meter_pixels)
-    small=int(100*small/meter_pixels)
+    deep= np.abs(len(np.where(damage_mask<=th[0])[0])-zeros)
+    medium = np.abs(len(np.where(damage_mask>th[1])[0]))  
+    small=0
 
-    dict={  'deep':f'{deep}%',
-            'medium':f'{medium}%',
-            'small':f'{small}%'}
+    # medium = all_pixels - deep -small - zeros
+    meter_pixels=0.5*all_pixels
+    print(f'\n - zeros={zeros}, \n - small={small}, \n - deep={deep}, \n - medium={medium} , \n - all_pixels={all_pixels} , \n - meter_pixels={meter_pixels} ') 
+    deep=100*deep/meter_pixels
+    medium=100*medium/meter_pixels
+    small=100*small/meter_pixels
+    metric=deep+0.7*medium
+
+    dict={  'deep':f'{deep:.3}%',
+            'medium':f'{medium:.3}%',
+            'small':f'{small:.3}%',
+            'metric':f'{metric:.3}%'}
     # import time
     # time.sleep(2)
     return dict
+
+def auto_thresholding(mask0, disp=1): 
+    from kneed import KneeLocator
+    from scipy.signal import argrelextrema, savgol_filter
+    print(f'\n segments: {np.unique(mask0)}')
+    # histogram
+    hist, bin=np.histogram(mask0[mask0!=0].ravel(), 256, [0, 255])
+ 
+    # get the first wave
+    # hist=hist[: int(len(hist)/1.5)]
+    idx0=np.where(hist==hist.max())[0][0]
+    hist=hist[idx0:]
+    hist=savgol_filter(hist, window_length=5, polyorder=1, mode="nearest")
+    hist=hist/np.max(hist)
+    diff_hist=np.abs(np.diff(hist))
+    # Local maximas
+    idx0=idx=np.where(hist==hist.max())[0][0]
+    idx_max=np.where(hist[idx0: ]<=0.5)[0][0]
+    
+    if len(np.unique(hist))==1: # mask is empthy
+        return 0
+    
+    cnt=0
+    knee_loops=1
+    # for k in range(knee_loops): 
+    while(True): 
+        y=hist[idx: ]
+        x=range(1, len(y)+1)
+        kn=KneeLocator(x, y, curve='convex', direction='decreasing')
+        cnt+=1
+        try: 
+            # update the threshold index
+            idx+=kn.knee
+            if idx_max<idx: 
+                break
+        except Exception as e: 
+            if True:#enable_warning:
+                print('\n warning: Exiting the Knee curve localization!!\n Exception: {e}')
+            break
+
+    auto_th=bin[idx]
+    # dispaly
+    if disp>=1: # True: # flag  
+        x=range(1, len(hist)+1)
+        plt.xlabel('number of clusters k')
+        plt.ylabel('Sum of squared distances')
+        plt.plot(x, hist, 'bx-', label='histogram')
+        plt.plot(x[: -1], diff_hist, 'rx-', label='diff(histogram)')
+        plt.vlines(idx, plt.ylim()[0], plt.ylim()[1], linestyles='dashed', label='Auto-Th')
+        plt.title(f'idx0={idx0}. idx_max={idx_max} idx={idx}, auto_th={bin[idx]} [{cnt} loops]')
+        plt.show()
+    return auto_th
 
 def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1, 
                         blur_size=(5, 5), cnt_th=[110, 255], 
@@ -172,6 +231,9 @@ def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1,
     lane=diff_image.copy()
     lane[diff_image<bright_th]=0
     # lane[diff_image>=bright_th]=255
+    if disp:
+        utils.show_two_image(diff_image, image0,img_title=f'diff image', figsize = (8,8))
+
     # image erosion
     lane=image_erosion(lane, erosion_tol=erosion_tol)
     resized = imutils.resize(lane, width=300)
@@ -240,8 +302,21 @@ def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1,
     mask = np.zeros_like(image)
     mask[cimg==255]=image[cimg==255]
     mask[image>150]=0
+    # from skimage.color import rgb2gray, gray2rgb
+    # gray0=256*rgb2gray(image0)
+    # mask_gray=rgb2gray(mask)
+    # gray=gray0.copy()
+    # gray[mask_gray==0]=0
+    
+    # #thresholding
+    # auto_th=auto_thresholding(gray0, disp=1)
+
+    # if disp:
+    #     utils.show_two_image(gray, image0,img_title=f'damages pixel intensity', figsize = (8,8))
+
+
     # evaluate the damage
-    dict_damage=evalute_damage(mask)
+    dict_damage=evaluate_damage(mask)
     # print(f' damage report={dict_damage}')
     # display
     if disp:
@@ -253,16 +328,25 @@ def get_road_diagnosis(nb_damages, dict_damage):
     deep=float(dict_damage['deep'].replace('%', ''))
     medium=float(dict_damage['medium'].replace('%', ''))
     small=float(dict_damage['small'].replace('%', ''))
-    if  deep>5:
+    metric=float(dict_damage['metric'].replace('%', ''))
+    # if  deep>5:
+    #     out_metric=1
+    #     color=(0,0,255)
+    # elif medium>10:
+    #     out_metric=2
+    #     color=(0,255,255)
+    # else:
+    #     out_metric=3
+    #     color=(0,255,0)
+    if  metric>10:
         out_metric=1
         color=(0,0,255)
-    elif medium>10:
+    elif metric>5:
         out_metric=2
         color=(0,255,255)
     else:
         out_metric=3
         color=(0,255,0)
-
     return out_metric, color
 
 def inspection_diff(img_path, bright_th=0, erosion_tol=1, 
@@ -277,14 +361,15 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
         from scipy import ndimage
         I =  I.astype(np.float64)
         #-Derivative x
-        Kx = -1*np.array([[-1,0,1]])
+        Kx = -1*np.array([[-0.8,-1,0,1,0.8]])
         Fx = ndimage.convolve(I, Kx)
 
         #-Derivative y
-        Ky = -1*np.array([[-1],[0],[1]])
+        Ky = -1*np.array([[-0.5],[-1],[0],[1],[0.5]])
         Fy = ndimage.convolve(I, Ky)
         #--Magnitute
         magnitude = np.sqrt(Fx**2 + Fy**2) # G
+        print(f'\n max dif abs={np.max(np.abs(magnitude))}')
         return magnitude
 
     if disp:
@@ -543,7 +628,7 @@ def main_DSP_segmentation():
     list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
     list_images.sort()
     print(f'\n - Found images =  {len(list_images)} images')
-    for img_path in list_images:#[1:2]:#
+    for img_path in list_images[8:]:#:#
         # Load the image
         img =cv2.imread(img_path)
         # DSP-base segmentation 
@@ -605,16 +690,34 @@ def main_patch_matching_inspection():
             break
     print('end')
 
-def main_image_variation_inspection():
+def write_damage_report_on_image(damage_img, dict_damage, nb_damages, color):
+    if nb_damages>1:
+        n,m, _=damage_img.shape
+        cnt=0
+        for i, damage in enumerate([f'Damaged report [{nb_damages} damages]:']+ list(dict_damage.keys())):
+            if i<1:
+                damage_str=damage
+            else:
+                damage_str= f'- {damage} = {dict_damage[damage]}'
+            cv2.putText(damage_img, f'{damage_str}', 
+            (int(0.01*n) , int(0.1*m) + 30*cnt), cv2.FONT_HERSHEY_SIMPLEX,
+                0.6, color, 2)
+            cnt+=1
+    return damage_img
 
+def main_image_variation_inspection():
+    ##---------------------------------------------
     bright_th=0
     erosion_tol=1
     cnt_th=[5, 300]
     cnt_size_ratio=0.1
+    disp=False # True# 
+
+    ##---------------------------------------------
     from glob import glob
     import cv2
     img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
-    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
+    # img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
     # img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads'
     # list the existing images
     img_ext='.jpg'
@@ -627,22 +730,20 @@ def main_image_variation_inspection():
     list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
     list_images.sort()
     print(f'\n - Found images =  {len(list_images)} images')
-    for img_path in list_images[5:]:#:#
+    for k, img_path in enumerate(list_images[20:]):#):#
         # variation based inspection
+        print(f'\n image{k}')
         damage_img, image_RGB, mask, nb_damages, dict_damage = \
             inspection_diff(img_path, bright_th=bright_th,
                             erosion_tol=erosion_tol, cnt_th=cnt_th, 
-                            cnt_size_ratio=cnt_size_ratio, disp=False)
+                            cnt_size_ratio=cnt_size_ratio, disp=disp)
         # get diagnosis
         out_metric, color= get_road_diagnosis(nb_damages, dict_damage)
+        damage_img=write_damage_report_on_image(damage_img, dict_damage, nb_damages, color)
+
         # Display the diagnosed frame
         damage_img = cv2.resize(damage_img, resize) 
-        n,m, _=damage_img.shape
-        if nb_damages>1:
-            # color=(0,0,0)
-            cv2.putText(damage_img, f'{nb_damages} damages: {str(dict_damage)}', 
-            (int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
-                0.6, color, 2)
+  
      
         # Display the diagnosed frame
         cv2.imshow('DSP-based road inspection',damage_img)
@@ -651,6 +752,8 @@ def main_image_variation_inspection():
         out.write(damage_img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+        # input('click:')
     print('end')
 
 def main_lanemarker_inspection():

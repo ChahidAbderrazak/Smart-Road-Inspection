@@ -4,7 +4,7 @@ DATA: # real
   # data_root: '/media/abdo2020/DATA1/data/raw-dataset/hais-node' 
   data_root: '/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark' 
   # data_root: '/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
-  # data_root: '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download' # for the API server
+  data_root: '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download' # for the API server
   # data_root: 'data'
   version: 'v1.0'         # version of the Nuscene database to consider
   enable_nscene: True     # manage the DB using Nuscene packages

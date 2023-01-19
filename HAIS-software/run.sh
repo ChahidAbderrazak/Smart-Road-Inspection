@@ -3,6 +3,7 @@ clear
 eval "$($(which conda) 'shell.bash' 'hook')"
 echo  "--> Activating conda environment"
 env_name=hais-node-env2  
+# env_name=xct-cpu-env
 conda activate $env_name
 # conda activate hais-node-env2  
 
