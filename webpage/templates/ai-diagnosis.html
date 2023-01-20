@@ -89,25 +89,19 @@
 
     <div class="container-fluid">
       <div class="row">
+        <!-- --------------------------  Side-Bar Menu  ---------------------------------- -->
         <nav class="col-md-2 d-none d-md-block bg-light sidebar">
           <div class="sidebar-sticky">
             <ul class="nav flex-column">
-              
-              
-              <!-- --------------------------  Side-Bar Menu  ---------------------------------- -->
-              <li class="nav-item">
-                <a class="nav-link " href="/">
-                  <span data-feather="home"></span>
-                  Dashboard <span class="sr-only">(admin)</span>
-                </a>
+
 
               <li class="nav-item">
-                <a class="nav-link" href="/map">
+                <a class="nav-link" href="/">
                   <span data-feather="map"></span>
                   Road Conditions
                 </a>
               </li>
-              </li>
+             
 
               <li class="nav-item">
                 <a class="nav-link" href="/sensors">
@@ -116,7 +110,6 @@
                 </a>
               </li>
 
-              </li>
               <li class="nav-item">
                 <a class="nav-link" href="/ai">
                   <span data-feather="bar-chart-2"></span>
@@ -129,7 +122,8 @@
                   <span data-feather="layers"></span>
                   Reports
                 </a>
-
+              </li>
+              
               <li class="nav-item">
                 <a class="nav-link active" href="/contact">
                   <span data-feather="file-text"></span>
@@ -138,10 +132,11 @@
               </li>
               <!-- ----------------------------------------------------------------------------- -->
             </ul>
-
-           
           </div>
         </nav>
+
+
+
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
           <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-2 border-bottom">
             <h1 class="h3">Smart damage inspection: [status={{status_AI}}]</h1>
@@ -207,6 +202,7 @@
 
             </div>
         </main>
+
       </div>
     </div>
 

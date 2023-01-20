@@ -29,11 +29,6 @@ except:
     app.mount("/static", StaticFiles(directory="src/static"), name="static")
     templates = Jinja2Templates(directory="src/templates/")    
 
-@app.get('/')
-def read_form(request: Request): 
-    result ='home'
-    return templates.TemplateResponse('homepage.html', context={'request': request, 'result': result}) 
-
 @app.get("/ai")
 def form_post(request: Request):
     image_path = "static/files/prediction.jpg"
@@ -117,7 +112,7 @@ def form_post(request: Request):
     
     return templates.TemplateResponse('sensors.html', context={'request': request, 'image_path': image_path})
 
-@app.get("/map")
+@app.get("/")
 def form_post(request: Request):
     return templates.TemplateResponse('map.html', context={'request': request})
 

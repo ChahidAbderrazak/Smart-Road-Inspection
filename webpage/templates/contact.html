@@ -25,6 +25,7 @@
   </head>
 
   <body>
+    
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
       <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Smart Road Inspection</a>
       <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
@@ -40,20 +41,23 @@
         <nav class="col-md-2 d-none d-md-block bg-light sidebar">
           <div class="sidebar-sticky">
             <ul class="nav flex-column">
+              
+              
               <!-- --------------------------  Side-Bar Menu  ---------------------------------- -->
-              <li class="nav-item">
+              <!-- <li class="nav-item">
                 <a class="nav-link " href="/">
                   <span data-feather="home"></span>
                   Dashboard <span class="sr-only">(admin)</span>
                 </a>
+              </li> --> 
 
               <li class="nav-item">
-                <a class="nav-link" href="/map">
+                <a class="nav-link" href="/">
                   <span data-feather="map"></span>
                   Road Conditions
                 </a>
               </li>
-              </li>
+              
 
               <li class="nav-item">
                 <a class="nav-link" href="/sensors">
@@ -84,79 +88,80 @@
               </li>
               <!-- ----------------------------------------------------------------------------- -->
             </ul>
+
+           
           </div>
         </nav>
 
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
-          <div class="jumbotron p-3 p-md-5 text-white rounded bg-dark">
-            <div class="col-md-6 px-0">
-              <h1 class="display-7 font-italic"> Technical Assistance</h1>
-              <p class="lead my-3">If you have any question/issue with the software, please contact us using the following form..</p>
+          
+          
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+            <h1 class="h2">Sensors measurment</h1>
+            <!-- <h2 class="h3"> For your assistance </h2> -->
+            <div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+              </div>
             </div>
           </div>
-            <!--<h4 class=0"text-light mb-5">(Please upload images less than 500kb in size)</h4>-->
-            <form id="contact-form" method="post" action="contact.php" role="form">
-              <div class="messages"></div>
-                <div class="controls">
-                  <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group">
-                          <label for="form_name">Firstname *</label>
-                          <input id="form_name" type="text" name="name" class="form-control" placeholder="Please enter your firstname *" required="required" data-error="Firstname is required.">
-                          <div class="help-block with-errors"></div>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="form-group">
-                          <label for="form_lastname">Lastname *</label>
-                          <input id="form_lastname" type="text" name="surname" class="form-control" placeholder="Please enter your lastname *" required="required" data-error="Lastname is required.">
-                          <div class="help-block with-errors"></div>
-                        </div>
-                    </div>
+
+            <div class="row">
+              <div class="column">
+                <div class="card">
+                  <img src="../static/tmp/cam.jpg" height="350" width="auto" class="center">
+                  <div class="container">
+                    <h2>Camera</h2>
+                    <p class="title">RGB camera placed in the back o the car</p>
                   </div>
-                  <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group">
-                          <label for="form_email">Email *</label>
-                          <input id="form_email" type="email" name="email" class="form-control" placeholder="Please enter your email *" required="required" data-error="Valid email is required.">
-                          <div class="help-block with-errors"></div>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="form-group">
-                          <label for="form_need">Please specify your need *</label>
-                          <select id="form_need" name="need" class="form-control" required="required" data-error="Please specify your need.">
-                            <option value=""></option>
-                            <option value="Request quotation">Request quotation</option>
-                            <option value="Request order status">Request order status</option>
-                            <option value="Request copy of an invoice">Request copy of an invoice</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        <div class="help-block with-errors"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-12">
-                      <div class="form-group">
-                        <label for="form_message">Message *</label>
-                        <textarea id="form_message" name="message" class="form-control" placeholder="Message for me *" rows="4" required="required" data-error="Please, leave us a message."></textarea>
-                        <div class="help-block with-errors"></div>
-                      </div>
-                    </div>
-                    <div class="col-md-12">
-                        <input type="submit" class="btn btn-success btn-send" value="Send message">
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-12">
-                      <p class="text-muted">
-                        <strong>*</strong> These fields are required. 
-                      </p>
-                    </div>
-                  </div>
+                </div>
               </div>
-            </form>
+
+              <div class="column">
+                <div class="card">
+                  <img src="../static/tmp/lidar.gif" height="350"  width="auto" class="center">
+                  <div class="container">
+                    <h2>Lidar</h2>
+                    <p class="title">road surface smoothness</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="column">
+                <div class="card">
+                  <div class="container">
+                    <br>
+                    <p class="title"> GRZ = [42.2561555, 36.125555]]</p>
+                    <p class="title"> Navigation Angle = 12 &#8728; </p>
+                    <p class="title"> Speed = 25km/h</p>
+                    <p class="title"> Accelerate = 15 km/h<sup>2</sup></p>
+                    <p class="title"> GRX = 105 &#8728;</p>
+                    <p class="title"> GRY = 20 &#8728;</p>
+                    <p class="title"> GRZ = 1 &#8728;</p>
+                    <h2>Kenematics sensors</h2>
+                    <p class="title"> measure car vibration</p>
+                  </div>
+                </div>
+              </div>
+              <!--  Weather sensors: humidity, air pressure, ambient light intensity, Volatile Organic Compounds VOC, IR ray, UV r -->
+              <div class="column">
+                <div class="card">
+                  <div class="container">
+                    <br>
+                    <p class="title"> Temperature = -2 &#8451; </p>
+                    <p class="title"> Humidity = 12 %</p>
+                    <p class="title"> Light intensity = 12 W/sr</p>
+                    <p class="title"> VOC = 15 ppm</p>
+                    <h2>Weather sensors</h2>
+                    <p class="title">measure the wehather conditions</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+
+          
+
         </main>
       </div>
     </div>
