@@ -250,7 +250,7 @@
                 <select id="roadClass" multiple="multiple">
                   <option class=gray value="0" selected>Scanned road</option>
                   <option class=green value="3" selected> Good road</option>
-                  <option class=orange value="2" selected>Medium road</option>
+                  <option class=orange value="2" selected>Regular road</option>
                   <option class=red  value="1" selected>Bad roard</option>
                 </select>
     
@@ -274,7 +274,7 @@
               </div>
               <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
                 <span data-feather="calendar"></span>
-                This week
+                Last year
               </button>
             </div>
           </div>
@@ -584,12 +584,12 @@
       <!-- Inspection History Graphs -->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
       <script>
-        var days_axis =  ['June', 'July',  'August', 'September', 'October', 'November', 'December' ]
+        var days_axis =  ['January', 'February', 'March', 'April', 'May', 'June', 'July',  'August', 'September', 'October', 'November', 'December' ]
         // var days_axis = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] //["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]; // Utils.months({count: 7});//
         var data={
             labels: days_axis ,
             datasets: [{
-              data: [12, 1, 2, 15, 4, 4,21],
+              data: [14, 16, 13, 8, 19, 12, 1, 2, 15, 4, 4,21],
               label: 'Damaged ',
               lineTension: 0,
               backgroundColor: 'rgba(255, 99, 132, 0.2)',
@@ -597,7 +597,7 @@
               borderWidth: 1,
               // pointBackgroundColor: '#007bff'
             },{
-              data: [1, 0, 0, 2, 5, 14,3],
+              data: [5, 4, 7, 9, 7, 1, 0, 0, 2, 5, 14,3],
               label: 'in reperation',
               lineTension: 0,
               backgroundColor: 'rgba(255, 159, 64, 0.2)',
@@ -606,7 +606,7 @@
               // pointBackgroundColor: '#ff7300'
 
             },{
-              data: [10, 15, 6, 10, 4, 6,17],
+              data: [20, 15, 18, 13, 15, 10, 15, 6, 10, 4, 6,17],
               label: 'Repaired',
               lineTension: 0,
               backgroundColor: 'rgba(0, 255, 0, 0.2)',
@@ -623,7 +623,13 @@
                                   options: {
                                       scales: {
                                           x: {stacked: true},
-                                          y: {stacked: true}
+                                          y: {stacked: true},
+                                          yAxes: [{ ticks: {beginAtZero:false},
+                                                    scaleLabel: {
+                                                                  display: true,
+                                                                  labelString: 'Number of missions'
+                                                                }
+                                                 }]
                                       }},
                                   legend: { title : {text:"Inspection Statistics"},
                                             display: true,

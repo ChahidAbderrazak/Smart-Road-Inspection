@@ -139,6 +139,13 @@ def visualize_deblured_images(imblur, imdeblur, imdeblurfista, imdeblurtv, imdeb
 	plt.show()
 
 
+def popup_message():
+		# except Exception as e:
+			print(f'\n\n - Error in running the inspection.')
+			# QMessageBox.warning(self, "Error in running the inspection", f'{e}')
+			# raise e
+
+
 
 if __name__ == '__main__':
 	# # img_path='/media/abdo2020/DATA1/data/raw-dataset/data-demo/road-conditions-google/good-roads/road1.jpeg'

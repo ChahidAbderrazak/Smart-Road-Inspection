@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 try:
@@ -132,42 +133,6 @@ def inspection_patch_matching(img_path, hole_patch_root, patch_size=(256,256), d
     if disp:
         plot_dsp_detection(road_hole_RGB, image, matching_score, mask, detection_list)
     return image, image_RGB, matching_score, mask
-
-def evaluate_damage(damage_mask_rgb, th=[0.8, 0.11]):
-    from skimage.color import rgb2gray
-    # evaluate the damage
-    damage_mask= rgb2gray(damage_mask_rgb)    
-    zeros= len(np.where(damage_mask==0)[0])
-    # display
-    # if True: # flag
-    #     utils.show_two_image(damage_mask, damage_mask,img_title=f'damage mask', figsize = (8,8))
-
-    n,m=damage_mask.shape
-    all_pixels= len(np.where(damage_mask>0)[0])
-    all_pixels=n*m
-    if all_pixels==0:
-        all_pixels=1
-    # print(f'\n damage_mask seg boundries: [min={np.min(damage_mask)}, max= {np.max(damage_mask)}] \n th= {th}')
-    
-    deep= np.abs(len(np.where(damage_mask<=th[0])[0])-zeros)
-    medium = np.abs(len(np.where(damage_mask>th[1])[0]))  
-    small=0
-
-    # medium = all_pixels - deep -small - zeros
-    meter_pixels=0.5*all_pixels
-    # print(f'\n - zeros={zeros}, \n - small={small}, \n - deep={deep}, \n - medium={medium} , \n - all_pixels={all_pixels} , \n - meter_pixels={meter_pixels} ') 
-    deep=100*deep/meter_pixels
-    medium=100*medium/meter_pixels
-    small=100*small/meter_pixels
-    metric=deep+0.7*medium
-
-    dict={  'deep':f'{deep:.3}%',
-            'medium':f'{medium:.3}%',
-            'small':f'{small:.3}%',
-            'metric':f'{metric:.3}%'}
-    # import time
-    # time.sleep(2)
-    return dict
 
 def auto_thresholding(mask0, disp=1): 
     from kneed import KneeLocator
@@ -324,12 +289,55 @@ def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1,
 
     return lane, mask, nb_cnts, dict_damage
 
+def evaluate_damage(damage_mask_rgb, th=[0.08, 0.11]):
+    from skimage.color import rgb2gray
+    # evaluate the damage
+    damage_mask= rgb2gray(damage_mask_rgb)    
+    zeros= len(np.where(damage_mask==0)[0])
+
+
+    n,m=damage_mask.shape
+    all_pixels= len(np.where(damage_mask>0)[0])
+    all_pixels=n*m
+    if all_pixels==0:
+        all_pixels=1
+    # print(f'\n damage_mask seg boundries: [min={np.min(damage_mask)}, max= {np.max(damage_mask)}] \n th= {th}')
+    total_damages_pixels= len(np.where(damage_mask!=0)[0])
+    deep= np.abs(len(np.where(damage_mask<th[0])[0])-zeros)
+    small = np.abs(len(np.where(damage_mask>th[1])[0]))  
+    medium=total_damages_pixels-deep-small
+
+    # medium = all_pixels - deep -small - zeros
+    meter_pixels=0.5*all_pixels
+    # print(f'\n - zeros={zeros}, \n - small={small}, \n - deep={deep}, \n - medium={medium} , \n - all_pixels={all_pixels} , \n - total_damages_pixels={total_damages_pixels} ') 
+    deep=100*deep/meter_pixels
+    medium=100*medium/meter_pixels
+    small=100*small/meter_pixels
+    alpha=0.7  # deep crack coeficient
+
+    metric= deep + alpha*(medium+small)
+    # metric=alpha*deep+0.65*(1-alpha)*medium+0.35*(1-alpha)*small
+    # metric=alpha*metric+(1-alpha)*small
+
+    dict={  'deep':f'{deep:.3}%',
+            'medium':f'{medium:.3}%',
+            'small':f'{small:.3}%',
+            'metric':f'{metric:.3}%'}
+    # import time
+    # time.sleep(2)
+
+    # # display
+    # if True: # flag
+    #     utils.show_two_image(damage_mask, damage_mask,img_title=f'damage mask', figsize = (8,8))
+
+    return dict
+
 def get_road_diagnosis(nb_damages, dict_damage):
     deep=float(dict_damage['deep'].replace('%', ''))
     medium=float(dict_damage['medium'].replace('%', ''))
     small=float(dict_damage['small'].replace('%', ''))
     metric=float(dict_damage['metric'].replace('%', ''))
-    # if  deep>5:
+    # if  deep>0.09:
     #     out_metric=1
     #     color=(0,0,255)
     # elif medium>10:
@@ -338,15 +346,29 @@ def get_road_diagnosis(nb_damages, dict_damage):
     # else:
     #     out_metric=3
     #     color=(0,255,0)
+    # if  deep>1 or metric>10:
+    #     out_metric=1
+    #     color=(0,0,255)
+    # elif small<2 or metric<0.1:
+    #     out_metric=3
+    #     color=(0,255,0)
+    # else:
+    #     out_metric=2
+    #     color=(0,255,255)
+        
     if  metric>10:
         out_metric=1
         color=(0,0,255)
-    elif metric>5:
-        out_metric=2
-        color=(0,255,255)
-    else:
+    elif metric<4:
         out_metric=3
         color=(0,255,0)
+    else:
+        out_metric=2
+        color=(0,255,255)
+        
+
+
+    # print(f'\n - out_metric={out_metric}')
     return out_metric, color
 
 def inspection_diff(img_path, bright_th=0, erosion_tol=1, 
@@ -622,9 +644,9 @@ def main_DSP_segmentation():
     ##############
     data_name=os.path.dirname(img_folder)
     out_video=f'results/dsp_road_segmentation_{data_name}.mp4'
-    resize=(800,500)
+    img_size=(800,500)
     # inspect the images
-    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, resize)
+    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, img_size)
     list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
     list_images.sort()
     print(f'\n - Found images =  {len(list_images)} images')
@@ -664,9 +686,9 @@ def main_patch_matching_inspection():
     ##############
     data_name=os.path.dirname(img_folder)
     out_video=f'results/dsp_road_inspection_{data_name}.mp4'
-    resize=(500,500)
+    img_size=(500,500)
     # inspect the images
-    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, resize)
+    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, img_size)
     list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
     list_images.sort()
     print(f'\n - Found images =  {len(list_images)} images')
@@ -683,7 +705,7 @@ def main_patch_matching_inspection():
         cv2.imshow('DSP-based road inspection',img_box)
         # save the video
         # print(f'\n - images size=  {img_box.shape} ')
-        img_box = cv2.resize(img_box, resize) 
+        img_box = cv2.resize(img_box, img_size) 
         img_box = np.uint8(255 * img_box)
         out.write(img_box)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -719,20 +741,22 @@ def main_image_variation_inspection():
     img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
     # img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
     # img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads'
+    img_folder='/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node1' 
+
     # list the existing images
     img_ext='.jpg'
     ##############
     data_name=os.path.dirname(img_folder)
     out_video=f'results/dsp_variation_road_inspection_{data_name}.mp4'
-    resize=(800,500)
+    img_size=(800,500)
     # inspect the images
-    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, resize)
+    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'), 10, img_size)
     list_images=utils.getListOfFiles(dirName=img_folder, ext=img_ext, path_pattern='')
     list_images.sort()
     print(f'\n - Found images =  {len(list_images)} images')
-    for k, img_path in enumerate(list_images[20:]):#):#
+    for k, img_path in enumerate(list_images):#[-5:]):#
         # variation based inspection
-        print(f'\n image{k}')
+        # print(f'\n image{k}')
         damage_img, image_RGB, mask, nb_damages, dict_damage = \
             inspection_diff(img_path, bright_th=bright_th,
                             erosion_tol=erosion_tol, cnt_th=cnt_th, 
@@ -742,11 +766,12 @@ def main_image_variation_inspection():
         damage_img=write_damage_report_on_image(damage_img, dict_damage, nb_damages, color)
 
         # Display the diagnosed frame
-        damage_img = cv2.resize(damage_img, resize) 
-  
-     
+        damage_img = cv2.resize(damage_img, img_size) 
+
         # Display the diagnosed frame
         cv2.imshow('DSP-based road inspection',damage_img)
+
+        # input(' click to contiue')
         # save the video
         # damage_img = np.uint8(255 * damage_img)
         out.write(damage_img)
@@ -765,16 +790,16 @@ def main_lanemarker_inspection():
     ##############
     data_name=os.path.dirname(img_folder)
     out_video=f'results/lane_marker_{data_name}.mp4'
-    resize=(500,500)
+    img_size=(500,500)
 
     # inspect the images
-    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'),10, resize)
+    out = cv2.VideoWriter(out_video, cv2.VideoWriter_fourcc(*'MJPG'),10, img_size)
     for k, img_path in enumerate(glob(os.path.join(img_folder,'*'))):#enumerate([1:2]):#
         # DSP-based road segmentation
         reflection_coef, lanemarker_img, image, lane_mrk_mask=lane_inspection(img_path, disp=0)#, bright_th=bright_th)
         # get diagnosis
         out_metric, color= get_lanemarker_diagnosis(reflection_coef)
-        image = cv2.resize(image, resize) 
+        image = cv2.resize(image, img_size) 
         n,m, _=image.shape
         # Display the diagnosed frame
         cv2.putText(image, f'frame{k}:  reflection coef={reflection_coef:.2}', 

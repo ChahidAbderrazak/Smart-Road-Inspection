@@ -120,6 +120,8 @@ class HAIS_GUI(QWidget):
 			self.version=self.config['DATA']['version']
 			self.enable_nscene=self.config['DATA']['enable_nscene']
 			self.verbose=self.config['DATA']['enable_nscene']
+			self.img_size=(self.config['INSPECTION']['imgSizes_X'], self.config['INSPECTION']['imgSizes_Y'] )
+			self.viewer_resize=(1200, 800)
 			self.DB=None
 			self.dst_directory=self.config['OUTPUTS']['dst_directory']
 			self.maps_root=os.path.join(self.dst_directory, "maps")
@@ -133,6 +135,9 @@ class HAIS_GUI(QWidget):
 			self.file_index=0
 			self.node_dict={}
 			self.disp=disp
+
+			# thread falg
+			self.Thread_running=False
 
 			# intialize the GUI
 			self.createMenu()
@@ -179,6 +184,14 @@ class HAIS_GUI(QWidget):
 			self.show_lanemarker=QRadioButton("lanemarker")
 			self.show_road_condition=QRadioButton("road conditon")
 
+			#  labeling classes
+			self.button_bad_road=QPushButton('Bad roads')
+			self.button_bad_road.clicked.connect(self.save_bad_road_image)
+			self.button_medium_road=QPushButton('Medium roads')
+			self.button_medium_road.clicked.connect(self.save_medium_road_image)
+			self.button_good_road=QPushButton('Good roads')
+			self.button_good_road.clicked.connect(self.save_good_road_image)
+
 			# Annotation verification
 			self.button_inteactive_annotation=QPushButton('Inteactive visualization') 
 			self.button_inteactive_annotation.setFont(QFont("Times", 10, QFont.Bold))
@@ -211,7 +224,7 @@ class HAIS_GUI(QWidget):
 			self.imageLabel.setBackgroundRole(QPalette.Base)
 			self.imageLabel.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 			self.imageLabel.setScaledContents(True)
-			self.imageLabel.resize(resize[0], resize[1])
+			self.imageLabel.resize(self.viewer_resize[0], self.viewer_resize[1])
 
 			self.scrollArea = QScrollArea()
 			self.scrollArea.setBackgroundRole(QPalette.Dark)
@@ -224,27 +237,43 @@ class HAIS_GUI(QWidget):
 			self.nodes_formGroupBox.setVisible(False)
 			self.create_execution_formGroupBox()
 			self.setVisible_inspection_widgets(False)
-
 			self.create_visualization_formGroupBox()
 			self.visualization_formGroupBox.setVisible(False)
-
-			
+			self.create_labeling_formGroupBox()
+			self.labeling_formGroupBox.setVisible(False)
 
 			# Compile the maun GUI layout
-			mainLayout=QVBoxLayout()
-			
-			mainLayout.addWidget(QLabel())
-			mainLayout.addWidget(self.database_formGroupBox)
-			mainLayout.addWidget(self.nodes_formGroupBox)
-			mainLayout.addWidget(self.image_ID)
-			mainLayout.addWidget(self.scrollArea)
-			mainLayout.addWidget(self.execution_formGroupBox)
-			mainLayout.addWidget(self.visualization_formGroupBox)
+			mainLayout=QGridLayout()
+			# viewer layout
+			mainLayout.addWidget(self.image_ID, 0,1)
+			mainLayout.addWidget(self.scrollArea,1, 1, 4, 1)
+			# control layout
+			mainLayout.addWidget(self.database_formGroupBox, 0,0)
+			mainLayout.addWidget(self.nodes_formGroupBox, 1,0)
+			mainLayout.addWidget(self.execution_formGroupBox, 2,0)
+			mainLayout.addWidget(self.labeling_formGroupBox, 3,0)
+			mainLayout.addWidget(self.visualization_formGroupBox, 4,0)
+
+	
+			# mainLayout=QVBoxLayout()
+			# mainLayout.addWidget(QLabel())
+			# mainLayout.addWidget(self.database_formGroupBox)
+			# mainLayout.addWidget(self.nodes_formGroupBox)
+			# mainLayout.addWidget(self.image_ID)
+			# mainLayout.addWidget(self.scrollArea)
+			# mainLayout.addWidget(self.execution_formGroupBox)
+			# mainLayout.addWidget(self.labeling_formGroupBox)
+			# mainLayout.addWidget(self.visualization_formGroupBox)
+
+
+
 			self.setLayout(mainLayout)
 			self.setWindowTitle("Browse the collected data")
 			self.setWindowTitle('HAIS-Inspection')
 			self.setWindowIcon(QIcon('files/icon_hais.png'))
-			self.setGeometry(1, 1, 580, 1200)
+			# self.setGeometry(1, 1, 580, 1200)
+			self.showMaximized()
+
 			# self.setWindowFlags(
 			# 		Qt.WindowCloseButtonHint
 			# )
@@ -321,21 +350,17 @@ class HAIS_GUI(QWidget):
 		self.dataroot=self.trip_dict[self.trip_name]
 		
 		# get list of sensors
-		if self.enable_nscene: # Create Nuscene like database
-			self.DB=hais_database.HAIS_database(dataroot=self.dataroot, version=self.version, verbose=self.verbose)
-			# get the list of file
-			self.inspect_json_file=self.DB.inspect_json_file
-			self.inspection_dict=self.DB.inspection_dict
-			self.out_metric_arr=np.array([0 for k in range(len(self.inspection_dict['token']))])
-			# print(f'\n  inspection_dict = {self.DB.inspection_dict}')
+		self.DB=hais_database.HAIS_database(dataroot=self.dataroot, version=self.version, verbose=self.verbose)
+		# get the list of file
+		self.inspect_json_file=self.DB.inspect_json_file
+		self.inspection_dict=self.DB.inspection_dict
+		self.out_metric_arr=np.array([0 for k in range(len(self.inspection_dict['token']))])
+		# print(f'\n  inspection_dict = {self.DB.inspection_dict}')
 
-			# list sensors names
-			list_sensors=self.DB.get_list_sensors()
-			list_sensors=[k for k in list_sensors if 'CAM' in k or 'LIDAR' in k]
-		else:
-			# self.out_metric_arr=np.array([0 for k in range(len(self.list_files))])
-			list_sensors=[os.path.basename(path) for path in glob(os.path.join(self.dataroot, 'sweeps', '*')) if os.path.isdir(path)]
-		
+		# list sensors names
+		list_sensors=self.DB.get_list_sensors()
+		list_sensors=[k for k in list_sensors if 'CAM' in k or 'LIDAR' in k]
+	
 		# print(f'\n flag: \n - list_sensors={list_sensors}')
 		self.list_sensors_combo.clear()
 		self.list_sensors_combo.addItem("select a sensor")
@@ -359,6 +384,7 @@ class HAIS_GUI(QWidget):
 			# self.inspection_formGroupBox.setVisible(True)
 			self.setVisible_inspection_widgets(True)
 			self.visualization_formGroupBox.setVisible(True)
+			self.labeling_formGroupBox.setVisible(True)
 			# show the first file
 			self.file_index=0
 			self.image_path=self.list_files[self.file_index]
@@ -372,29 +398,40 @@ class HAIS_GUI(QWidget):
 		# get the next image path
 		self.update_image_path()
 		# run the inspection
-		self.inspect_image(self.image_path)
+		self.run_data_inspection_algorithms()
 
 	def inspect_next_frame(self):
 		self.frame_step=1
 		# get the next image path
 		self.update_image_path()
 		# run the inspection
-		self.inspect_image(self.image_path)
+		self.run_data_inspection_algorithms()
 
 	def update_image_path(self):
-		if self.enable_nscene:
-			filename, self.car_position=self.DB.get_file_path_ego(self.sensor_name, n=self.frame_step)
-			# print(f'\n flag: \n n={self.file_index}\n filename={filename}')
-			if filename!='':
-				self.image_path=os.path.join(self.dataroot, filename)
+		self.sensor_data_dict={}
+		err=self.DB.get_file_path_ego(n=self.frame_step)
+		self.sample_token=self.DB.sample_token
+		# print(f'\n flag: \n n={self.file_index}\n filename={filename}')
+		print(f'\n data sample{self.file_index}: ego_token={self.DB.ego_token}')
+		if err==0:
+			self.sensor_data_dict= self.DB.sensor_data_dict
 		else:
-			# get the next image path
-			self.file_index+=self.frame_step
-			if self.file_index<0:
-				self.file_index=len(self.list_files)-1
-			elif self.file_index>=len(self.list_files):
-				self.file_index=0
-			self.image_path= self.list_files[self.file_index]
+			self.sensor_data_dict={}
+
+		# if self.enable_nscene:
+		# 	err=self.DB.get_file_path_ego(n=self.frame_step)
+		# 	# print(f'\n flag: \n n={self.file_index}\n filename={filename}')
+		# 	print(f'\n data sample{self.file_index}: ego_token={self.DB.ego_token}')
+		# 	if err==0:
+		# 		self.sensor_data_dict= self.DB.sensor_data_dict
+		# else:
+		# 	# get the next image path
+		# 	self.file_index+=self.frame_step
+		# 	if self.file_index<0:
+		# 		self.file_index=len(self.list_files)-1
+		# 	elif self.file_index>=len(self.list_files):
+		# 		self.file_index=0
+		# 	self.image_path= self.list_files[self.file_index]
 
 	def show_inspection_map(self):
 		if self.show_all_nodes.isChecked(): # show all nodes
@@ -417,8 +454,9 @@ class HAIS_GUI(QWidget):
 				image = cv2.imread(input_data)
 				filename=input_data
 			else:
-				image=input_data
-		
+				image=input_data# image resize
+			# resizing
+			image=cv2.resize(image, self.viewer_resize)
 			height, width, channel = image.shape
 			bytesPerLine = 3 * width
 			image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888).rgbSwapped()
@@ -426,7 +464,7 @@ class HAIS_GUI(QWidget):
 
 			# print(f'\n - showing the file in the viewer: \n - {input_data}')
 			self.imageLabel.setPixmap(QPixmap.fromImage(image))
-			self.scaleFactor = 1.0
+			# self.scaleFactor = 1.0
 			return 
 		except Exception as e:
 			QMessageBox.warning(self, "Image Viewer", "Cannot view the data %s." % filename)
@@ -452,7 +490,7 @@ class HAIS_GUI(QWidget):
 					b.setText('folders')
 
 	def create_database_formGroupBox(self): 
-		self.database_formGroupBox=QGroupBox("Database setting")
+		self.database_formGroupBox=QGroupBox()
 		layout=QFormLayout()
 		layout.addRow(QLabel("data type: "), self.data_source)
 		layout.addRow(QLabel("data folder: "), self.input_data_button)
@@ -493,6 +531,14 @@ class HAIS_GUI(QWidget):
 		layout.addWidget(self.button_visualize, 2, 0, 1, 4)
 		layout.addWidget(self.button_inteactive_annotation, 3, 0, 1, 4)
 		self.visualization_formGroupBox.setLayout(layout)
+	
+	def create_labeling_formGroupBox(self): 
+		self.labeling_formGroupBox=QGroupBox("Manual labeling")
+		layout=QGridLayout()
+		layout.addWidget(self.button_bad_road, 0,0)
+		layout.addWidget(self.button_medium_road, 0,1)
+		layout.addWidget(self.button_good_road, 0,2)
+		self.labeling_formGroupBox.setLayout(layout)
 	
 	def showdialog_information(self, title, message): 
 		msg=QMessageBox()
@@ -540,6 +586,7 @@ class HAIS_GUI(QWidget):
 				## Hide the insection and annotatin widgets
 				self.setVisible_inspection_widgets(False)
 				self.visualization_formGroupBox.setVisible(False)
+				self.labeling_formGroupBox.setVisible(False)
 
 				# uodate the new nodes/trip/sensors
 				self.explore_nodes_and_trips(self.image_path)
@@ -611,66 +658,80 @@ class HAIS_GUI(QWidget):
 		self.nodes_formGroupBox.setVisible(True)
 
 	def inspection_thread(self):
-		# Step 2: Create a QThread object
-		self.thread = QThread()
-		# Step 3: Create a worker object
-		self.worker = Worker()
-		self.worker.N=self.nb_data_samples
-		# Step 4: Move worker to the thread
-		self.worker.moveToThread(self.thread)
-		# Step 5: Connect signals and slots
-		self.thread.started.connect(self.worker.run)
-		self.worker.finished.connect(self.thread.quit)
-		self.worker.finished.connect(self.worker.deleteLater)
-		self.thread.finished.connect(self.thread.deleteLater)
-		self.worker.progress.connect(self.run_inspect_image_sequences)
-		# Step 6: Start the thread
-		self.thread.start()
+		if self.Thread_running:
+			self.stop_thread()
+		else:
+			# Step 2: Create a QThread object
+			self.thread = QThread()
+			# Step 3: Create a worker object
+			self.worker = Worker()
+			self.worker.N=self.nb_data_samples
+			# Step 4: Move worker to the thread
+			self.worker.moveToThread(self.thread)
+			# Step 5: Connect signals and slots
+			self.thread.started.connect(self.worker.run)
+			self.worker.finished.connect(self.thread.quit)
+			self.worker.finished.connect(self.worker.deleteLater)
+			self.thread.finished.connect(self.thread.deleteLater)
+			self.worker.progress.connect(self.run_data_inspection_sequences)
+			# Step 6: Start the thread
+			self.thread.start()
+			self.Thread_running=True
 
 	def stop_thread(self):
 			self.worker.stop()
+			self.Thread_running=False
+			self.button_run_inspection.setText('Run all frames inspection')
+			self.button_run_inspection.setStyleSheet("background-color : QColor(53, 53, 53)")
 			# self.thread.wait()
 
-	def save_inspection_dict(self):
-		# update the inspection dict
-		print(f'\n - out_metric_arr shape={self.out_metric_arr.shape}')
-		values_=list(self.out_metric_arr)
-		values_metric=[int(k) for k in values_]
-		self.DB.update_inspection_dict(self.module_name, values_metric)
 
-	def run_inspect_image_sequences(self, n):
+	def run_data_inspection_sequences(self, n):
 		N=self.nb_data_samples #len(self.list_files)
 		progress=f"[{n+1}/{N}]({int(100*n/N)}%)"
 		try:
-			if self.enable_nscene:
-				if n==0:
-					self.frame_step=0
-				else:
-					self.frame_step=1
-				# get the next image path
-				self.update_image_path()
+			if n==0:
+				self.frame_step=0
 			else:
-				self.image_path=self.list_files[n]
+				self.frame_step=1
+			# get the next image path
+			self.update_image_path()
+
 			# run the inspection on the frame
-			out_metric=self.inspect_image(self.image_path, progress)
-			#update the inspection values
-			# print(f'\n report out_metric={out_metric}')
-			self.out_metric_arr[n]=int(out_metric)
-			
-			if n==N-1:# n==50: #
-				self.setEnabled(True)
-				self.button_run_inspection.setText('Run all frames inspection')
-				self.button_run_inspection.setStyleSheet("background-color : QColor(53, 53, 53)")
+			err=self.run_data_inspection_algorithms(progress)
+		
+			# update the inspection JSON 
+			self.DB.update_inspection_dict(self.list_metrics)
+
+			##---------------  FLAG --------------------
+			# # retreive the kenematics data
+			# if n==0:
+			# 	self.list_paramters=list ( self.DB.kenimatic_dict.keys() )
+			# 	self.IMU_vect=[]
+			# if self.DB.kenimatic_dict!={}:
+			# 	vect_=[self.DB.kenimatic_dict[key] for key in self.list_paramters]+[int(out_metric)]
+			# 	self.IMU_vect.append(vect_)
+			# print(f'\n IMU_vect{n} size= {len(self.IMU_vect)}: \n {vect_}')
+			##-------------------------------------------
+
+			# stop the inspection sequence or resume
+			if n==N-1:#  
 				# stop the thread
 				self.stop_thread()
 
-				# update the insepction report
-				self.save_inspection_dict()
+				##---------------  FLAG --------------------
+				# save the regression values
+				columns_names=self.list_paramters+['target']
+				data=np.array( self.IMU_vect )
+				print(f'\n df shapes:  dataset {data.shape}, columns_names={len(columns_names)}')
+				df= pd.DataFrame(data,columns=columns_names)
+				print(f'\n IMU dataset {df}')
+				df.to_csv('imu_data.csv')
+				##------------------------------------------
 				return
 			elif n==0:
-				self.button_run_inspection.setText('Please wait till the process is done ...')
+				self.button_run_inspection.setText('Click to stop the inspection sequence ...')
 				self.button_run_inspection.setStyleSheet("background-color : red")
-				self.setEnabled(True)
 				
 		except Exception as e:
 			print(f'\n error in ruuning imags sequences!!\n Exception: {e}')
@@ -681,84 +742,158 @@ class HAIS_GUI(QWidget):
 		file_id=os.path.splitext(filepath)[0]
 		return file_id
 
-	def inspect_image(self, img_path, progress=''):
-		# try:
-			# refresh the algorithm values
-			self.refresh_preferences_values()
-			image_id=self.get_image_id(img_path)
-			msg=f"{progress}\t fileID=" + os.path.basename(img_path)
-			self.image_ID.setText(msg)
-			if 'DRONE' in self.sensor_name or '3D' in self.sensor_name or 'CSI' in self.sensor_name:
-				self.module_name="metric"
-				# variation based inspection
-				out_image, image_RGB, mask, nb_damages, dict_damage = \
-						inspection_algorithm.inspection_diff(	img_path, bright_th=self.bright_th,
-																								erosion_tol=self.erosion_tol, cnt_th=self.cnt_th, 
-																								cnt_size_ratio=self.cnt_size_ratio, disp=False)
+	def run_data_inspection_algorithms(self, progress=''):
+		try:
+			self.list_metrics={}
+			print(f'\n - self.sensor_data_dict={self.sensor_data_dict}')
+			for k, sensor_name in enumerate(self.sensor_data_dict.keys()):
+				print(f'\n sensor{k}={sensor_name}')
+				if 'DRONE' in sensor_name or 'CAMERA' in sensor_name:
+					self.module_name="road"
+					img_path=self.sensor_data_dict[sensor_name]
+					image_id=self.get_image_id(img_path)
+					# refresh the algorithm values
+					self.refresh_preferences_values()				
+					# variation based inspection
+					out_image, image_RGB, mask, nb_damages, dict_damage = \
+							inspection_algorithm.inspection_diff(	img_path, bright_th=self.bright_th,
+																									erosion_tol=self.erosion_tol, cnt_th=self.cnt_th, 
+																									cnt_size_ratio=self.cnt_size_ratio, disp=False)
 
-				# Display the diagnosed frame
-				out_image = cv2.resize(out_image, resize) 
-				out_metric, color= inspection_algorithm.get_road_diagnosis(nb_damages, dict_damage)
-				out_image=inspection_algorithm.write_damage_report_on_image(out_image, dict_damage, nb_damages, color)
+					# Display the diagnosed frame
+					out_image = cv2.resize(out_image, self.img_size) 
+					out_metric, color= inspection_algorithm.get_road_diagnosis(nb_damages, dict_damage)
+					out_image=inspection_algorithm.write_damage_report_on_image(out_image, dict_damage, nb_damages, color)
 
-			elif self.sensor_name=='RIGHT_CAMERA' or self.sensor_name=='LEFT_CAMERA':
-				self.module_name="Lanemarker"
-				# run Lanemarker reflectivity
-				reflection_coef, lanemarker_img, image_RGB, mask=inspection_algorithm.lane_inspection(img_path, disp=0)#, bright_th=bright_th)
-				# get diagnosis
-				out_metric, color= inspection_algorithm.get_lanemarker_diagnosis(reflection_coef)
-				out_image = cv2.resize(lanemarker_img, resize) 
-				# Display the diagnosed frame
-				n,m, _=out_image.shape
-				cv2.putText(out_image, f'reflection coef={reflection_coef:.2}', 
-										(int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
-											0.8, color, 2)
-			else:
-				msg=f"Undefined algorithm for the sensor: \n - {self.sensor_name}."
-				QMessageBox.warning(self, "Inspection algorithm", msg )
-				print(msg)
-				return
+					# export annotation:	the mask and image
+					if self.save_annotations.isChecked():
+						self.save_image_and_mask(self.node_name, self.trip_name, 
+																		self.sensor_name, image_id, image_RGB, mask)
+					# visualize the image
+					if self.sensor_name==sensor_name:
+						msg=f"{progress}\t fileID=" + os.path.basename(img_path)
+						self.image_ID.setText(msg)
+						self.visualize_image(out_image)
+
+				elif sensor_name=='RIGHT_CAMERA' or sensor_name=='LEFT_CAMERA':
+					self.module_name="Lanemarker"
+					img_path=self.sensor_data_dict[sensor_name]
+					image_id=self.get_image_id(img_path)
+					# run Lanemarker reflectivity
+					reflection_coef, lanemarker_img, image_RGB, mask=inspection_algorithm.lane_inspection(img_path, disp=0)#, bright_th=bright_th)
+					# get diagnosis
+					out_metric, color= inspection_algorithm.get_lanemarker_diagnosis(reflection_coef)
+					out_image = cv2.resize(lanemarker_img, resize) 
+					# Display the diagnosed frame
+					n,m, _=out_image.shape
+					cv2.putText(out_image, f'reflection coef={reflection_coef:.2}', 
+											(int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
+												0.8, color, 2)
 		
-			# export annotation:	the mask and image
-			if self.save_annotations.isChecked():
-				self.save_image_and_mask(self.node_name, self.trip_name, 
-																self.sensor_name, image_id, image_RGB, mask)
-			# visualize the image
-			self.visualize_image(out_image)
-			return  out_metric
-	
-		# except Exception as e:
-		# 	print(f'\n\n - Error in running the inspection.')
-		# 	# QMessageBox.warning(self, "Error in running the inspection", f'{e}')
-		# 	# raise e
+					# visualize the image
+					if self.sensor_name==sensor_name:
+						msg=f"{progress}\t fileID=" + os.path.basename(img_path)
+						self.image_ID.setText(msg)
+						self.visualize_image(out_image)
 
-	def save_image_and_mask(self, node_name, trip_name, sensor_name, image_id, image, mask):
-		if len(np.unique(mask))>1: # ignore empty or full masks
-			mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-			mask[mask!=0]=255
-			# print(f'\n flag: gray_mask shape={mask.shape}, segments={np.unique(mask)}')
-			dst_folder=os.path.join(self.annotation_directory, node_name, f'{trip_name}__{sensor_name}')
-			# save the image
-			image_folder=os.path.join(dst_folder, 'images')
-			utils.create_new_directory(image_folder)
-			cv2.imwrite(os.path.join(image_folder, image_id + ".jpg"), image)
+				elif 'IMU' in sensor_name:
+					self.module_name="kenimatics"
+					# run kenimaticcs inspection
+					
+					# get diagnosis
+					out_metric=0
 
-			# save the mask
-			mask_folder=os.path.join(dst_folder, 'masks')
-			utils.create_new_directory(mask_folder)
-			cv2.imwrite(os.path.join(mask_folder, image_id + ".png"), mask)
+				elif 'GPS' in sensor_name:
+					car_location=self.sensor_data_dict[sensor_name]			
+					# get diagnosis
+					# self.list_metrics.update({"car_location": {	"lat":car_location[0],
+					# 																						"lon":car_location[1],
+					# 																						"alt":car_location[2]} })
+					self.list_metrics.update({"lat":car_location[0]}) 
+					self.list_metrics.update({"lon":car_location[1]})
+					self.list_metrics.update({"alt":car_location[2]})
 
-			print(f'\n - the {sensor_name} annotations are saved in :\n{dst_folder}')
+				else:
+					msg=f"Undefined algorithm for the sensor: \n - {sensor_name}."
+					QMessageBox.warning(self, "Inspection algorithm", msg )
+					print(msg)
+					continue
+				print(f'\n - inspection report: {self.list_metrics}')
+
+				# get the sensors inspection index
+				if not 'GPS' in sensor_name:
+					self.list_metrics.update({self.module_name:out_metric})
+				
+			# add the token
+			self.list_metrics.update({"token":self.sample_token})
+
+			# define the inspection result
+			if "road" in self.list_metrics.keys():
+				metric = self.list_metrics["road"]
+				self.list_metrics.update({"metric":metric})
+
+			return  0
+
+		except Exception as e:
+			print(f'\n error in ruuning data inspection\n Exception: {e}')
+			return  1
+
+	def save_labeling_image(self, calss_folder):
+		if os.path.exists(self.image_path):
+			msg=f"fileID=" + os.path.basename(self.image_path)
+			self.image_ID.setText(msg)
+			import shutil
+			dst_file=os.path.join(self.annotation_directory, 'road_quality', calss_folder, os.path.basename(self.image_path))
+			utils.create_new_directory(os.path.dirname(dst_file))
+			shutil.copyfile(self.image_path, dst_file)
+			print(f'\n Labeled {calss_folder} image saved in:\n{dst_file}')
 		else:
-			print(f'\n - the {sensor_name} annotations are ignored \
-							\n - mask segments={np.unique(mask)}')
+			print(f'\n image path not found!!\n{self.image_path}')
+
+		# get the next image
+		self.frame_step=1
+		# get the next image path
+		self.update_image_path()
+		# visualize the imaeg
+		self.image_path=self.sensor_data_dict[self.sensor_name]
+		self.visualize_image(self.image_path)
+
+	def save_bad_road_image(self):
+		self.save_labeling_image(calss_folder='Bad')
+
+	def save_medium_road_image(self):
+		self.save_labeling_image(calss_folder='Medium')
+
+	def save_good_road_image(self):
+		self.save_labeling_image(calss_folder='Good')
+	
+	def save_image_and_mask(self, node_name, trip_name, sensor_name, image_id, image, mask):
+			if len(np.unique(mask))>1: # ignore empty or full masks
+				mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+				mask[mask!=0]=255
+				# print(f'\n flag: gray_mask shape={mask.shape}, segments={np.unique(mask)}')
+				dst_folder=os.path.join(self.annotation_directory, node_name, f'{trip_name}__{sensor_name}')
+				# save the image
+				image_folder=os.path.join(dst_folder, 'images')
+				utils.create_new_directory(image_folder)
+				cv2.imwrite(os.path.join(image_folder, image_id + ".jpg"), image)
+
+				# save the mask
+				mask_folder=os.path.join(dst_folder, 'masks')
+				utils.create_new_directory(mask_folder)
+				cv2.imwrite(os.path.join(mask_folder, image_id + ".png"), mask)
+
+				print(f'\n - the {sensor_name} annotations are saved in :\n{dst_folder}')
+			else:
+				print(f'\n - the {sensor_name} annotations are ignored \
+								\n - mask segments={np.unique(mask)}')
 
 	def napari_mask_verification(self): 
 		global tool_name
 		# run the inspection on Napari GUI
 		self.mask_path=self.image_path
 		ret_val, msg_out=Napari_GUI(self.image_path, self.mask_path,
-									annotation_directory=self.annotation_directory)
+										annotation_directory=self.annotation_directory)
 
 class GUI_App(QWidget): 
 	def __init__(self, config_file='../config/config.yml'): 

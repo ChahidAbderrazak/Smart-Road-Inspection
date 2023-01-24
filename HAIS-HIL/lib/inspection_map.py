@@ -254,9 +254,9 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 	# define te colors and inspection status:
 	available_colors = ['gray', 'red',  'orange',  'green', 'green'] # ['gray', 'red', 'coral', 'orange', 'aquamarine2', 'green']
 	if show_lanemarker:
-		inspect_status = ['Scanned lanemarkers','Low reflectivity',  'Meduim reflectivity', 'Good reflectivity', 'Excellent reflectivity']
+		inspect_status = ['Scanned lanemarkers','Low reflectivity',  'Medium reflectivity', 'Good reflectivity', 'Excellent reflectivity']
 	else:
-		inspect_status = ['Scanned road','Bad roard', 'Meduim roard', 'Good roard', 'Excellent roard']
+		inspect_status = ['Scanned road','Bad roard', 'Regular roard', 'Good roard', 'Excellent roard']
 	# load HAIS data
 	lat_coord, lon_coord, token_coord, metric_list=[],[],[], []
 	raod_coord,lanemarker_coord = [], []

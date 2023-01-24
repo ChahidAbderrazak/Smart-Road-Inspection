@@ -14,6 +14,8 @@ INSPECTION:
   mask_th : 0.85         # Mask refinement threshold
   screenshot : True      # save defect mask screen shot 
   erosion_tol : 2       # erosion tolerance in mask refinement
+  imgSizes_X: 500                       # resizing width
+  imgSizes_Y: 500                       # resizing hight
 
 ANNOTATION:
   annotation_directory: '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/automated-annotations'

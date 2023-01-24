@@ -18,13 +18,9 @@ conda activate $env_name
 ######################  INSPECTION MODULE ##########################
 
 # # Run the DSP Based inspection algorithm 
-# echo && echo && echo  "--> Run the DSP Based inspection algorithm"
+# echo && echo && echo  "--> Run the d inspection algorithm"
 # python  lib/inspection_algorithm.py
 
-
-# # Run lane inspection algorithm 
-# echo && echo && echo  "--> Run the lane marker inspection algorithm"
-# python  lib/inspection_algorithm.py
 
 #######################  DATABASE MODULE ##########################
 
@@ -33,7 +29,7 @@ conda activate $env_name
 # python lib/dji_drone.py
 
 # # Build Nuscene-like database  using HAIS database stucture
-# echo && echo  "--> Build Nuscene-like database  using HAIS database stucture "
+# echo && echo  "--> EXPLORE the  HAIS database stucture "
 # python lib/hais_database.py
 
 
@@ -46,10 +42,10 @@ conda activate $env_name
 
 #######################  HAIS SOFTWARE ##########################
 
-# run the main script
-echo && echo " #################################################" 
-echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
-echo " #################################################" && echo 
+# # run the main script
+# echo && echo " #################################################" 
+# echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
+# echo " #################################################" && echo 
 
 # python main.py
 python main_gui.py --cfg config/config.yml 

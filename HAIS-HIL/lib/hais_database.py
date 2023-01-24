@@ -35,6 +35,7 @@ class HAIS_database:
 			self.config_file=os.path.join(self.dataroot, 'info.json')
 			self.config=self.load_config()
 			self.node_name=self.config["vehicle"]
+
 			# load/create database
 			self.load_create_database()
 			# display
@@ -145,12 +146,17 @@ class HAIS_database:
 	def create_database_folder_structure(self):
 		import shutil
 		DIR=osp.join(self.dataroot, self.version)
+		inspect_file=osp.join(self.dataroot, 'inspection_dic.json')
+		# removing the inepction dict
+		if os.path.exists(inspect_file):
+			os.remove()
+
+		# removing the vesion folder
 		if not os.path.exists(DIR):
 				os.makedirs(DIR)
 		else:
 			shutil.rmtree(DIR) 
 			os.makedirs(DIR)
-			os.remove(osp.join(self.dataroot, 'inspection_dic.json'))
 			print(f'\n Warrning: the old {self.version} database is removed and replaced by a new one!! \n')
 
 	def pkl_to_dict(self, filename):
@@ -204,8 +210,10 @@ class HAIS_database:
 		scene_files_list=glob(os.path.join(self.scenes_path, "*.json"))
 		# Load the inspection table
 		inspect_filename=osp.join(self.dataroot, 'inspection_dic.json')
-		inspect_table={'lon': [], 'lat':	[], 'alt':	[], 
-											'token':[], 'metric': []}
+		inspect_table={	'lon': [], 'lat':	[], 'alt':	[], 
+										'token':[], 'road': [], 'lanemarker': [],
+										'kenimatics': [], 'weather': [], 'metric': []}
+
 		if os.path.exists(inspect_filename):
 			try:
 				inspect_table = self.load_json(inspect_filename)
@@ -314,12 +322,16 @@ class HAIS_database:
 					self.update_table(calib_table, calib_, calib_filename)
 
 					# inspection table
-					if not sample_data_token in inspect_table['token']:
-						road_metric = 0#random.randint(0, 4)
+					if not sample_token in inspect_table['token']:
+						road_metric = 0 #random.randint(0, 4)
 						inspect_table['lat'].append(translation[0])
 						inspect_table['lon'].append(translation[1])
 						inspect_table['alt'].append(translation[2])
-						inspect_table['token'].append(sample_data_token)
+						inspect_table['token'].append(sample_token)
+						inspect_table['road'].append(road_metric)
+						inspect_table['lanemarker'].append(road_metric)
+						inspect_table['kenimatics'].append(road_metric)
+						inspect_table['weather'].append(road_metric)
 						inspect_table['metric'].append(road_metric)
 
 					# update sample tabel?
@@ -729,22 +741,33 @@ class HAIS_database:
 		return entry
 
 #%%	#################	 Main methods	 ################# 
-
 	def load_create_database(self):
 		'''
 		Creation of a structured HAIS database
 		'''
+		# from nuscenes.nuscenes import NuScenes
+		# self.nusc = NuScenes(version=self.version, dataroot=self.dataroot, verbose=self.verbose)
+		# my_scene=self.nusc.scene[0]
+		# self.nusc.list_scenes()
 		try:
 			from nuscenes.nuscenes import NuScenes
 			self.nusc = NuScenes(version=self.version, dataroot=self.dataroot, verbose=self.verbose)
 			my_scene=self.nusc.scene[0]
 			self.nusc.list_scenes()
+			build_database=False
 			if self.verbose:
 				print(f'\n - The Nuscnes database is already created.')
 			
 		except Exception as e:
-			# display
+			build_database=True
 			
+		# check the inspection json
+		self.inspect_json_file=os.path.join(self.dataroot, 'inspection_dic.json')
+		if not os.path.exists(self.inspect_json_file):
+			build_database=True
+
+		if build_database:
+			# disply
 			if self.verbose:
 				print(f'\n The Nuscnes database does not exist or corrupted. \nException: {e}')
 				print(f'\n - Building the Nuscenes database ...')
@@ -757,26 +780,84 @@ class HAIS_database:
 			self.build_database_tables()
 			# create the Nuscenes DB object
 			self.nusc = NuScenes(version=self.version, dataroot=self.dataroot, verbose=True)
-	
-		# laod the inspection dict
-		self.inspect_json_file=os.path.join(self.dataroot, 'inspection_dic.json')
+		
+		# load the inspection json
 		self.inspection_dict=self.load_json(self.inspect_json_file)
 		self.ego_idx=0
 		self.ego_token=self.inspection_dict['token'][self.ego_idx]
-		self.sample_token=self.ego_token.split('_f')[0]
+		# self.sample_token=self.ego_token.split('_f')[0]
+		self.sample_token=self.ego_token
 		self.my_sample = self.nusc.get('sample', self.sample_token)
 		return 
 
-	def update_inspection_dict(self, module_name, values_metric):
-		new_inspct_dict={module_name:[]}
-		self.inspection_dict.update(new_inspct_dict)
-		self.inspection_dict[module_name]=values_metric
-		# print(f'\n - self.inspection_dict={self.inspection_dict}')
+	def update_inspection_dict(self, list_metrics):
+		# print(f'\n - list_metrics ={list_metrics}')
+		# print(f'\n - keys = \n new={list_metrics.keys()} dict={self.inspection_dict.keys()}')
+		# self.save_json(self.inspection_dict, self.inspect_json_file)
+		tokens=self.inspection_dict['token']
+		new_token=list_metrics['token']
+		idx=tokens.index(new_token) 
+		# print(f"\n - new token {new_token}  --> index= {idx}")
+		# print(f"\n - inspection_dict [{idx}] =  {tokens[idx]}")
+		
+		for metric in list_metrics.keys():
+			if metric!='token':
+				try:
+					self.inspection_dict[metric][idx]=list_metrics[metric]
+				except Exception as e:
+					print(f'\n Error: error in update the inspection metric {metric} !! \nException:{e}')
+
+		# input(f"\n changed!! \n - inspection_dict=  {self.inspection_dict}")
 		self.save_json(self.inspection_dict, self.inspect_json_file)
 
-	def get_file_path_ego(self, sensor_name, n=0):
+
+	def get_IMU_kenimatics(self, sample_token):
 		try:
-			ego_token=self.inspection_dict['token'][self.ego_idx]
+			self.sample = self.nusc.get('sample', self.sample_token)
+			imu_token=self.sample['data']['IMU_SENSOR']
+			imu_sample_data = self.nusc.get('sample_data', imu_token)
+			self.kenimatic_dict=imu_sample_data['meta_data']
+			# print(f'\n flag: kenimatic_dict={self.kenimatic_dict}')
+		except Exception as e:
+			print(f'\n - error in reading the stored IMU data!!\nException:{e}')
+			self.kenimatic_dict={}
+
+	def get_LIDAR(self, sample_token):
+		try:
+			self.sample = self.nusc.get('sample', self.sample_token)
+			imu_token=self.sample['data']['IMU_SENSOR']
+			imu_sample_data = self.nusc.get('sample_data', imu_token)
+			self.kenimatic_dict=imu_sample_data['meta_data']
+			# print(f'\n flag: kenimatic_dict={self.kenimatic_dict}')
+		except Exception as e:
+			print(f'\n - error in reading the stored IMU data!!\nException:{e}')
+			self.kenimatic_dict={}
+
+	def get_Road_Camera(self, sample_token):
+		try:
+			self.sample = self.nusc.get('sample', self.sample_token)
+			imu_token=self.sample['data']['IMU_SENSOR']
+			imu_sample_data = self.nusc.get('sample_data', imu_token)
+			self.kenimatic_dict=imu_sample_data['meta_data']
+			# print(f'\n flag: kenimatic_dict={self.kenimatic_dict}')
+		except Exception as e:
+			print(f'\n - error in reading the stored IMU data!!\nException:{e}')
+			self.kenimatic_dict={}
+
+	def get_Lanemarker_Camera(self, sample_token):
+		try:
+			self.sample = self.nusc.get('sample', self.sample_token)
+			imu_token=self.sample['data']['IMU_SENSOR']
+			imu_sample_data = self.nusc.get('sample_data', imu_token)
+			self.kenimatic_dict=imu_sample_data['meta_data']
+			# print(f'\n flag: kenimatic_dict={self.kenimatic_dict}')
+		except Exception as e:
+			print(f'\n - error in reading the stored IMU data!!\nException:{e}')
+			self.kenimatic_dict={}
+
+	def get_file_path_ego_0(self, sensor_name, n=0):
+		try:
+			self.ego_token=self.inspection_dict['token'][self.ego_idx]
 			# print(f'\n ego_token={ego_token}')
 		except Exception as e:
 			print(f'\n error in loading the ego token [{self.ego_idx}]!!!\n Exception={e}')
@@ -786,11 +867,15 @@ class HAIS_database:
 				self.ego_idx=-1
 			return '', [-1, -1,-1]
 		self.ego_idx+=n
-		self.ego_pos = self.nusc.get('ego_pose', ego_token)
+		self.ego_pos = self.nusc.get('ego_pose', self.ego_token)
+		# get the kenimaics data
+		kenimatic_dict=self.get_IMU_kenimatics(self.sample_token)
+
 		car_position=self.ego_pos["translation"]
-		self.my_sample_data = self.nusc.get('sample_data', ego_token)
+		self.my_sample_data = self.nusc.get('sample_data', self.ego_token)
 		filename=self.my_sample_data['filename']
-		# print(f'\n flag: ego_token={ego_token}')
+
+
 		if sensor_name in filename:
 			return filename, car_position
 		else:
@@ -799,17 +884,57 @@ class HAIS_database:
 			if filename!='':
 				return filename, car_position
 			else :
-				return self.get_file_path_ego(sensor_name, n=n)
+				return self.get_file_path_ego_0(sensor_name, n=n)
 
-		# if 
-		# # self.sample_token=ego_token.split('_f')[0]
-		# filename, car_position=self.get_file_path(sensor_name, n=n)
-		# frame_step=n*len(self.my_sample['data'])
-		# self.ego_idx+=n
-		# # if filename=='':
-		# # 	filename, car_position = self.get_file_path_ego(sensor_name, n=n)
-		# # # input(f'\n self.sample_token={self.sample_token}\n\n filename={filename}')
-		# return filename, car_position
+	def get_file_path_ego(self,n=0):
+		try:
+			self.sample_token=self.inspection_dict['token'][self.ego_idx]
+			# print(f'\n ego_token={ego_token}')
+		except Exception as e:
+			print(f'\n error in loading the ego token [{self.ego_idx}]!!!\n Exception={e}')
+			if n==1:
+				self.ego_idx=0
+			else:
+				self.ego_idx=-1
+			return 1
+
+		self.ego_idx+=n
+		# get the sensors data
+		self.sensors_data_list=self.get_sample_files_data(n=n)
+		# input(f'\n self.sensors_data_list={self.sensors_data_list}')
+		self.sensor_data_dict={}
+		for sensor_name in self.sensors_data_list.keys():
+			# get the kenimaics data
+			if 'IMU' in sensor_name:
+				sensor_token=self.sensors_data_list[sensor_name]
+				sensor_sample_data = self.nusc.get('sample_data', sensor_token)
+				self.sensor_data_dict.update({sensor_name:sensor_sample_data['meta_data']})
+			elif  'LIDAR' in sensor_name or 'CAMERA' in sensor_name:
+				sensor_token=self.sensors_data_list[sensor_name]
+				sensor_sample_data = self.nusc.get('sample_data', sensor_token)
+				self.sensor_data_dict.update({sensor_name:os.path.join(self.dataroot, sensor_sample_data['filename'])})
+			elif  'GPS'  in sensor_name:
+				sensor_token=self.sensors_data_list[sensor_name]
+				ego_pos=self.nusc.get('ego_pose', sensor_token)
+				car_position=ego_pos["translation"]
+				self.sensor_data_dict.update({sensor_name:car_position})
+		return 0
+
+	def get_sample_files_data(self, n=1):
+		# input(f'\n self.my_sample={self.my_sample}\n sensor_name={sensor_name} ')
+		if self.sample_token=='':
+			# print(f'\n flag: n= {n} --> sample token ={self.sample_token} \n self.my_sample={self.my_sample}')
+			return '', [-1,-1,-1]
+		self.my_sample = self.nusc.get('sample', self.sample_token)
+		if n==1:
+			self.sample_token=self.my_sample['next']
+		elif n==-1:
+			self.sample_token=self.my_sample['prev']
+		# input(f'\n n={n} --> self.sample_token={self.sample_token}')
+
+		# input(f'\n self.my_sample={self.my_sample}\n sensor_name={sensor_name} ')
+		sensors_list=self.my_sample['data']
+		return sensors_list
 
 	def get_file_path(self, sensor_name, n=1):
 		# input(f'\n self.my_sample={self.my_sample}\n sensor_name={sensor_name} ')
@@ -860,6 +985,36 @@ class HAIS_database:
 		list_sensors=self.get_list_sensors()
 		print(f'\n\n ==> List of sensors: \n {list_sensors}')
 
+###########################
+
+def test_HAIS_database(dataroot, version, verbose=True):
+	# load/create the database structure from the collected inspection sensors dataset
+	DB = HAIS_database(dataroot=dataroot, version=version, verbose=verbose)
+	# # explore the database
+	# DB.explore_database()
+	# # list sensors names
+	# list_sensors=DB.get_list_sensors()
+	# files_list=[]
+	# cnt=0
+	# while True:	
+	# # for n in range(800):
+	# 	# filename, car_position=DB.get_file_path(sensor_name, n=1)
+	# 	err=DB.get_file_path_ego(n=1)
+	# 	print(f'\n sensor_data_dict={DB.sensor_data_dict}')
+	# 	files_list.append(DB.sensor_data_dict)
+	# 	cnt+=1
+	# 	if DB.sensor_data_dict=={}:
+	# 		break
+
+	# updaet the ispection dicr
+	inspection_dict= {'road': 1, 
+										'token': 'car1-2022-10-31-17h-19min-38sec__s2', 
+										'kenimatics': 0, 
+										'car_location': {'lat': 43.9310942, 'lon': -78.8674386, 'alt': -1}}
+
+	DB.update_inspection_dict(inspection_dict)
+
+	return DB
 
 if __name__ == '__main__':
 	# raw-data folder
@@ -874,33 +1029,13 @@ if __name__ == '__main__':
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark'
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
+	dataroot='/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node1' 
 	version='v1.0'
-
-	# load/create the database structure from the collected inspection sensors dataset
-	DB = HAIS_database(dataroot=dataroot, version=version, verbose=True)
-	# explore the database
-	DB.explore_database()
-	# list sensors names
-	list_sensors=DB.get_list_sensors()
-	sensor_name= 'CSI_CAMERA' #'RIGHT_CAMERA'
-	# filename, car_position=DB.get_file_path(sensor_name, n=1)
-	files_list=[]
-	cnt=0
-	while True:	
-	# for n in range(800):
-		# filename, car_position=DB.get_file_path(sensor_name, n=1)
-		filename, car_position=DB.get_file_path_ego(sensor_name, n=1)
-		# print(f'\n filename={filename}')
-		files_list.append(filename)
-		cnt+=1
-		if filename=='':
-			break
-	print(f'\n cnt={cnt} \n unique file = {len(np.unique(files_list))}')
-	print(f'\n first={files_list[0]} \nlast = {files_list[-2]} \n sample token={DB.sample_token}')
-	# lon=DB.inspection_dict['lon']
-	# values_metric=[k for k in range(len(lon))]
-	# module_name="landmaerk"
-	# DB.update_inspection_dict(module_name, values_metric)
+	verbose=True
+	# test database
+	DB=test_HAIS_database(dataroot, version, verbose=True)
+	
+  
 	
 
 
