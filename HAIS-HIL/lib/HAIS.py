@@ -4,6 +4,7 @@ from tkinter import E
 import cv2
 import time
 import threading
+import webbrowser
 import numpy as np
 import pandas as pd
 from glob import glob
@@ -12,6 +13,7 @@ from numpy.core.records import array
 import matplotlib.pyplot as plt
 from pyrsistent import s
 
+
 try: 
 	from src.lib.global_variables import *
 	from src.lib import utils, hais_database, inspection_algorithm, inspection_map
@@ -19,7 +21,6 @@ except:
 	from lib.global_variables import *
 	from lib import utils, hais_database, inspection_algorithm, inspection_map
 	
-#%%############################	RUN the GUI	############################
 import napari
 from PyQt5 import QtCore, Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QFormLayout, QLabel, QMessageBox, \
@@ -34,6 +35,15 @@ from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
 
 # set the transformation
 import torchvision.transforms as transforms
+
+#%%############## CLASSES  ######################
+class GUI_App(QWidget): 
+	def __init__(self, config_file='../config/config.yml'): 
+		super().__init__()
+		# parameters
+		self.disp=1
+		# instanciate the HAIS	GUI
+		self.HAIS=HAIS_GUI(config_file=config_file, disp=self.disp)
 
 class Worker(QObject):
 	finished = pyqtSignal()
@@ -118,7 +128,7 @@ class HAIS_GUI(QWidget):
 			self.config=self.load_config(config_file)
 			self.root_folder=self.config['DATA']['data_root']
 			self.version=self.config['DATA']['version']
-			self.enable_nscene=self.config['DATA']['enable_nscene']
+			# self.enable_nscene=self.config['DATA']['enable_nscene']
 			self.verbose=self.config['DATA']['enable_nscene']
 			self.img_size=(self.config['INSPECTION']['imgSizes_X'], self.config['INSPECTION']['imgSizes_Y'] )
 			self.viewer_resize=(1200, 800)
@@ -192,6 +202,10 @@ class HAIS_GUI(QWidget):
 			self.button_good_road=QPushButton('Good roads')
 			self.button_good_road.clicked.connect(self.save_good_road_image)
 
+			self.button_VGA_annotator=QPushButton('run VGA object annotator')
+			self.button_VGA_annotator.clicked.connect(self.run_VGA_annotator)
+
+
 			# Annotation verification
 			self.button_inteactive_annotation=QPushButton('Inteactive visualization') 
 			self.button_inteactive_annotation.setFont(QFont("Times", 10, QFont.Bold))
@@ -251,8 +265,9 @@ class HAIS_GUI(QWidget):
 			mainLayout.addWidget(self.database_formGroupBox, 0,0)
 			mainLayout.addWidget(self.nodes_formGroupBox, 1,0)
 			mainLayout.addWidget(self.execution_formGroupBox, 2,0)
-			mainLayout.addWidget(self.labeling_formGroupBox, 3,0)
-			mainLayout.addWidget(self.visualization_formGroupBox, 4,0)
+			mainLayout.addWidget(self.visualization_formGroupBox, 3,0)
+			mainLayout.addWidget(self.labeling_formGroupBox, 4,0)
+			
 
 	
 			# mainLayout=QVBoxLayout()
@@ -316,9 +331,6 @@ class HAIS_GUI(QWidget):
 			"Email:amrb@nvscanada.ca<br/></p>"
 		QMessageBox.about(self, "About CTIMS 2021", text)
 
-
-#%%############## GUI Routines ######################
-
 	def display(self): 
 		print(f'\n\n##################### 	Running GUI based inspection	########################')
 		print(f'## - data root : {self.root_folder} ')
@@ -374,10 +386,7 @@ class HAIS_GUI(QWidget):
 		self.sensor_folder=os.path.join(self.dataroot, 'sweeps', self.sensor_name)
 		# retreive list of files
 		self.list_files=[path for path in glob(os.path.join(self.sensor_folder, '*')) if os.path.isfile(path)]
-		if self.enable_nscene:
-			self.nb_data_samples=len(self.DB.inspection_dict['token'])
-		else:
-			self.nb_data_samples=len(self.list_files)
+		self.nb_data_samples=len(self.DB.inspection_dict['token'])
 
 		if self.nb_data_samples>0:
 			print(f'\n - {self.sensor_name} sensor has {len(self.list_files)} files.')
@@ -533,11 +542,14 @@ class HAIS_GUI(QWidget):
 		self.visualization_formGroupBox.setLayout(layout)
 	
 	def create_labeling_formGroupBox(self): 
-		self.labeling_formGroupBox=QGroupBox("Manual labeling")
+		self.labeling_formGroupBox=QGroupBox("Manual Annotation")
 		layout=QGridLayout()
-		layout.addWidget(self.button_bad_road, 0,0)
-		layout.addWidget(self.button_medium_road, 0,1)
-		layout.addWidget(self.button_good_road, 0,2)
+		layout.addWidget(QLabel('Image classification'), 0,0)
+		layout.addWidget(self.button_bad_road, 1,0)
+		layout.addWidget(self.button_medium_road, 1,1)
+		layout.addWidget(self.button_good_road, 1,2)
+		layout.addWidget(QLabel('VGA annotator '), 2,0)
+		layout.addWidget(self.button_VGA_annotator, 3,0 , 1, 3)
 		self.labeling_formGroupBox.setLayout(layout)
 	
 	def showdialog_information(self, title, message): 
@@ -563,7 +575,7 @@ class HAIS_GUI(QWidget):
 		QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 		return reply
 
-#%%############## Road inspection ######################
+    ############### Road inspection ######################
 	def browse_data_path(self): 
 		# open select folder dialog
 		if self.data_source.isChecked()==True: 
@@ -748,7 +760,30 @@ class HAIS_GUI(QWidget):
 			print(f'\n - self.sensor_data_dict={self.sensor_data_dict}')
 			for k, sensor_name in enumerate(self.sensor_data_dict.keys()):
 				print(f'\n sensor{k}={sensor_name}')
-				if 'DRONE' in sensor_name or 'CAMERA' in sensor_name:
+				
+				if sensor_name=='RIGHT_CAMERA' or sensor_name=='LEFT_CAMERA':
+					self.module_name="Lanemarker"
+					img_path=self.sensor_data_dict[sensor_name]
+					image_id=self.get_image_id(img_path)
+					# run Lanemarker reflectivity
+					reflection_coef, lanemarker_img, image_RGB, mask=inspection_algorithm.lane_inspection(img_path, disp=0)#, bright_th=bright_th)
+					# get diagnosis
+					out_metric, color= inspection_algorithm.get_lanemarker_diagnosis(reflection_coef)
+					out_image = cv2.resize(lanemarker_img, self.viewer_resize) 
+					# Display the diagnosed frame
+					n,m, _=out_image.shape
+					cv2.putText(out_image, f'reflection coef={reflection_coef:.2}', 
+											(int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
+												0.8, color, 2)
+		
+					# visualize the image
+					if self.sensor_name==sensor_name:
+						msg=f"{progress}\t fileID=" + os.path.basename(img_path)
+						self.image_ID.setText(msg)
+						self.visualize_image(out_image)
+
+
+				elif 'DRONE' in sensor_name or 'CAMERA' in sensor_name:
 					self.module_name="road"
 					img_path=self.sensor_data_dict[sensor_name]
 					image_id=self.get_image_id(img_path)
@@ -775,27 +810,6 @@ class HAIS_GUI(QWidget):
 						self.image_ID.setText(msg)
 						self.visualize_image(out_image)
 
-				elif sensor_name=='RIGHT_CAMERA' or sensor_name=='LEFT_CAMERA':
-					self.module_name="Lanemarker"
-					img_path=self.sensor_data_dict[sensor_name]
-					image_id=self.get_image_id(img_path)
-					# run Lanemarker reflectivity
-					reflection_coef, lanemarker_img, image_RGB, mask=inspection_algorithm.lane_inspection(img_path, disp=0)#, bright_th=bright_th)
-					# get diagnosis
-					out_metric, color= inspection_algorithm.get_lanemarker_diagnosis(reflection_coef)
-					out_image = cv2.resize(lanemarker_img, resize) 
-					# Display the diagnosed frame
-					n,m, _=out_image.shape
-					cv2.putText(out_image, f'reflection coef={reflection_coef:.2}', 
-											(int(0.01*n), int(0.1*m)), cv2.FONT_HERSHEY_SIMPLEX,
-												0.8, color, 2)
-		
-					# visualize the image
-					if self.sensor_name==sensor_name:
-						msg=f"{progress}\t fileID=" + os.path.basename(img_path)
-						self.image_ID.setText(msg)
-						self.visualize_image(out_image)
-
 				elif 'IMU' in sensor_name:
 					self.module_name="kenimatics"
 					# run kenimaticcs inspection
@@ -815,7 +829,7 @@ class HAIS_GUI(QWidget):
 
 				else:
 					msg=f"Undefined algorithm for the sensor: \n - {sensor_name}."
-					QMessageBox.warning(self, "Inspection algorithm", msg )
+					# QMessageBox.warning(self, "Inspection algorithm", msg )
 					print(msg)
 					continue
 				print(f'\n - inspection report: {self.list_metrics}')
@@ -867,6 +881,19 @@ class HAIS_GUI(QWidget):
 	def save_good_road_image(self):
 		self.save_labeling_image(calss_folder='Good')
 	
+	def run_VGA_annotator(self):
+		print(f'\n -> Running VGA annotator ..')
+		# 1st method how to open html files in chrome using
+		for file in ['../webpage/templates/via-annotator.html', 'webpage/templates/via-annotator.html']:
+			if os.path.exists(file):
+				filename=file
+				break
+		try:
+			webbrowser.open_new_tab(filename)
+		except Exception as e:
+			print(f'\n Error: cannot shor VGA annotator. \nException: {e}')
+		
+
 	def save_image_and_mask(self, node_name, trip_name, sensor_name, image_id, image, mask):
 			if len(np.unique(mask))>1: # ignore empty or full masks
 				mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
@@ -895,15 +922,7 @@ class HAIS_GUI(QWidget):
 		ret_val, msg_out=Napari_GUI(self.image_path, self.mask_path,
 										annotation_directory=self.annotation_directory)
 
-class GUI_App(QWidget): 
-	def __init__(self, config_file='../config/config.yml'): 
-		super().__init__()
-		# parameters
-		self.disp=1
-		# instanciate the HAIS	GUI
-		self.HAIS=HAIS_GUI(config_file=config_file, disp=self.disp)
-		
-#%%#
+#%%############## Utils functions  ######################
 def set_GUI_style(app): 
 		# Force the style to be the same on all OSs: 
 		app.setStyle("Fusion")

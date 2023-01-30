@@ -760,6 +760,7 @@ class HAIS_database:
 			
 		except Exception as e:
 			build_database=True
+			print(f'\n The Nuscnes database does not exist or corrupted. \nException: {e}')
 			
 		# check the inspection json
 		self.inspect_json_file=os.path.join(self.dataroot, 'inspection_dic.json')
@@ -769,7 +770,6 @@ class HAIS_database:
 		if build_database:
 			# disply
 			if self.verbose:
-				print(f'\n The Nuscnes database does not exist or corrupted. \nException: {e}')
 				print(f'\n - Building the Nuscenes database ...')
 				print(f'\t - dataset root={self.dataroot} ')
 			# create the database root

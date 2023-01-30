@@ -109,8 +109,12 @@ def form_post(request: Request):
 @app.get("/sensors")
 def form_post(request: Request):
     image_path = "  "
-    
     return templates.TemplateResponse('sensors.html', context={'request': request, 'image_path': image_path})
+
+@app.get("/via-annotator")
+def form_post(request: Request):
+    data_root = "download/"
+    return templates.TemplateResponse('via-annotator.html', context={'request': request, 'data_root': data_root})
 
 @app.get("/")
 def form_post(request: Request):
