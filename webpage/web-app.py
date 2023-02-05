@@ -1,5 +1,6 @@
 import os, json, shutil, time
 from typing import List
+from glob import glob
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, File, UploadFile, Request, Form
@@ -133,6 +134,14 @@ def form_post(request: Request):
     return templates.TemplateResponse('contact.html', context={'request': request, 'image_path': image_path})
 
 
+@app.get("/get_node_list")
+async def get_sensor_data():
+    list_nodes=[ os.path.basename(path) for path in glob(os.path.join(download_path,'*')) if os.path.isdir(path)] 
+    dict_list_nodes={node:idx+1 for idx, node in enumerate(list_nodes)}
+    data = serialize_sensor_dict(dict_list_nodes)
+    # print(f'\n List of found nodes data={data}')
+    return data
+
 @app.get("/get_routes/{node_name}")
 async def read_user_me(node_name):
     print(f'\n requestd node is : {node_name}')
@@ -157,13 +166,13 @@ async def get_sensor_data(location_str):
     print(f'\n the picked location data is : {picked_location}')
     dict_sensor=utils_hais.search_node_in_DB(database_root=download_path, picked_location=picked_location, max_dist=max_dist)
     # copy the files locally
-    copy_senso_data(dict_sensor, tmp_dir)
+    copy_sensor_data(dict_sensor, tmp_dir)
     # flag: serialize the json [quick solution as the <dict_sensor> does not POST correctly ]
     data = serialize_sensor_dict(dict_sensor)
     print(f'\n sensor data={data}')
     return data
 
-def copy_senso_data(dict_sensor, tmp_dir):
+def copy_sensor_data(dict_sensor, tmp_dir):
     
     try:
         dst_cam= os.path.join(tmp_dir, os.path.basename(dict_sensor['camera']) )

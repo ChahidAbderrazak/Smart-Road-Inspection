@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <!-- <base target="_top"> -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico">
+    <!-- <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico"> -->
     <title>HAIS: Highway Automated Inspection System (2022)</title>
     <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/dashboard/">
     <!-- Bootstrap core CSS -->
@@ -18,7 +18,7 @@
     <!-- Leaflet -->
     <title>HAIS: Highway Automated Inspection System</title>
 
-    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+    <!-- <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" /> -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
 
@@ -31,27 +31,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" type="text/css"/>
     <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
     
-    <!-- nodes selsction checkbox-->
+    <!-- nodes selection checkbox-->
     <script type="text/javascript">
       $(document).ready(function() {
           $('#NodeName').multiselect({
-              includeSelectAllOption: true, // add select all option as usual
-              // optionClass: function(element) {
-              //     var value = $(element).val();
-              //     if (value%2 == 0) {
-              //         return 'odd'; // reversed
-              //     }
-              //     else {
-              //         return 'even'; // reversed
-              //     }
+              includeSelectAllOption: true, // add select all option as usual   }
               // }
           });
           $('#roadClass').multiselect({
               includeSelectAllOption: true
           });
-
       });
     </script>
+
+    <!-- <script type="text/javascript">
+      
+    </script> -->
 
   <!-- The page styles-->
     <style>
@@ -132,40 +127,40 @@
         }
 
         /*Legend specific*/
-.legend {
-  padding: 6px 8px;
-  font: 14px Arial, Helvetica, sans-serif;
-  background: white;
-  background: rgba(255, 255, 255, 0.8);
-  /*box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);*/
-  /*border-radius: 5px;*/
-  line-height: 24px;
-  color: #555;
-}
-.legend h4 {
-  text-align: center;
-  font-size: 16px;
-  margin: 2px 12px 8px;
-  color: #777;
-}
+        .legend {
+          padding: 6px 8px;
+          font: 14px Arial, Helvetica, sans-serif;
+          background: white;
+          background: rgba(255, 255, 255, 0.8);
+          /*box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);*/
+          /*border-radius: 5px;*/
+          line-height: 24px;
+          color: #555;
+        }
+        .legend h4 {
+          text-align: center;
+          font-size: 16px;
+          margin: 2px 12px 8px;
+          color: #777;
+        }
 
-.legend span {
-  position: relative;
-  bottom: 3px;
-}
+        .legend span {
+          position: relative;
+          bottom: 3px;
+        }
 
-.legend i {
-  width: 18px;
-  height: 18px;
-  float: left;
-  margin: 0 8px 0 0;
-  opacity: 0.7;
-}
+        .legend i {
+          width: 18px;
+          height: 18px;
+          float: left;
+          margin: 0 8px 0 0;
+          opacity: 0.7;
+        }
 
-.legend i.icon {
-  background-size: 18px;
-  background-color: rgba(255, 255, 255, 1);
-}
+        .legend i.icon {
+          background-size: 18px;
+          background-color: rgba(255, 255, 255, 1);
+        }
 
     </style>
 
@@ -183,14 +178,13 @@
         </li>
       </ul>
     </nav>
-    
+
     <div class="container-fluid">
       <div class="row">
         <!-- --------------------------  Side-Bar Menu  ---------------------------------- -->
         <nav class="col-md-2 d-none d-md-block bg-light sidebar">
           <div class="sidebar-sticky">
             <ul class="nav flex-column">
-
 
               <li class="nav-item">
                 <a class="nav-link" href="/">
@@ -245,14 +239,18 @@
           <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-1 mb-3 border-bottom">
             
             <h1 class="h3">Inspection Nodes
-                <select id="NodeName" multiple="multiple">
-                  <option value="node1" selected >node1</option>
+                <!-- <select id="NodeName" multiple="multiple">
+                  
                   <option value="node2">node2</option>
                   <option value="node3" >node3</option>
                   <option value="node4">node4</option>
                   <option value="node5">node5</option>
                     <option value="node6">node6</option>
-                </select>
+                </select> -->
+
+                <select id="NodeName" multiple="multiple">
+                </select> 
+
                   &nbsp; Highway conditions 
                 <select id="roadClass" multiple="multiple">
                   <option class=gray value="0" selected>Scanned road</option>
@@ -413,174 +411,186 @@
 
   <!-- // ############################### SCRIPTS  ############################### -->
       <!-- Inspection MAP -->
-          <script>
+      <script>
+          function plot_nodes_list(NodeName, roadClass) {
+          let numberSelected = 0;
+          var road_class_list = []
+          // Clear the map
+          clearMap(map)
 
-            function plot_nodes_list(NodeName, roadClass) {
-              let numberSelected = 0;
-              var road_class_list = []
-              // Clear the map
-              clearMap(map)
-
-              // Plot the selected nodes
-              for (let c = 0; c < roadClass.options.length; c++) {
-                if (roadClass.options[c].selected) {
-                    // console.log(`- plotting road class${roadClass.options[c].value} `);
-                    var selected_class = roadClass.options[c].value;
-                    road_class_list.push(parseInt(selected_class));
-                    }
+          // Plot the selected nodes
+          for (let c = 0; c < roadClass.options.length; c++) {
+            if (roadClass.options[c].selected) {
+                // console.log(`- plotting road class${roadClass.options[c].value} `);
+                var selected_class = roadClass.options[c].value;
+                road_class_list.push(parseInt(selected_class));
+                }
+          }
+          for (let i = 0; i < NodeName.options.length; i++) {
+              if (NodeName.options[i].selected) {
+                numberSelected++;
+                // console.log(`- plotting node: ${NodeName.options[i].value} `);
+                var selected_node = NodeName.options[i].text;
+                fetch_coordinates(selected_node, road_class_list)
+                }
               }
-              for (let i = 0; i < NodeName.options.length; i++) {
-                  if (NodeName.options[i].selected) {
-                    numberSelected++;
-                    // console.log(`- plotting node: ${NodeName.options[i].value} `);
-                    var selected_node = NodeName.options[i].value;
-                    fetch_coordinates(selected_node, road_class_list)
-                    }
-                  }
-              return numberSelected;
-            }
+          return numberSelected;
+        }
+        // ----------------------------------  Events Listners  -----------------------------------------
 
-            document.getElementById('show-inspections').addEventListener('click', () => {
-            // const NodeName = document.selectNodes.NodeName;
-            const NodeName =this.NodeName
-            const roadClass =this.roadClass
-            // plot the selected nodes
-            plot_nodes_list(NodeName, roadClass);
-          });
+        document.getElementById('show-inspections').addEventListener('click', () => {
+        // const NodeName = document.selectNodes.NodeName;
+        const NodeName =this.NodeName
+        const roadClass =this.roadClass
+        // plot the selected nodes
+        plot_nodes_list(NodeName, roadClass);
+      });
 
-            // ----------------------------------  Sensor data popup  -----------------------------------------
-            popup_msg = "";
-            const map = L.map('map').setView([51.505, -0.09], 13);
-            const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              maxZoom: 19,
-              attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
-            const popup = L.popup()
-              .setLatLng([51.513, -0.09])
-              .setContent('Click on the road to visualise the sensors data')
-              .openOn(map);
+      // document.getElementById('NodeNames').addEventListener('change', () => {
+      //   // const NodeName = document.selectNodes.NodeName;
+      //   for (let node in curr_node_list ) {
+      //     console.log('tstin : ' + node + ' --> ' + list_nodes[node]);
+          
+      //   }
+      // })
 
-            // legend 
-           
-            /*Legend specific*/
-            var legend = L.control({ position: "bottomleft" });
 
-            legend.onAdd = function(map) {
-              var div = L.DomUtil.create("div", "legend");
-              for (i = 0; i < roadClass.options.length; i++) {
-                div.innerHTML += `<i style="background: ${getColor(i)}"></i><span> ${roadClass.options[i].text}</span><br>`;
+        // ----------------------------------  Sensor data popup  -----------------------------------------
+        popup_msg = "";
+        const map = L.map('map').setView([51.505, -0.09], 13);
+        const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+        const popup = L.popup()
+          .setLatLng([51.513, -0.09])
+          .setContent('Click on the road to visualise the sensors data')
+          .openOn(map);
+
+        // legend 
+        
+        /*Legend specific*/
+        var legend = L.control({ position: "bottomleft" });
+
+        legend.onAdd = function(map) {
+          var div = L.DomUtil.create("div", "legend");
+          for (i = 0; i < roadClass.options.length; i++) {
+            div.innerHTML += `<i style="background: ${getColor(i)}"></i><span> ${roadClass.options[i].text}</span><br>`;
+          }
+          return div;
+        };
+
+        legend.addTo(map);
+
+        // ---------------------------- Onclick data exploration -----------------------------------------------
+        function onMapClick(e) {
+          // request the sensors data dict
+          console.log(`Retreived road of picked location: e.latlng= (${e.latlng.lat}, ${e.latlng.lng})`);
+          var picked_location=`${e.latlng.lat}__${e.latlng.lng}`
+          fetch(`/get_sensor_data/${picked_location}/`)
+          .then(function (response) {
+                return response.text();
+            }).then(function (text) { 
+                console.log(`Retreived road at location ${picked_location} :`);
+                console.log(text); 
+                // get the route coordinate and color
+                resObj = JSON.parse(text)
+                console.log('sensor data:');
+                console.log(resObj); 
+                // lidar_path=resObj.lidar
+                img_path= JSON.stringify(resObj.camera) //"../static/tmp/cam.jpg"
+                console.log(`image path=${img_path}`);
+                if (img_path.length>3) {
+                  
+                  popup
+                    .setLatLng(e.latlng)
+                    .setContent(`<br> image ID ${JSON.stringify(resObj.camera)}
+                    <br> <img src=${img_path} alt="" width="300" height="180"> 
+                    <br>  ${JSON.stringify(resObj.Kenematics)}
+                    <br> <input type="button" value="See all collected data" onclick="window.location.href='sensors';"/>
+                    `) // 
+                    .openOn(map);
+                }
+                  img_path=""
+            }); 
+        };
+        map.on('click', onMapClick);
+
+        // ----------------------------- Fetch the route coordinates ----------------------------------------------
+        function getColor(x) {
+          return x <= 0     ?    'gray':
+                x <= 1     ?   'red':
+                x <= 2     ?   'orange':
+                x <= 3     ?   'green':
+                'green' ;
+        };
+
+        function clearMap(map) {
+            map.eachLayer((layer) => {
+              const hasEmptyContrib = !(layer.getAttribution && layer.getAttribution());
+              const hasNoContrib = !layer.getAttribution;
+              if (hasEmptyContrib || hasNoContrib) {
+                  map.removeLayer(layer);
               }
-              return div;
-            };
+            })
+          }
 
-            legend.addTo(map);
-              
-            // ---------------------------- Onclick data exploration -----------------------------------------------
-            function onMapClick(e) {
-              // request the sensors data dict
-              console.log(`Retreived road of picked location: e.latlng= (${e.latlng.lat}, ${e.latlng.lng})`);
-              var picked_location=`${e.latlng.lat}__${e.latlng.lng}`
-              fetch(`/get_sensor_data/${picked_location}/`)
-              .then(function (response) {
-                    return response.text();
-                }).then(function (text) { 
-                    console.log(`Retreived road at location ${picked_location} :`);
-                    console.log(text); 
-                    // get the route coordinate and color
-                    resObj = JSON.parse(text)
-                    console.log('sensor data:');
-                    console.log(resObj); 
-                    // lidar_path=resObj.lidar
-                    img_path= JSON.stringify(resObj.camera) //"../static/tmp/cam.jpg"
-                    console.log(`image path=${img_path}`);
-                    if (img_path.length>3) {
-                      
-                      popup
-                        .setLatLng(e.latlng)
-                        .setContent(`<br> image ID ${JSON.stringify(resObj.camera)}
-                        <br> <img src=${img_path} alt="" width="300" height="180"> 
-                        <br>  ${JSON.stringify(resObj.Kenematics)}
-                        <br> <input type="button" value="See all collected data" onclick="window.location.href='sensors';"/>
-                        `) // 
-                        .openOn(map);
-                    }
-                      img_path=""
-                }); 
-            };
-            map.on('click', onMapClick);
+        function fetch_coordinates(index, road_class_list){
+          fetch(`/get_routes/${index}`) //
+            .then(function (response) {
+                return response.text();
+            }).then(function (text) { 
+                // console.log(`Retreived road of node ${index} :`);
+                // console.log(text); 
 
-            // ----------------------------- Fetsch the route coordinates ----------------------------------------------
-            function getColor(x) {
-              return x <= 0     ?    'gray':
-                    x <= 1     ?   'red':
-                    x <= 2     ?   'orange':
-                    x <= 3     ?   'green':
-                    'green' ;
-            };
-            function clearMap(map) {
-                map.eachLayer((layer) => {
-                  const hasEmptyContrib = !(layer.getAttribution && layer.getAttribution());
-                  const hasNoContrib = !layer.getAttribution;
-                  if (hasEmptyContrib || hasNoContrib) {
-                      map.removeLayer(layer);
-                  }
-                })
+                // get the route coordinate and color
+                var latlngs = [];
+                var roads_color = [];
+                resObj = JSON.parse(text)
+                // console.log(`lat coordinates: ${resObj}`);
+                poyline_exist=false
+                for (i = 1; i < resObj.alt.length; i++) {
+                  x=resObj.metric[i]
+                  
+                  // skip the invalid coordinate or metric
+                  if (resObj.lat[i] === -1 || resObj.lon[i] === -1 || resObj.metric[i] === -1) { continue; }
+                  
+                  // skip the nselected road classes
+                  selected_class=(road_class_list.indexOf(parseInt(x)) >= 0)
+                  // console.log(` ${x} selected? ${selected_class}`);
+                  if (selected_class) {
+                  latlngs = []
+                  latlngs.push([resObj.lat[i-1], resObj.lon[i-1]]);
+                  latlngs.push([resObj.lat[i], resObj.lon[i] ]);
+                  metric=0.5*(resObj.metric[i-1]+resObj.metric[i])
+                  // metric=resObj.metric[i-1]
+                  roads_color.push(getColor(metric));
+                  var polyline = L.polyline(latlngs, {color: getColor(x), weight: 8}).addTo(map); //, lineCap: 'square'
+                  var poyline_exist=true
+                }
+                }
+        
+                // zoom the map to the polyline
+                if (poyline_exist){
+                  map.fitBounds(polyline.getBounds());
+                }
+            });   
+          };             
+
+        function show_sensors_data(selectObject) {
+          let numberSelected = 0;
+          for (let i = 0; i < selectObject.options.length; i++) {
+              if (selectObject.options[i].selected) {
+                numberSelected++;
+                console.log(`- plotting node: ${selectObject.options[i].value} `);
+                var selected_node = selectObject.options[i].value;
+                fetch_coordinates(selected_node)
+                }
               }
-            function fetch_coordinates(index, road_class_list){
-              fetch(`/get_routes/${index}`) //
-                .then(function (response) {
-                    return response.text();
-                }).then(function (text) { 
-                    console.log(`Retreived road of node ${index} :`);
-                    console.log(text); 
-                    // get the route coordinate and color
-                    var latlngs = [];
-                    var roads_color = [];
-                    resObj = JSON.parse(text)
-                    // console.log(`lat coordinates: ${resObj}`);
-                    poyline_exist=false
-                    for (i = 1; i < resObj.alt.length; i++) {
-                      x=resObj.metric[i]
-                      
-                      // // skip the invalid coordinate or metric
-                      // if (resObj.lat[i] === -1 || resObj.lon[i] === -1 || resObj.metric[i] === -1) { continue; }
-                      
-                      // skip the nselected road classes
-                      selected_class=(road_class_list.indexOf(parseInt(x)) >= 0)
-                      // console.log(` ${x} selected? ${selected_class}`);
-                      if (selected_class) {
-                      latlngs = []
-                      latlngs.push([resObj.lat[i-1], resObj.lon[i-1]]);
-                      latlngs.push([resObj.lat[i], resObj.lon[i] ]);
-                      metric=0.5*(resObj.metric[i-1]+resObj.metric[i])
-                      // metric=resObj.metric[i-1]
-                      roads_color.push(getColor(metric));
-                      var polyline = L.polyline(latlngs, {color: getColor(x), weight: 8}).addTo(map); //, lineCap: 'square'
-                      var poyline_exist=true
-                    }
-                    }
-           
-                    // zoom the map to the polyline
-                    if (poyline_exist){
-                      map.fitBounds(polyline.getBounds());
-                    }
-                });   
-              };             
-            
-            function show_sensrs_data(selectObject) {
-              let numberSelected = 0;
-              for (let i = 0; i < selectObject.options.length; i++) {
-                  if (selectObject.options[i].selected) {
-                    numberSelected++;
-                    console.log(`- plotting node: ${selectObject.options[i].value} `);
-                    var selected_node = selectObject.options[i].value;
-                    fetch_coordinates(selected_node)
-                    }
-                  }
-              return numberSelected;
-            };
+          return numberSelected;
+        };
 
-          </script>  
+      </script>  
 
       <!-- Icons -->
       <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
@@ -651,6 +661,40 @@
       </div>
     </div>
 
+    <!-- ----------------------------------  Node listing  ----------------------------------------- -->
+    <script>
+      var curr_node_list = document.getElementById("NodeName");
+      function removeOptions(selectElement) {
+        var i, L = selectElement.options.length;
+        for(i = L; i >= 0; i--) {
+            selectElement.remove(i);
+        }
+      }
+
+      function update_node_list() {
+        fetch(`/get_node_list`)
+        .then(function (response) {return response.text();})
+        .then(function (text) { 
+            // source: from hossam code
+            let list_nodes = JSON.parse(text) 
+            var options = [];
+            var select = document.getElementById("NodeName");
+            var options = [];
+            var option = document.createElement('option');
+
+            console.log(list_nodes);
+            for (let node in list_nodes )
+            {
+                option.text = option.value = node;
+                options.push(option.outerHTML);
+            }
+            select.insertAdjacentHTML('beforeEnd', options.join('\n'));
+            });   
+        };
+      
+        // Update the nodes
+      update_node_list()
+    </script>
     <!-- Bootstrap core JavaScript
     ======Side============================================ -->
     <!-- Placed at the end of the document so the pages load faster -->

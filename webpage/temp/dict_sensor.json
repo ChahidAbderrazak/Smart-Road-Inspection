@@ -1,5 +1,6 @@
 {
-  "camera": "static/tmp/2022-10-31-17h-31min-47sec__CSI_CAMERA__1.jpg",
-  "Kenematics": "| ACCX Angle=45 || ACCY Angle=-44 || GRYX Angle=0 || GYRY Angle=0 || GYRZ Angle=0 || CFangleX Angle=-27 || HEADING=45 || tiltCompensatedHeading=32 || kalmanX=13 || kalmanY=-13 |",
-  "lidar": ""
+  "node1": 1,
+  "node2": 2,
+  "node3": 3,
+  "node4": 4
 }
