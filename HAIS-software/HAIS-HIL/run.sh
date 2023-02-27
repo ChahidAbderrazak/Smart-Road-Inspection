@@ -10,10 +10,15 @@ config_file=config/config.yml # config/config_ct_server.yml #
 #######################  HAIS SOFTWARE ##########################
 conda activate $env_name
 
-# run the main script
-echo && echo " #################################################" 
-echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
-echo " #################################################" && echo 
+# ------------------ run the syntac script  ------------------
+
+# python syntax.py
+
+# ------------------ run the main script  ------------------
+
+# echo && echo " #################################################" 
+# echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
+# echo " #################################################" && echo 
 
 python main_gui.py --cfg $config_file
 

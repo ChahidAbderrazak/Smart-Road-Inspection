@@ -13,8 +13,8 @@ conda activate $env_name
 # python syntax.py
 
 #####################  SENSORS FUNCTIONS ##########################
-echo && echo && echo  "--> Test sensors functions"
-python lib/sensors.py
+# echo && echo && echo  "--> Test sensors functions"
+# python lib/sensors.py
 
 ######################  INSPECTION MODULE ##########################
 
@@ -29,9 +29,9 @@ python lib/sensors.py
 # echo && echo && echo  "--> Build and generate structures HAIS-database "
 # python lib/dji_drone.py
 
-# # Build Nuscene-like database  using HAIS database stucture
-# echo && echo  "--> EXPLORE the  HAIS database structure "
-# python lib/hais_database.py
+# Build Nuscene-like database  using HAIS database stucture
+echo && echo  "--> EXPLORE the  HAIS database structure "
+python lib/hais_database.py
 
 
 # #####################  VISUALIZATION MODULE ##########################

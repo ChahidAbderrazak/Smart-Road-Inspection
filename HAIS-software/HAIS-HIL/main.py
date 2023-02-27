@@ -9,7 +9,6 @@ def convert_measurment_to_database(dataroot):
  	# If Drone, build the predefined data structure od HAIS node
 	dji_drone.build_Hais_data_strucure(dataroot)
 
-
 def create_HAIS_database(dataroot, version='v0.0'):
 	# Load the collected inspection sensors dataset
 	raw_data = hais_database.HAIS_database(dataroot=dataroot, version=version)

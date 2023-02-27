@@ -86,6 +86,8 @@ class HAIS_database:
 				dji_drone.build_Hais_data_strucure(	self.dataroot)
 			# building the json tables
 			self.create_database_table()
+	def convert_JetsonNano_database(self):
+		a=1
 
 	def create_database_table(self):
 		# building the json tables
@@ -1016,13 +1018,13 @@ def test_HAIS_database(dataroot, version, verbose=True):
 	# 	if DB.sensor_data_dict=={}:
 	# 		break
 
-	# update the ispection dicr
-	inspection_dict= {'road': 1, 
-										'token': 'car1-2022-10-31-17h-19min-38sec__s2', 
-										'kenimatics': 0, 
-										'car_location': {'lat': 43.9310942, 'lon': -78.8674386, 'alt': -1}}
+	# # update the ispection dicr
+	# inspection_dict= {'road': 1, 
+	# 									'token': 'car1-2022-10-31-17h-19min-38sec__s2', 
+	# 									'kenimatics': 0, 
+	# 									'car_location': {'lat': 43.9310942, 'lon': -78.8674386, 'alt': -1}}
 
-	DB.update_inspection_dict(inspection_dict)
+	# DB.update_inspection_dict(inspection_dict)
 
 	return DB
 
@@ -1041,6 +1043,7 @@ if __name__ == '__main__':
 	# dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all'
 	dataroot='/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node1' 
 	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2023-02-17/CS1_Oshawa-road'
+	dataroot='/home/abdo2020/Downloads/Jetson_ROS_data/Node2/mission_2023-02-26-15h-49min-07sec'
 	version='v1.0'
 	verbose=True
 	# test database
