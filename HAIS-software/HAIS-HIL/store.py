@@ -160,9 +160,4 @@ if __name__ == '__main__':
 	# 	print('.')
 	# 	im =  imblur[:,:,k]
 	# 	imdeblur[:,:,k], imdeblurfista[:,:,k], imdeblurtv[:,:,k], imdeblurtv1[:,:,k]=deblur_gray_image(im)
-	# visualize_deblured_images(imblur, imdeblur, imdeblurfista, imdeblurtv, imdeblurtv1)
-
-
- 
-  
-
+	visualize_deblured_images(imblur, imdeblur, imdeblurfista, imdeblurtv, imdeblurtv1)

@@ -370,7 +370,9 @@ class HAIS_GUI(QWidget):
 		# print(f'\n  inspection_dict = {self.DB.inspection_dict}')
 
 		# list sensors names
-		list_sensors=self.DB.get_list_sensors()
+		# list_sensors=self.DB.get_list_sensors()
+		sensors_file=os.path.join(self.dataroot, 'sensor.json')
+		list_sensors=utils.load_json(sensors_file)
 		list_sensors=[k for k in list_sensors if 'CAM' in k or 'LIDAR' in k]
 	
 		# print(f'\n flag: \n - list_sensors={list_sensors}')
@@ -418,10 +420,14 @@ class HAIS_GUI(QWidget):
 
 	def update_sensor_data_path(self):
 		self.sensor_data_dict={}
-		err=self.DB.get_file_path_ego(n=self.frame_step)
-		self.sample_token=self.DB.sample_token
-		# print(f'\n flag: \n n={self.file_index}\n filename={filename}')
-		print(f'\n data sample{self.file_index}: ego_token={self.DB.ego_token}')
+		stop=False
+		while (not stop ):
+			err=self.DB.get_file_path_ego(n=self.frame_step)
+			if err!=0 or self.sensor_name in self.DB.sensor_data_dict.keys():
+				stop=True
+			self.sample_token=self.DB.sample_token
+			# print(f'\n flag: \n n={self.file_index}\n filename={filename}')
+			# print(f'\n {self.sensor_name} data sample{self.file_index}: ego_token={self.DB.ego_token}')
 		if err==0:
 			self.sensor_data_dict= self.DB.sensor_data_dict
 		else:
@@ -663,12 +669,17 @@ class HAIS_GUI(QWidget):
 		self.on_trip_selection()
 		# find images/camera sensors
 		idx_list=[i	for i in range(self.list_sensors_combo.count()) if 'CAM' in self.list_sensors_combo.itemText(i)]
-		idx=2
-		if len(idx_list)>0:
-			idx=idx_list[0]
+		
+		try:
+			print(f'\n flag:idx_list={idx_list} ')
+			idx=2
+			if len(idx_list)>0:
+				idx=idx_list[0]
 
-		self.list_sensors_combo.setCurrentIndex(idx)
-		self.on_sensor_selection()
+			self.list_sensors_combo.setCurrentIndex(idx)
+			self.on_sensor_selection()
+		except Exception as e:
+			print(f'\n error in loading {self.list_sensors_combo.itemText(idx)} files. \n Exception:{e} ')
 		# how/hide dropdowns
 		self.nodes_formGroupBox.setVisible(True)
 
@@ -765,7 +776,6 @@ class HAIS_GUI(QWidget):
 			for k, sensor_name in enumerate(self.sensor_data_dict.keys()):
 				print(f'\n new data: sensor{k}={sensor_name}  --> {self.sensor_name}')
 				if sensor_name==self.sensor_name:
-					
 					if sensor_name=='RIGHT_CAMERA' or sensor_name=='LEFT_CAMERA':
 						self.module_name="lanemarker"
 						img_path=self.sensor_data_dict[sensor_name]

@@ -9,7 +9,7 @@ config_file=config/config.yml # config/config_ct_server.yml #
 
 #######################  HAIS SOFTWARE ##########################
 conda activate $env_name
-
+# conda activate hais-node-env
 # ------------------ run the syntac script  ------------------
 
 # python syntax.py

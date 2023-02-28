@@ -1,4 +1,4 @@
-# HAIS-Bot.
+# HAIS-Bot.self.nusc=
 # Code written by Abderrazak Chahid, 2022.
 # NB: some part/structure are inspired/used from nuScenes
 # code source: https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/nuscenes/nuscenes.py
@@ -86,6 +86,7 @@ class HAIS_database:
 				dji_drone.build_Hais_data_strucure(	self.dataroot)
 			# building the json tables
 			self.create_database_table()
+	
 	def convert_JetsonNano_database(self):
 		a=1
 
@@ -981,7 +982,15 @@ class HAIS_database:
 		sensors=self.my_sample['data']
 		list_sensors=list(sensors.keys())
 		return list_sensors
-
+	def get_list_sensors(self):
+		self.my_scene=self.nusc.scene[0]
+		self.sample_token=self.my_scene['first_sample_token']
+		self.my_sample = self.nusc.get('sample', self.sample_token)
+		# print(f'\n\n ==> First sample of the scene: \n {my_sample}')
+		sensors=self.my_sample['data']
+		list_sensors=list(sensors.keys())
+		return list_sensors
+	
 	def explore_database(self):
 
 		my_scene=self.nusc.scene[0]
