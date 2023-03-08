@@ -124,6 +124,7 @@ class Ontario511():
 		import os
 		import numpy as np
 		import urllib.request
+		import polyline
 		url='https://511on.ca/api/v2/get/roadconditions'
 		string= urllib.request.urlopen(url).read().decode('utf-8')
 		road_dict = json.loads(string)
@@ -132,11 +133,6 @@ class Ontario511():
 		# downloading all images
 		for data_dict in tqdm(road_dict[0:-1]):
 			try:
-				# print(f'\n data_dict={data_dict}')
-				# get the conditions info
-				# Visibility=data_dict["Visibility"] 
-				# Drifting=data_dict["Drifting"]
-				# Region=data_dict["Region"]
 				LastUpdated=data_dict["LastUpdated"]
 				RoadwayName=data_dict["RoadwayName"]
 				Condition=data_dict["Condition"]
@@ -145,7 +141,13 @@ class Ontario511():
 				road_class=road_class.replace(' ', '-')
 				# remove the EncodedPolyline
 				if 'EncodedPolyline' in data_dict.keys():
+					route_codeded=data_dict["EncodedPolyline"]
+					# input(f'\n - route_codeded={route_codeded}')
 					data_dict.pop("EncodedPolyline")
+					positions=polyline.decode(route_codeded)
+					
+					data_dict["positions"]=positions
+					# input(f'\n - positions={positions}')
 				# save road condition in json
 				if RoadwayName != None:
 					filePath = os.path.join(self.dst_root, "road-conditions", road_class, RoadwayName, str(LastUpdated) + '.json')
@@ -154,20 +156,20 @@ class Ontario511():
 			except Exception as e:
 				print(f'\n - warring: error in downloading the conditions of the road [{RoadwayName}] \n \tException: {e}')
 				print(f'\n data_dict={data_dict}')
+				sys.exit(0)
 
 			except KeyboardInterrupt:
 				print(f'\n - Exit Ontario511 download!')
 				sys.exit(0)
-
 
 	def download(self, disp=False):
 		# downloading all images
 		cnt=0
 		while True:
 			cnt+=1
-			######## download CAM streaming ######
-			print(f'\n ------------ Download Camera frame: {cnt} ------------')
-			self.download_Ontario511_CAM(disp=disp)
+			# ######## download CAM streaming ######
+			# print(f'\n ------------ Download Camera frame: {cnt} ------------')
+			# self.download_Ontario511_CAM(disp=disp)
 
 			######## download HW conditions ######
 			print(f'\n ------------ Download road condition: {cnt} ------------')
@@ -179,7 +181,7 @@ class Ontario511():
 
 if __name__ == '__main__':
 	dst_root='/media/abdo2020/DATA1/data/raw-dataset/Ontario511'
-	# dst_root='/home/chahid/Desktop/dataset/raw-dataset/Ontario511'
+	dst_root='/home/chahid/Desktop/dataset/raw-dataset/Ontario511'
 	
 	# instantiate  Ontario511()
 	ont511= Ontario511(dst_root)

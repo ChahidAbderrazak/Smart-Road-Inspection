@@ -32,6 +32,7 @@ sklearn
 scikit-image>=0.19.1
 imutils
 pylops
+polyline
 
 ##### General packages
 PyYAML
