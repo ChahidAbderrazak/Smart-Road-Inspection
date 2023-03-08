@@ -7,7 +7,7 @@ class Ontario511():
 		super().__init__()
 		# parameters
 		self.dst_root=dst_root    		# destination folder
-		self.cam_fs=fs								# download repetition frequency f Cameras frames
+		self.fs=fs								# download repetition frequency f Cameras frames
 
 
 	def get_cameras(self):
