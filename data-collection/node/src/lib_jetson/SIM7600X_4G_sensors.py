@@ -14,4 +14,10 @@ def get_gps_data(visualize=False):
     err, dict_GPS = GPS.getGpsPosition()
     if visualize:
         print('\n -GPS data=', dict_GPS)
-    return  dict_GPS
+    return  err, dict_GPS
+
+if __name__ == "__main__":
+	print('\n\n --- Testing GPS')
+	for k in range(10):
+		get_gps_data(visualize=True)
+

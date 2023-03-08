@@ -44,14 +44,21 @@ def getGpsPosition():
 		time.sleep(2)
 	# while rec_null:
 		answer = sendAt('AT+CGPSINFO','+CGPSINFO: ',1)
+		#print('answer=', answer)
+		#print('rec_buff=', rec_buff)
 		if 1 == answer:
 			answer = 0
-			position=rec_buff.decode().split('+CGPSINFO: ')[1].split('\r')[0]
-			names='Latitude, Longitude, Date, Time, Altitude, Speed, Navigation_Angle'.split(',')
+			position=rec_buff.decode().split('+CGPSINFO: ')[1]
+			position=position.split('\r')[0]
+
+#u'4356.741364,N,07853.813160,W,270223,181044.0,161.4,0.0,
+			names='Latitude, N, Longitude, W, Date, Time, Altitude, Speed, Navigation_Angle'.split(',')
 			pos=position.split(',')
 			# #print(f'\n GPS data: \n - metrics: \t{names} \n - values: \t{pos}')
-			Latitude, Longitude, Date, Time,Altitude, Speed, Navigation_Angle=position.split(',')
+			Latitude, N, Longitude, W, Date, Time,Altitude, Speed, Navigation_Angle=position.split(',')
+			Latitude,  Longitude, Date, Time,Altitude, Speed=float(Latitude)/100.0, float(Longitude)/100.0, float(Date), float(Time), float(Altitude), float(Speed)
 			car_location=[Latitude, Longitude, Altitude]
+
 			dict_GPS={	"car_location":car_location,
 						"Speed":Speed,
 						"Time":Time,

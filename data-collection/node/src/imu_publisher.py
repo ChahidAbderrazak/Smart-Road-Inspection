@@ -14,14 +14,17 @@ except:
 import rospy
 from std_msgs.msg import String
 
+fs=10      #Hz
+sensor_name="IMU_sensor"
+
 str_msg= String()
 str_pub= rospy.Publisher("/imu_data", String, queue_size=10)
 # str_pub= rospy.Publisher("/gps_IMU", String, queue_size=10)
 rospy.init_node("IMU_node")
-
-# rate  = rospy.Rate(1) #1 Hz
-# rate  = rospy.Rate(5) #5 Hz
+rate  = rospy.Rate(fs)
+rospy.loginfo(" Topic= " + sensor_name)
 idx=0
+sensor_frame=0
 while not rospy.is_shutdown():
     idx+=1
     try:
@@ -34,9 +37,15 @@ while not rospy.is_shutdown():
         # print('\n - car_location =', car_location)
         str_msg.data= str(IMU_dict)
         str_pub.publish(str_msg)
-        if idx%100==1:
-            rospy.loginfo("IMU data "+ str(idx) + " : " + str(IMU_dict))
-        # rate.sleep()
+
+        sensor_frame+=1
+         # display
+        idx+=1
+        if sensor_frame%10==1:
+            msg=sensor_name + "[ data samples "+ str(sensor_frame) + "/"+ str(idx) + ", fs="+ str(fs) +\
+                                 "sec ==> fs_op="+fs_sec + "]"
+            rospy.loginfo(msg)
+        
 
     except Exception as e:
         print(' Error in reading the IMU sensor!!')

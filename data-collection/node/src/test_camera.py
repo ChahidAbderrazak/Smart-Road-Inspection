@@ -2,9 +2,9 @@ import os
 import sys
 from lib.utils import create_new_folder
 
-def test_camera(cam_id):
+def test_camera(cam_id, disp=0):
 	# import the opencv library
-	print('\n --> testing the camera sensor')
+	print('\n --> testing the camera sensor ', cam_id )
 	import cv2
 	import numpy as np
 
@@ -21,7 +21,8 @@ def test_camera(cam_id):
 			create_new_folder(os.path.dirname(filename))
 			cv2.imwrite(filename, frame)
 			# Display the resulting frame
-			cv2.imshow('Camera'+str(), frame)
+			if disp!=0:
+				cv2.imshow('Camera'+str(), frame)
 		except Exception as e:
 			print('\n error: camera port ['+str(cam_id)+']') ; print(' Exception:', e)
 			break

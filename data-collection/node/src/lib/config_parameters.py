@@ -26,3 +26,4 @@ sensor_frame=0																	# intial frame ID
 scene_count=0																		# intial scene ID
 car_location=[-1,-1,-1]										                # intial car position (waiting for the GPS to start)
 data_root=os.path.join(data_root, configuration['node'])
+mission_dir=''

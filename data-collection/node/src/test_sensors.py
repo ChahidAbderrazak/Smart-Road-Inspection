@@ -79,7 +79,7 @@ def run_Jetson_testing():
 	# dict_wheather=ENV_IMU_sensors.get_wheather_sensors_data(LCD_visualize=False)
 
 	# print('\n --> testing the GPS sensor')
-	# dict_GPS = SIM7600X_4G_sensors.get_gps_data(visualize=True)
+	# err, dict_GPS = SIM7600X_4G_sensors.get_gps_data(visualize=True)
 
 
 if __name__ == "__main__":
