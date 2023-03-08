@@ -237,7 +237,7 @@ def residual_thresholding(image0, diff_image, bright_th=160, erosion_tol=1,
         try:
             cX = int((M["m10"] / M["m00"]) * ratio)
             cY = int((M["m01"] / M["m00"]) * ratio)
-            # box sizze
+            # box size
             box_sz=cX*cY
             shape = sd.detect(c)
             # multiply the contour (x, y)-coordinates by the resize ratio,
@@ -313,7 +313,7 @@ def evaluate_damage(damage_mask_rgb, th=[0.08, 0.11]):
     deep=100*deep/meter_pixels
     medium=100*medium/meter_pixels
     small=100*small/meter_pixels
-    alpha=0.7  # deep crack coeficient
+    alpha=0.7  # deep crack coefficient
 
     metric= deep + alpha*(medium+small)
     # metric=alpha*deep+0.65*(1-alpha)*medium+0.35*(1-alpha)*small
@@ -389,7 +389,7 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
         #-Derivative y
         Ky = -1*np.array([[-0.5],[-1],[0],[1],[0.5]])
         Fy = ndimage.convolve(I, Ky)
-        #--Magnitute
+        #--Magnitude
         magnitude = np.sqrt(Fx**2 + Fy**2) # G
         # print(f'\n max dif abs={np.max(np.abs(magnitude))}')
         return magnitude

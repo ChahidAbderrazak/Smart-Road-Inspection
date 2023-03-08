@@ -83,7 +83,7 @@ class HAIS_database:
 					from lib import dji_drone
 				except:
 					import dji_drone
-				dji_drone.build_Hais_data_strucure(	self.dataroot)
+				dji_drone.build_Hais_data_structure(	self.dataroot)
 			# building the json tables
 			self.create_database_table()
 	
@@ -215,7 +215,7 @@ class HAIS_database:
 		inspect_filename=osp.join(self.dataroot, 'inspection_dic.json')
 		inspect_table={	'lon': [], 'lat':	[], 'alt':	[], 
 										'token':[], 'road': [], 'lanemarker': [],
-										'kenimatics': [], 'weather': [], 'metric': []}
+										'kinematics': [], 'weather': [], 'metric': []}
 
 		if os.path.exists(inspect_filename):
 			try:
@@ -343,7 +343,7 @@ class HAIS_database:
 						inspect_table['token'].append(sample_token)
 						inspect_table['road'].append(road_metric)
 						inspect_table['lanemarker'].append(road_metric)
-						inspect_table['kenimatics'].append(road_metric)
+						inspect_table['kinematics'].append(road_metric)
 						inspect_table['weather'].append(road_metric)
 						inspect_table['metric'].append(road_metric)
 
@@ -420,7 +420,7 @@ class HAIS_database:
 
 	def annotate_database(self,scene):
 		'''
-		nnotate the collected measurments
+		Annotate the collected measurements
 		'''
 		# nuscene manager
 		from nuscenes import NuScenes
@@ -664,7 +664,7 @@ class HAIS_database:
 		}
 		return entry
 
-	#################	 CLIBRATIO TABLE	 ################# 
+	#################	 CALIBRATION TABLE	 ################# 
 	def get_calib_token(self, sample_data_token):
 		return 'calib__' + sample_data_token
 
@@ -789,7 +789,7 @@ class HAIS_database:
 			self.create_database_folder_structure()
 			# If Drone, build the predefined data structure od HAIS node
 			self.convert_drone_database()
-			# convert the colected data to Nuscnes database 
+			# convert the collected data to Nuscnes database 
 			self.build_database_tables()
 			# create the Nuscenes DB object
 			self.nusc = NuScenes(version=self.version, dataroot=self.dataroot, verbose=True)
@@ -824,49 +824,49 @@ class HAIS_database:
 		self.save_json(self.inspection_dict, self.inspect_json_file)
 
 
-	def get_IMU_kenimatics(self, sample_token):
+	def get_IMU_kinematics(self, sample_token):
 		try:
 			self.sample = self.nusc.get('sample', self.sample_token)
 			imu_token=self.sample['data']['IMU_SENSOR']
 			imu_sample_data = self.nusc.get('sample_data', imu_token)
-			self.kenimatic_dict=imu_sample_data['meta_data']
-			# print(f'\n flag: kenimatic_dict={self.kenimatic_dict}')
+			self.kinematic_dict=imu_sample_data['meta_data']
+			# print(f'\n flag: kinematic_dict={self.kinematic_dict}')
 		except Exception as e:
 			print(f'\n - error in reading the stored IMU data!!\nException:{e}')
-			self.kenimatic_dict={}
+			self.kinematic_dict={}
 
 	def get_LIDAR(self, sample_token):
 		try:
 			self.sample = self.nusc.get('sample', self.sample_token)
 			imu_token=self.sample['data']['IMU_SENSOR']
 			imu_sample_data = self.nusc.get('sample_data', imu_token)
-			self.kenimatic_dict=imu_sample_data['meta_data']
-			# print(f'\n flag: kenimatic_dict={self.kenimatic_dict}')
+			self.kinematic_dict=imu_sample_data['meta_data']
+			# print(f'\n flag: kinematic_dict={self.kinematic_dict}')
 		except Exception as e:
 			print(f'\n - error in reading the stored IMU data!!\nException:{e}')
-			self.kenimatic_dict={}
+			self.kinematic_dict={}
 
 	def get_Road_Camera(self, sample_token):
 		try:
 			self.sample = self.nusc.get('sample', self.sample_token)
 			imu_token=self.sample['data']['IMU_SENSOR']
 			imu_sample_data = self.nusc.get('sample_data', imu_token)
-			self.kenimatic_dict=imu_sample_data['meta_data']
-			# print(f'\n flag: kenimatic_dict={self.kenimatic_dict}')
+			self.kinematic_dict=imu_sample_data['meta_data']
+			# print(f'\n flag: kinematic_dict={self.kinematic_dict}')
 		except Exception as e:
 			print(f'\n - error in reading the stored IMU data!!\nException:{e}')
-			self.kenimatic_dict={}
+			self.kinematic_dict={}
 
 	def get_Lanemarker_Camera(self, sample_token):
 		try:
 			self.sample = self.nusc.get('sample', self.sample_token)
 			imu_token=self.sample['data']['IMU_SENSOR']
 			imu_sample_data = self.nusc.get('sample_data', imu_token)
-			self.kenimatic_dict=imu_sample_data['meta_data']
-			# print(f'\n flag: kenimatic_dict={self.kenimatic_dict}')
+			self.kinematic_dict=imu_sample_data['meta_data']
+			# print(f'\n flag: kinematic_dict={self.kinematic_dict}')
 		except Exception as e:
 			print(f'\n - error in reading the stored IMU data!!\nException:{e}')
-			self.kenimatic_dict={}
+			self.kinematic_dict={}
 
 	def get_file_path_ego_0(self, sensor_name, n=0):
 		try:
@@ -881,8 +881,8 @@ class HAIS_database:
 			return '', [-1, -1,-1]
 		self.ego_idx+=n
 		self.ego_pos = self.nusc.get('ego_pose', self.ego_token)
-		# get the kenimaics data
-		kenimatic_dict=self.get_IMU_kenimatics(self.sample_token)
+		# get the kinematics data
+		kinematic_dict=self.get_IMU_kinematics(self.sample_token)
 
 		car_position=self.ego_pos["translation"]
 		self.my_sample_data = self.nusc.get('sample_data', self.ego_token)
@@ -917,7 +917,7 @@ class HAIS_database:
 		# input(f'\n self.sensors_data_list={self.sensors_data_list}')
 		self.sensor_data_dict={}
 		for sensor_name in self.sensors_data_list.keys():
-			# get the kenimaics data
+			# get the kinematics data
 			if 'IMU' in sensor_name:
 				sensor_token=self.sensors_data_list[sensor_name]
 				sensor_sample_data = self.nusc.get('sample_data', sensor_token)
@@ -1027,10 +1027,10 @@ def test_HAIS_database(dataroot, version, verbose=True):
 	# 	if DB.sensor_data_dict=={}:
 	# 		break
 
-	# # update the ispection dicr
+	# # update the inspection dicr
 	# inspection_dict= {'road': 1, 
 	# 									'token': 'car1-2022-10-31-17h-19min-38sec__s2', 
-	# 									'kenimatics': 0, 
+	# 									'kinematics': 0, 
 	# 									'car_location': {'lat': 43.9310942, 'lon': -78.8674386, 'alt': -1}}
 
 	# DB.update_inspection_dict(inspection_dict)

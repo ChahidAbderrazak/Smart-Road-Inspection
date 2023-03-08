@@ -19,7 +19,7 @@ def convert_to_time_stamp(str_time):
 
 def sparse_DJI_SRT(filename):
 	'''
-	Convert SRT file from DJI Movic3 drone into a dict format
+	Convert SRT file from DJI Mavic3 drone into a dict format
 	'''
 	# "chunk" our input file, delimited by blank lines
 	with open(filename) as f:
@@ -43,7 +43,7 @@ def sparse_DJI_SRT(filename):
 						for metric in ['iso',	'fnum', 'ev','ct',	'focal_len',	'latitude',	'longitude', 'rel_alt', 'abs_alt']:
 							if line==metric:
 								dict_.update({metric: float(location[k+1])})
-					# updaet the location and the metadata
+					# update the location and the metadata
 					output.append(dict_)
 					
 	return output
@@ -87,7 +87,7 @@ def save_mission_json(mission_root, drone_meta,configuration):
 		dict_frame["filename"] = str(os.path.join("sweeps", "DRONE_CAMERA", image_path_name))
 		dict_frame["meta_data"] = drone_frame
 
-		# updaet the frame list 
+		# update the frame list 
 		dict_frame_list.append(dict_frame)
 	# save the mission file
 	if len(dict_frame_list)>0:
@@ -97,7 +97,7 @@ def save_mission_json(mission_root, drone_meta,configuration):
 		mission_path=os.path.join(mission_root, filename_strg)
 		utils.save_json(dict_frame_list, mission_path)
 
-def build_Hais_data_strucure(dataroot, ext='.SRT'):
+def build_Hais_data_structure(dataroot, ext='.SRT'):
 	'''
 	Build the predefined data structure of HAIS node
 	'''
@@ -120,7 +120,7 @@ def build_Hais_data_strucure(dataroot, ext='.SRT'):
 				video_path=path
 				break
 		if video_path=='':
-			print(f'\n - Warnning: No videos is found corresponding to drone mission: \n{filename}')
+			print(f'\n - Warning: No videos is found corresponding to drone mission: \n{filename}')
 			continue
 		# convert the video into images
 		print(f'\n - converting the video: \n  {filename} \n{video_path}')
@@ -157,7 +157,7 @@ def build_Hais_data_strucure(dataroot, ext='.SRT'):
 def test_drone_data_preparation():
 	dataroot='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
 	# Build the predefined data structure od HAIS node
-	build_Hais_data_strucure(dataroot)
+	build_Hais_data_structure(dataroot)
 
 if __name__ == '__main__':
 	

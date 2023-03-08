@@ -16,7 +16,7 @@ except:
     import utils
 
 class HAIS_map(object):
-	'''Class manaing the inspection visualization'''
+	'''Class managing the inspection visualization'''
 
 	def __init__(self, place_coord, radius=1000, max_St = 20):
 
@@ -25,8 +25,8 @@ class HAIS_map(object):
 		self.route_list = []
 		self.route_colors = []
 		self.available_colors = ['red', 'salmon', 'orange', 'yellow', 'green', 'green']
-		self.max_St = max_St               # maximun streets annotation to visualise (eg: -1 for all)
-		# initializethe map  the graph
+		self.max_St = max_St               # maximum streets annotation to visualize (eg: -1 for all)
+		# initialize the map  the graph
 		self.initialize_location_map()
 
 	def initialize_location_map(self):
@@ -74,14 +74,14 @@ class HAIS_map(object):
 		return route_color
 
 	def show_streets_names(self):
-		#- show steets names
-		steets_names=[]
-		# reteive the streets names
+		#- show streets names
+		streets_names=[]
+		# retrieve the streets names
 		for _, edge in self.edges.fillna('').iterrows():
 			# limit number of street to show
-			if edge['name'] not in steets_names:
-				steets_names.append(edge['name'])
-			if len(steets_names)>self.max_St or self.max_St==-1:
+			if edge['name'] not in streets_names:
+				streets_names.append(edge['name'])
+			if len(streets_names)>self.max_St or self.max_St==-1:
 				break
 			else:
 				c = edge['geometry'].centroid
@@ -96,23 +96,23 @@ class HAIS_map(object):
 
 	def generate_random_road_slices(self, Nroutes=5):
 		import random
-		list_coodinate = []
+		list_coordinate = []
 		for k in range(Nroutes):
 			start_point, dest_point = self.get_random_point()
 			# print(f'\n flag sim: start_point={start_point}')
 			# input(f'\n flag sim: dest_point={dest_point}')
-			# get the earest node to the locations
+			# get the nearest node to the locations
 			start = ox.nearest_nodes(self.graph, X=start_point[0],Y=start_point[1])
 			dest = ox.nearest_nodes(self.graph, X=dest_point[0],Y=dest_point[1])
 			if start!=dest:
 				# get random road conditions
 				road_metric = random.randint(0, 4)
-				list_coodinate.append((start, dest, road_metric))
-		return list_coodinate
+				list_coordinate.append((start, dest, road_metric))
+		return list_coordinate
 
 	def convert_coord_to_nodes(self, list_inspected_coord):
 		import random
-		list_coodinate = []
+		list_coordinate = []
 
 		new_portion=True
 		for k in range(len(list_inspected_coord)-1):
@@ -131,16 +131,16 @@ class HAIS_map(object):
 			 
 			print(f'\n start={start}, dest={dest}')
 			if start!=dest:
-				list_coodinate.append((start, dest, int(np.mean(road_metric))) )
+				list_coordinate.append((start, dest, int(np.mean(road_metric))) )
 				new_portion=True
 			else:
 				new_portion=False
 				print(f'\n error: the road represents same node [start=dest]')
 
-				if len(list_coodinate)==1:
-					list_coodinate+=list_coodinate
+				if len(list_coordinate)==1:
+					list_coordinate+=list_coordinate
 					
-		return list_coodinate
+		return list_coordinate
 
 	def get_roads_conditions(self, list_inspected_roads):
 		import networkx as nx
@@ -166,14 +166,14 @@ class HAIS_map(object):
 			                   route_colors = self.route_colors, route_linewidths=3)
 		
 
-def generate_random_roads_ispection():
+def generate_random_roads_inspection():
 	place_coord = (43.94593458427975, -78.89566960105887) # Ontario Tech University
 	radius = 1000  # meters
 	max_St = -1
 	# create visualization object
 	map=HAIS_map(place_coord=place_coord, radius=radius,max_St=max_St)
 
-	# genrate  Nroutes randomly inspected roads 
+	# generate  Nroutes randomly inspected roads 
 	Nroutes=2
 	list_inspected_roads = map.generate_random_road_slices(Nroutes=Nroutes)
 	input(f'\n flag: list_inspected_roads={list_inspected_roads}')
@@ -192,7 +192,7 @@ def rectify_route_positions(points_list):
 		return [(i,j) for (i,j) in points_list if i!=-1 and j!=-1]
 
 def draw_polylines(points, metrics, map, available_colors, inspect_status, horison=2):
-		# add ledend
+		# add legend
 		lgd_txt = '<span style="color: {col};">{txt}</span>'
 		cur_metrics=np.unique(metrics)
 		cur_metrics=[k for k in cur_metrics if k!=-1]
@@ -256,10 +256,10 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 	if show_lanemarker:
 		inspect_status = ['Scanned lanemarkers','Low reflectivity',  'Medium reflectivity', 'Good reflectivity', 'Excellent reflectivity']
 	else:
-		inspect_status = ['Scanned road','Bad roard', 'Regular roard', 'Good roard', 'Excellent roard']
+		inspect_status = ['Scanned road','Bad road', 'Regular road', 'Good road', 'Excellent road']
 	# load HAIS data
 	lat_coord, lon_coord, token_coord, metric_list=[],[],[], []
-	raod_coord,lanemarker_coord = [], []
+	road_coord,lanemarker_coord = [], []
 	cnt=0
 	print(f'\n - The map will show {len(list_missions)} missions. Please wait :) ...')
 	for dataroot in list_missions:
@@ -276,17 +276,17 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 				try:
 					inspection_dict=inspection_dict[0]
 				except:
-					print('The inspection_dict is loaded successsfully!!')
+					print('The inspection_dict is loaded successfully!!')
 
-				# upadte the map routes
+				# update the map routes
 				lat_coord+=inspection_dict['lat']+[-1]
 				lon_coord+=inspection_dict['lon']+[-1]
 				token_coord+=inspection_dict['token']+['']
-				raod_coord+=inspection_dict['metric']+['']
+				road_coord+=inspection_dict['metric']+['']
 				try:
 					lanemarker_coord+=inspection_dict['Lanemarker']+['']
 				except:
-					print(f'\n Lanemarker data does not exsit!!')
+					print(f'\n Lanemarker data does not exit!!')
 					pass
 				if show_lanemarker:
 					metric_list+=inspection_dict['Lanemarker']+[-1]
@@ -312,7 +312,7 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 	points = zip(df['lat'], df['lon'])
 	points = list(points)
 	metrics=df['metric'].values
-	# intialize the map
+	# initialize the map
 	df2 = df.drop(df[(df.lat==-1) & (df.lon==-1)].index)
 	if len(df2)==0:
 		return 1
@@ -327,7 +327,7 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 
 	# save map to html file
 	myMap.save(map_path)
-	print(f'\n - The inspectin map is saved in : \n {map_path}')
+	print(f'\n - The inspection map is saved in : \n {map_path}')
 
 	# open the map in the browser
 	open_map_html(map_path)
@@ -356,8 +356,8 @@ def run_visualize_nodes_inspection():
 
 if __name__ == '__main__':
 
-	# # genrate  Nroutes randomly inspected roads 
-	# generate_random_roads_ispection()
+	# # generate  Nroutes randomly inspected roads 
+	# generate_random_roads_inspection()
 
 	# Visuaise a list of inspected roads
 	run_visualize_nodes_inspection()

@@ -2,12 +2,12 @@
 import os, sys
 from lib import hais_database, dji_drone, utils
 
-def convert_measurment_to_database(dataroot):
+def convert_measurement_to_database(dataroot):
 	'''
 	Build a Nuscenes-like data base using hais-node and hais-drone data
 	'''
  	# If Drone, build the predefined data structure od HAIS node
-	dji_drone.build_Hais_data_strucure(dataroot)
+	dji_drone.build_Hais_data_structure(dataroot)
 
 def create_HAIS_database(dataroot, version='v0.0'):
 	# Load the collected inspection sensors dataset
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 		# Explore the created database
 		explore_database(dataroot, version)
 
-		# # synchorize (upload/download) sensors measurement
+		# # synchronize (upload/download) sensors measurement
 		# sync_data_to_firebase()
 
 

@@ -1,0 +1,9 @@
+{
+	"python.analysis.typeCheckingMode": "off",
+	"grammarly.selectors": [
+		{
+			"language": "python",
+			"scheme": "file"
+		}
+	]
+}

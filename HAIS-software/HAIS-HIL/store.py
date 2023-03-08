@@ -153,8 +153,8 @@ if __name__ == '__main__':
 	# imblur =  utils.load_image(img_path)
 
 	# imdeblur=imdeblurfista=imdeblurtv=imdeblurtv1=np.empty_like(imblur)
-	# #  Debluring
-	# print(f'\n\n ==> Image debluring ... \n ')
+	# #  Deblurring
+	# print(f'\n\n ==> Image deblurring ... \n ')
 
 	# for k in range(3):
 	# 	print('.')

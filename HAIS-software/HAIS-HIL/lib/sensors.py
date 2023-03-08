@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''Animates distances and measurment quality'''
+'''Animates distances and measurement quality'''
 from cProfile import label
 import os, sys, time
 import matplotlib.pyplot as plt
@@ -98,7 +98,7 @@ class RPLidar_sim(object):
 		Yields
 		------
 		scan : list
-				List of the measures. Each measurment is tuple with following
+				List of the measures. Each measurement is tuple with following
 				format: (quality, Azimuth , distance). For values description please
 				refer to `iter_measures` method's documentation.
 		'''
@@ -397,7 +397,7 @@ def run_Lidar_sim():
 	filename='/media/abdo2020/DATA1/Datasets/numerical-dataset/RPLidar-data/catalog_0_A1_R5_465_1.catalog.txt'# catalog_0_A2_465_2.catalog.txt'#catalog_0_A1_R6_465_1.catalog.txt'#
 	lidar = RPLidar_sim(filename, angle_step=2, DMAX=DMAX, IMIN=IMIN, IMAX=IMAX)
 	# vizualise lidar image
-	print('Visualize RPLidar simulation measurment')
+	print('Visualize RPLidar simulation measurement')
 	lidar.plot_lidar()
 	lidar.plot_lidar_animation()
 

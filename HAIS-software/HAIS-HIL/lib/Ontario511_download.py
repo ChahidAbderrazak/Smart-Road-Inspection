@@ -1,0 +1,186 @@
+import os, sys
+import json, time
+from tqdm import tqdm
+
+class Ontario511(): 
+	def __init__(self, dst_root='Ontario511', fs=600): 
+		super().__init__()
+		# parameters
+		self.dst_root=dst_root    		# destination folder
+		self.cam_fs=fs								# download repetition frequency f Cameras frames
+
+
+	def get_cameras(self):
+		cam_api_url='https://511on.ca/api/v2/get/cameras'
+		import urllib.request
+		import json
+		string= urllib.request.urlopen(cam_api_url).read().decode('utf-8')
+		cam_dic = json.loads(string)
+		print(f'\n- {len(cam_dic)} road cameras are found!')
+		return cam_dic
+
+	def get_time_tag(self, type=1):
+		from datetime import datetime
+		today = datetime.now()
+		if type==0:
+				return today.strftime("__%Y-%m-%d")
+		else:
+				return today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
+
+	def load_image(self, path):
+			import numpy as np
+			import cv2
+			# print(' The selected image is :', path)
+			# filename, file_extension = os.path.splitext(path)
+			try:
+					img = cv2.imread(path)
+					# print(f' The selected image file is [{path}] of size {img.shape}')
+					return 0, img
+			except Exception as e :
+					msg = '\n Error: the image path ' + path + f'cannot be loaded!!!!\n Exception: {e}'
+					print(msg)
+					return 1, []
+
+	def show_image(self, img, img_title, cmap="cividis", figsize = (8,8)):
+			import matplotlib.pyplot as plt
+			# show image
+			fig = plt.figure(figsize = figsize) # create a 5 x 5 figure 
+			ax3 = fig.add_subplot(111)
+			ax3.imshow(img, interpolation='none', cmap=cmap)
+			ax3.set_title(img_title)#, fontsize=40)
+			# plt.savefig('./residual_image.jpg')   
+			plt.axis("off")
+			plt.show()
+	
+	def create_new_folder(self, DIR):
+		if not os.path.exists(DIR):
+			os.makedirs(DIR)
+
+	def save_json(self, data_dict, filepath):
+		# save to .json
+		self.create_new_folder(os.path.dirname(filepath))
+		if not os.path.exists(filepath):
+			with open(filepath, "w") as outfile:
+				json.dump(data_dict, outfile, indent=2)
+				
+	def download_CAM_frame(self, url, filePath, disp=False):
+			global camera_dict
+			import os
+			import numpy as np
+			import urllib.request
+			cam_frame = urllib.request.urlopen(url).read()
+			# print("downloading: ",url)
+			# print (filePath)
+			corrp_img=cam_frame[0]==137
+			# print(f'\, cam_frame={cam_frame[0]} \n corrupted={corrp_img}')
+			# save uncorrupted images
+			if not corrp_img:
+				self.create_new_folder(os.path.dirname(filePath))
+				with open(filePath, 'wb') as localFile:
+					localFile.write(cam_frame)
+
+					# save camera info in json
+					camera_info=os.path.join(os.path.dirname(filePath), 'camera_info.json' )
+					self.save_json(camera_dict, camera_info)
+
+					# display:
+					if disp:
+						err1, img = self.load_image(filePath)
+						# show image
+						self.show_image(img, img_title=f'{os.path.basename(filePath)} [error={corrp_img}]')
+				localFile.close()
+
+	def download_Ontario511_CAM(self, disp=False):
+		global camera_dict
+		import os , time
+		# get the list of camera dict	
+		cam_dic=self.get_cameras()
+
+		# downloading all images
+		for camera_dict in tqdm(cam_dic[0:-1]):
+			try:
+				# get the camera info
+				cam_enabled=camera_dict["Status"] 
+				if cam_enabled=="Enabled":
+					url=camera_dict["Url"]
+					camera_ID=camera_dict["Id"]
+					RoadwayName=camera_dict['RoadwayName']
+					timestamp=self.get_time_tag(type=1)
+					if RoadwayName != None:
+						filePath = os.path.join(self.dst_root, "CAMERAS", camera_dict['RoadwayName'], camera_ID, timestamp+'.jpg')
+						# download/save camera framess
+						self.download_CAM_frame(url, filePath, disp=disp)
+
+			except Exception as e:
+				print(f'\n - warring: error in downloading the camera {camera_ID} \n \tException: {e}')
+				print(f'\n camera_dict={camera_dict}')
+
+			except KeyboardInterrupt:
+				print(f'\n - Exit Ontario511 download!')
+				sys.exit(0)
+
+	def download_road_conditions(self, disp=False):
+		global camera_dict
+		import os
+		import numpy as np
+		import urllib.request
+		url='https://511on.ca/api/v2/get/roadconditions'
+		string= urllib.request.urlopen(url).read().decode('utf-8')
+		road_dict = json.loads(string)
+		print(f'\n - {len(road_dict)} road condition are found !!! \n - destination= {self.dst_root}')
+
+		# downloading all images
+		for data_dict in tqdm(road_dict[0:-1]):
+			try:
+				# print(f'\n data_dict={data_dict}')
+				# get the conditions info
+				# Visibility=data_dict["Visibility"] 
+				# Drifting=data_dict["Drifting"]
+				# Region=data_dict["Region"]
+				LastUpdated=data_dict["LastUpdated"]
+				RoadwayName=data_dict["RoadwayName"]
+				Condition=data_dict["Condition"]
+				road_class="__".join(Condition)
+				road_class=road_class.replace('  ', ' ')
+				road_class=road_class.replace(' ', '-')
+				# remove the EncodedPolyline
+				if 'EncodedPolyline' in data_dict.keys():
+					data_dict.pop("EncodedPolyline")
+				# save road condition in json
+				if RoadwayName != None:
+					filePath = os.path.join(self.dst_root, "road-conditions", road_class, RoadwayName, str(LastUpdated) + '.json')
+					self.save_json(data_dict, filePath)
+					
+			except Exception as e:
+				print(f'\n - warring: error in downloading the conditions of the road [{RoadwayName}] \n \tException: {e}')
+				print(f'\n data_dict={data_dict}')
+
+			except KeyboardInterrupt:
+				print(f'\n - Exit Ontario511 download!')
+				sys.exit(0)
+
+
+	def download(self, disp=False):
+		# downloading all images
+		cnt=0
+		while True:
+			cnt+=1
+			######## download CAM streaming ######
+			print(f'\n ------------ Download Camera frame: {cnt} ------------')
+			self.download_Ontario511_CAM(disp=disp)
+
+			######## download HW conditions ######
+			print(f'\n ------------ Download road condition: {cnt} ------------')
+			self.download_road_conditions(disp=disp)
+
+			# sleep
+			print(f'\n ------------ Sleeping [ {self.fs} sec] ------------')
+			time.sleep(self.fs)
+
+if __name__ == '__main__':
+	dst_root='/media/abdo2020/DATA1/data/raw-dataset/Ontario511'
+	# dst_root='/home/chahid/Desktop/dataset/raw-dataset/Ontario511'
+	
+	# instantiate  Ontario511()
+	ont511= Ontario511(dst_root)
+	ont511.download(disp=False)

@@ -33,7 +33,7 @@ MODEL:
   seg_name : 'TBD'                      # Segmentation model 
 
 TRAIN:
-  Min_nb_img_per_class : 5        # minam number of images per calss to stat the trainig
+  Min_nb_img_per_class : 5        # minam number of images per class to stat the trainig
   split_size: 0.8                 # the percentage of spliting of the trainning/Validation sets.  Default 0.7  :  70% 
   nb_folds: 1                     # number of time to split and train the modeol on the trainning set, stored in <workspace + train>,  will be repeated on the training set with suffling. Default 2
   num_epoch: 300                   # number of epochs to train to model for every epoch. Default 500

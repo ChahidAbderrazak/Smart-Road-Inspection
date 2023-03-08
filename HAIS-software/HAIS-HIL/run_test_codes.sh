@@ -29,9 +29,9 @@ conda activate $env_name
 # echo && echo && echo  "--> Build and generate structures HAIS-database "
 # python lib/dji_drone.py
 
-# Build Nuscene-like database  using HAIS database stucture
-echo && echo  "--> EXPLORE the  HAIS database structure "
-python lib/hais_database.py
+# # Build Nuscene-like database  using HAIS database stucture
+# echo && echo  "--> EXPLORE the  HAIS database structure "
+# python lib/hais_database.py
 
 
 # #####################  VISUALIZATION MODULE ##########################
@@ -39,5 +39,12 @@ python lib/hais_database.py
 # # Road conditions map
 # echo && echo && echo  "--> Visualize the road conditions map"
 # python lib/inspection_map.py
+
+
+#####################  Ontario511 CAMERA LIVE  ##########################
+
+# Download Ontario511  camera
+echo && echo && echo  "--> Download Ontario511 live data"
+python lib/Ontario511_download.py
 
 conda deactivate 

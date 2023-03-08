@@ -54,7 +54,7 @@ def get_new_sensor_dict(sensor_name, filename	,sensor_frame, sensor_scene,
 		
 		return dict_frame
 
-def timestamp_from_fileanme(sensor_name, curr_sample):
+def timestamp_from_filename(sensor_name, curr_sample):
 	global data_dict
 	idx=curr_sample[sensor_name][1]
 	filename_path=data_dict[sensor_name][idx][2]
@@ -147,7 +147,7 @@ def fill_sample_new_data(sensor_name, curr_sample, frame, scene, disp=False):
 
 		else:
 			print(f'\n  \t [{int(100*time_idx/len(timestamp_line))} %] {timestamp} | {timestamp_line[time_idx]} --> sensor_name={sensor_name} ')
-			# upadet the sensor frame details
+			# update the sensor frame details
 			car_location=sensor_dict["position"]["Translation"]
 			# update the mission dict
 			sensor_dict["frame"]=frame
@@ -168,7 +168,7 @@ def convert_JetsonNano_database(root, disp=False):
 	time_idx=1
 	car_location=[-1, -1,-1]
 	timestamp_line=[]
-	# searhc the sensor fiiles/data
+	# search the sensor files/data
 	tracker_json=[ path for path in glob(os.path.join(root, 'log', '*.json')) if os.path.isfile(path)]
 	list_sensors=[ os.path.basename(path) for path in glob(os.path.join(root, 'sweeps', '*')) if os.path.isdir(path)]
 	print(f'\n list_sensors= {list_sensors}')
@@ -204,7 +204,7 @@ def convert_JetsonNano_database(root, disp=False):
 			sensor_name=data_sample["sensor_name"]
 			sensor_frame=data_sample["frame"]
 			
-			# load list of frames of the exiting sensors
+			# load list of frames of the existing sensors
 			try: 
 				list_files=data_dict[sensor_name]
 			except: # first data of <sensor_name>
@@ -224,7 +224,7 @@ def convert_JetsonNano_database(root, disp=False):
 		timestamp_line=np.unique(timestamp_line)
 		timestamp_line.sort()
 		
-		# desave the list of sensor
+		# save the list of sensor
 		list_sensors=list(curr_sample.keys())
 		sensors_file=os.path.join(root, 'sensor.json')
 		utils.save_json(list_sensors, sensors_file)
@@ -245,7 +245,7 @@ def convert_JetsonNano_database(root, disp=False):
 		
 
 
-		# loop over al the avaialbe sensor data
+		# loop over al the available sensor data
 		stop_flag=False
 		new_frames_list_old=[]
 		while(not stop_flag):
@@ -267,7 +267,7 @@ def convert_JetsonNano_database(root, disp=False):
 					new_frames_list.append(new_data)
 				else:
 					if disp:
-						print(f'\n {sensor_name} has empthy data at {timestamp_line[time_idx]}!!')
+						print(f'\n {sensor_name} has empty data at {timestamp_line[time_idx]}!!')
 			# update the mission dict
 			# print(f'\n new_frames_list={new_frames_list}')
 			if new_frames_list_old!=new_frames_list:
@@ -278,7 +278,7 @@ def convert_JetsonNano_database(root, disp=False):
 				# check the end of the timeline
 				if time_idx==len(timestamp_line):
 					stop_flag=True
-				# print(f'\n timestamp time is empty of data. Step forwad={timestamp_line[time_idx]}')
+				# print(f'\n timestamp time is empty of data. Step forward={timestamp_line[time_idx]}')
 				# print(f'\n skipped sensors data of [frame={frame},  sensor={sensor_name}]')
 
 			# # [Dev] stop the loop

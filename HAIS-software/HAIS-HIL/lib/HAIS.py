@@ -207,9 +207,9 @@ class HAIS_GUI(QWidget):
 
 
 			# Annotation verification
-			self.button_inteactive_annotation=QPushButton('Inteactive visualization') 
-			self.button_inteactive_annotation.setFont(QFont("Times", 10, QFont.Bold))
-			self.button_inteactive_annotation.clicked.connect(self.napari_mask_verification)
+			self.button_interactive_annotation=QPushButton('interactive visualization') 
+			self.button_interactive_annotation.setFont(QFont("Times", 10, QFont.Bold))
+			self.button_interactive_annotation.clicked.connect(self.napari_mask_verification)
 
 			# list of nodes
 			self.list_nodes_combo = QComboBox(self)
@@ -425,9 +425,11 @@ class HAIS_GUI(QWidget):
 			err=self.DB.get_file_path_ego(n=self.frame_step)
 			if err!=0 or self.sensor_name in self.DB.sensor_data_dict.keys():
 				stop=True
+			elif self.frame_step==0:
+				self.frame_step=1
 			self.sample_token=self.DB.sample_token
 			# print(f'\n flag: \n n={self.file_index}\n filename={filename}')
-			# print(f'\n {self.sensor_name} data sample{self.file_index}: ego_token={self.DB.ego_token}')
+			# print(f'\n {self.sensor_name} [n={self.frame_step}]data sample{self.file_index}: ego_token={self.DB.ego_token}')
 		if err==0:
 			self.sensor_data_dict= self.DB.sensor_data_dict
 		else:
@@ -463,8 +465,8 @@ class HAIS_GUI(QWidget):
 		err=inspection_map.visualize_map(list_trips, maps_root=self.maps_root, 
 																show_lanemarker=self.show_lanemarker.isChecked())
 		if err==1:
-			self.showdialog_warnning(	title="Inspection map error", 
-																message='The seleted node has no routes or routes wit wrong GPS data')
+			self.showdialog_Warning(	title="No inspection route is found", 
+																message=f'The selected node=[{self.node_name}] has no routes or routes with wrong/corrupted GPS data!!')
 
 	def visualize_image(self, input_data):
 		try:
@@ -547,7 +549,7 @@ class HAIS_GUI(QWidget):
 		layout.addWidget(self.show_lanemarker, 0,2)
 		layout.addWidget(self.show_road_condition, 0,3)
 		layout.addWidget(self.button_visualize, 2, 0, 1, 4)
-		layout.addWidget(self.button_inteactive_annotation, 3, 0, 1, 4)
+		layout.addWidget(self.button_interactive_annotation, 3, 0, 1, 4)
 		self.visualization_formGroupBox.setLayout(layout)
 	
 	def create_labeling_formGroupBox(self): 
@@ -570,7 +572,7 @@ class HAIS_GUI(QWidget):
 		retval=msg.exec_()
 		return retval
 
-	def showdialog_warnning(self, title, message): 
+	def showdialog_Warning(self, title, message): 
 		msg=QMessageBox()
 		msg.setWindowTitle(title)
 		msg.setIcon(QMessageBox.Critical)
@@ -601,15 +603,15 @@ class HAIS_GUI(QWidget):
 			if self.image_path=='':
 				return 0
 			
-			# process the slected data
+			# process the selected data
 			self.input_data_button.setText(self.image_path)
 			if os.path.isdir(self.image_path):
-				## Hide the insection and annotatin widgets
+				## Hide the inspection and annotation widgets
 				self.setVisible_inspection_widgets(False)
 				self.visualization_formGroupBox.setVisible(False)
 				self.labeling_formGroupBox.setVisible(False)
 
-				# uodate the new nodes/trip/sensors
+				# update the new nodes/trip/sensors
 				self.explore_nodes_and_trips(self.image_path)
 			else:
 				self.nodes_formGroupBox.setVisible(False)
@@ -642,12 +644,12 @@ class HAIS_GUI(QWidget):
 			trips_dict={}
 			for sweep_root in list_trips:
 				if node_name == os.path.basename(sweep_root):
-					# updaet the trip list
+					# update the trip list
 					trip_name=f'trip{cnt}'
 					trip_={trip_name:sweep_root}
 					trips_dict.update(trip_)
 					cnt+=1		
-			# upadet teh node_dict
+			# update teh node_dict
 			node_dict.update( {node_name:trips_dict})
 		self.node_dict=node_dict
 		# print(f'\n\n node dict = \n{self.node_dict}')
@@ -671,7 +673,7 @@ class HAIS_GUI(QWidget):
 		idx_list=[i	for i in range(self.list_sensors_combo.count()) if 'CAM' in self.list_sensors_combo.itemText(i)]
 		
 		try:
-			print(f'\n flag:idx_list={idx_list} ')
+			# print(f'\n flag:idx_list={idx_list} ')
 			idx=2
 			if len(idx_list)>0:
 				idx=idx_list[0]
@@ -731,12 +733,12 @@ class HAIS_GUI(QWidget):
 			self.DB.update_inspection_dict(self.list_metrics)
 
 			##---------------  FLAG --------------------
-			# # retreive the kenematics data
+			# # retrieve the kinematics data
 			# if n==0:
-			# 	self.list_paramters=list ( self.DB.kenimatic_dict.keys() )
+			# 	self.list_parameters=list ( self.DB.kinematic_dict.keys() )
 			# 	self.IMU_vect=[]
-			# if self.DB.kenimatic_dict!={}:
-			# 	vect_=[self.DB.kenimatic_dict[key] for key in self.list_paramters]+[int(out_metric)]
+			# if self.DB.kinematic_dict!={}:
+			# 	vect_=[self.DB.kinematic_dict[key] for key in self.list_parameters]+[int(out_metric)]
 			# 	self.IMU_vect.append(vect_)
 			# print(f'\n IMU_vect{n} size= {len(self.IMU_vect)}: \n {vect_}')
 			##-------------------------------------------
@@ -748,7 +750,7 @@ class HAIS_GUI(QWidget):
 
 				##---------------  FLAG --------------------
 				# save the regression values
-				columns_names=self.list_paramters+['target']
+				columns_names=self.list_parameters+['target']
 				data=np.array( self.IMU_vect )
 				print(f'\n df shapes:  dataset {data.shape}, columns_names={len(columns_names)}')
 				df= pd.DataFrame(data,columns=columns_names)
@@ -761,7 +763,7 @@ class HAIS_GUI(QWidget):
 				self.button_run_inspection.setStyleSheet("background-color : red")
 				
 		# except Exception as e:
-		# 	print(f'\n error in ruuning imags sequences!!\n Exception: {e}')
+		# 	print(f'\n error in running images sequences!!\n Exception: {e}')
 		# 	pass
 
 	def get_image_id(self, filepath):
@@ -772,9 +774,9 @@ class HAIS_GUI(QWidget):
 	def run_data_inspection_algorithms(self, progress=''):
 		try:
 			self.list_metrics={}
-			print(f'\n - sensor_data_dict={self.sensor_data_dict}')
+			# print(f'\n - sensor_data_dict={self.sensor_data_dict}')
 			for k, sensor_name in enumerate(self.sensor_data_dict.keys()):
-				print(f'\n new data: sensor{k}={sensor_name}  --> {self.sensor_name}')
+				# print(f'\n new data: sensor{k}={sensor_name}  --> {self.sensor_name}')
 				if sensor_name==self.sensor_name:
 					if sensor_name=='RIGHT_CAMERA' or sensor_name=='LEFT_CAMERA':
 						self.module_name="lanemarker"
@@ -825,8 +827,8 @@ class HAIS_GUI(QWidget):
 							self.visualize_image(out_image)
 
 					elif 'IMU' in sensor_name:
-						self.module_name="kenimatics"
-						# run kenimaticcs inspection
+						self.module_name="kinematics"
+						# run kinematiccs inspection
 						
 						# get diagnosis
 						out_metric=0
@@ -869,18 +871,18 @@ class HAIS_GUI(QWidget):
 			return  0
 
 		except Exception as e:
-			print(f'\n error in ruuning data inspection\n Exception: {e}')
+			print(f'\n error in running data inspection\n Exception: {e}')
 			return  1
 
-	def save_labeling_image(self, calss_folder):
+	def save_labeling_image(self, class_folder):
 		if os.path.exists(self.image_path):
 			msg=f"fileID=" + os.path.basename(self.image_path)
 			self.image_ID.setText(msg)
 			import shutil
-			dst_file=os.path.join(self.annotation_directory, 'road_quality', calss_folder, os.path.basename(self.image_path))
+			dst_file=os.path.join(self.annotation_directory, 'road_quality', class_folder, os.path.basename(self.image_path))
 			utils.create_new_directory(os.path.dirname(dst_file))
 			shutil.copyfile(self.image_path, dst_file)
-			print(f'\n Labeled {calss_folder} image saved in:\n{dst_file}')
+			print(f'\n Labeled {class_folder} image saved in:\n{dst_file}')
 		else:
 			print(f'\n image path not found!!\n{self.image_path}')
 
@@ -893,13 +895,13 @@ class HAIS_GUI(QWidget):
 		self.visualize_image(self.image_path)
 
 	def save_bad_road_image(self):
-		self.save_labeling_image(calss_folder='Bad')
+		self.save_labeling_image(class_folder='Bad')
 
 	def save_medium_road_image(self):
-		self.save_labeling_image(calss_folder='Medium')
+		self.save_labeling_image(class_folder='Medium')
 
 	def save_good_road_image(self):
-		self.save_labeling_image(calss_folder='Good')
+		self.save_labeling_image(class_folder='Good')
 	
 	def run_VGA_annotator(self):
 		print(f'\n -> Running VGA annotator ..')
@@ -911,7 +913,7 @@ class HAIS_GUI(QWidget):
 		try:
 			webbrowser.open_new_tab(filename)
 		except Exception as e:
-			print(f'\n Error: cannot shor VGA annotator. \nException: {e}')
+			print(f'\n Error: cannot show VGA annotator. \nException: {e}')
 		
 
 	def save_image_and_mask(self, node_name, trip_name, sensor_name, image_id, image, mask):
@@ -1008,7 +1010,7 @@ def Napari_GUI(image_path, mask_path, annotation_directory='annotations', pyqt_g
 	napari.gui_qt()
 	viewer=napari.Viewer(title=f'HAIS: Interactive annotation verification')	# no prior setup needed
 	viewer.dims.ndisplay=2
-	# visulaize the reference volume
+	# visualize the reference volume
 	# input(f'flag: img_ref shape={img_ref.shape}')
 	name=get_file_tag(image_path)
 	viewer.add_image(img_ref, name=name)
@@ -1016,7 +1018,7 @@ def Napari_GUI(image_path, mask_path, annotation_directory='annotations', pyqt_g
 	# # hide the reference data
 	# viewer.layers[name].visible=False
 
-	# visulaize the input volume
+	# visualize the input volume
 	viewer.add_labels(img_input, name='damage mask: '+get_file_tag(mask_path), opacity=0.6)
 
 	if not pyqt_gui:

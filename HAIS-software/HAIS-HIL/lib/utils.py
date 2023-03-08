@@ -224,15 +224,15 @@ def show_road_damage_image(img, mask, img_title, cmap="cividis", figsize = (8,8)
     # plt.savefig('./residual_image.jpg')   
     plt.show()
 
-def show_input_images(img_input, img_ouput, msg='', cmap='gray'):
-    img_ouput_ = load_image(img_ouput)
+def show_input_images(img_input, img_output, msg='', cmap='gray'):
+    img_output_ = load_image(img_output)
     img_input_ = load_image(img_input)
     # display
     fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
     ax1.imshow(img_input_, interpolation='none', cmap=cmap)
     ax1.set_title('input image')
     ax1.set_ylabel(msg)
-    ax2.imshow(img_ouput_, interpolation='none', cmap=cmap)
+    ax2.imshow(img_output_, interpolation='none', cmap=cmap)
     ax2.set_title('output image')
     plt.show()
 
@@ -514,13 +514,13 @@ def save_xml_mask_annotations(img, mask, data_tag, annotation_directory,  label_
 
 def create_object_boxes(img_inpt0, mask, Min_box_area=0, factor=1.2, with_masks=True, data_tag='', annotation_directory='', disp=1):
     '''
-    Create bouding boxes and segmentation masks for each detected fault
+    Create bounding boxes and segmentation masks for each detected fault
     img_inpt: input image
     mask: input mask
     Min_object_area : Minimal box area. smaller boxes will be ignored
     with_masks: create masks or not. False) only images for classification, True) mask for segmentation and object detection
     data_tag : a tag of the experiment/scan,etc
-    annotation_directory: directory where the annoation will be save. 
+    annotation_directory: directory where the annotation will be save. 
                         if annotation_directory='', annotation will not be saved 
     '''
 
@@ -597,7 +597,7 @@ def create_object_boxes(img_inpt0, mask, Min_box_area=0, factor=1.2, with_masks=
                             display_detection(img_inpt, img_box, mask_out, msg='Bouding boxes', cmap="gray")
             msg_org = ( int(0.1*mask.shape[1]) , int(0.95*mask.shape[0]) )
             if nb_box == 0:
-                # print('\n\n\n Warnning: No fault is detected !!!!')
+                # print('\n\n\n Warning: No fault is detected !!!!')
                 img_box =cv2.putText(img=np.copy(img_box), text="Good road!", org=msg_org,fontFace=1, fontScale=1, color=(0,255,0), thickness=1)
                 img_class = 'defect-free'
             else:
