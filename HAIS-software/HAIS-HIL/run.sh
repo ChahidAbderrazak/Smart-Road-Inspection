@@ -12,7 +12,7 @@ conda activate $env_name
 # conda activate hais-node-env
 # ------------------ run the syntac script  ------------------
 
-# python syntax.py
+python syntax.py
 
 # ------------------ run the main script  ------------------
 
@@ -20,6 +20,6 @@ conda activate $env_name
 # echo " ##      HAIS Inspection DETECTION PROJECT      ##" 
 # echo " #################################################" && echo 
 
-python main_gui.py --cfg $config_file
+# python main_gui.py --cfg $config_file
 
 conda deactivate 

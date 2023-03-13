@@ -13,8 +13,8 @@ conda activate $env_name
 # python syntax.py
 
 #####################  SENSORS FUNCTIONS ##########################
-# echo && echo && echo  "--> Test sensors functions"
-# python lib/sensors.py
+echo && echo && echo  "--> Test sensors functions"
+python lib/sensors.py
 
 ######################  INSPECTION MODULE ##########################
 
@@ -43,8 +43,8 @@ conda activate $env_name
 
 #####################  Ontario511 CAMERA LIVE  ##########################
 
-# Download Ontario511  camera
-echo && echo && echo  "--> Download Ontario511 live data"
-python lib/Ontario511_download.py
+# # Download Ontario511  camera
+# echo && echo && echo  "--> Download Ontario511 live data"
+# python lib/Ontario511_download.py
 
 conda deactivate 

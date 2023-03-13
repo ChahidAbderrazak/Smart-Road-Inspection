@@ -371,11 +371,12 @@ class HAIS_GUI(QWidget):
 
 		# list sensors names
 		# list_sensors=self.DB.get_list_sensors()
-		sensors_file=os.path.join(self.dataroot, 'sensor.json')
+		sensors_file=os.path.join(self.dataroot, self.version, 'sensor.json')
 		list_sensors=utils.load_json(sensors_file)
-		list_sensors=[k for k in list_sensors if 'CAM' in k or 'LIDAR' in k]
+		print(f'\n flag: \n - list_sensors0={list_sensors}')
+		list_sensors=[k["channel"] for k in list_sensors if 'CAM' in k["channel"] or 'LIDAR' in k["channel"] ]
 	
-		# print(f'\n flag: \n - list_sensors={list_sensors}')
+		print(f'\n flag: \n - list_sensors={list_sensors}')
 		self.list_sensors_combo.clear()
 		self.list_sensors_combo.addItem("select a sensor")
 		self.list_sensors_combo.addItems(list_sensors)
@@ -469,10 +470,16 @@ class HAIS_GUI(QWidget):
 																message=f'The selected node=[{self.node_name}] has no routes or routes with wrong/corrupted GPS data!!')
 
 	def visualize_image(self, input_data):
+		
 		try:
 			if isinstance(input_data, str):
-				image = cv2.imread(input_data)
 				filename=input_data
+				file_ID, ext = os.path.splitext(filename)
+				if ext=='.npy':
+					np_array_vec=np.load(filename)
+				else:
+					image = cv2.imread(input_data)
+
 			else:
 				image=input_data# image resize
 			# resizing
@@ -602,7 +609,7 @@ class HAIS_GUI(QWidget):
 			self.image_path=self.browse_data_path()
 			if self.image_path=='':
 				return 0
-			
+
 			# process the selected data
 			self.input_data_button.setText(self.image_path)
 			if os.path.isdir(self.image_path):
@@ -659,7 +666,7 @@ class HAIS_GUI(QWidget):
 		self.define_nodes_and_trips(root)
 		# update th combo:
 		list_nodes=list(self.node_dict.keys())
-		# print(f'\n flag: \n - list_nodes={list_nodes}')
+		print(f'\n flag: \n - list_nodes={list_nodes}')
 		self.list_nodes_combo.clear()
 		self.list_nodes_combo.addItem("select a node")
 		self.list_nodes_combo.addItems(list_nodes)
@@ -673,13 +680,12 @@ class HAIS_GUI(QWidget):
 		idx_list=[i	for i in range(self.list_sensors_combo.count()) if 'CAM' in self.list_sensors_combo.itemText(i)]
 		
 		try:
-			# print(f'\n flag:idx_list={idx_list} ')
-			idx=2
+			print(f'\n flag:idx_list={idx_list} ')
+			idx=0
 			if len(idx_list)>0:
 				idx=idx_list[0]
-
-			self.list_sensors_combo.setCurrentIndex(idx)
-			self.on_sensor_selection()
+				self.list_sensors_combo.setCurrentIndex(idx)
+				self.on_sensor_selection()
 		except Exception as e:
 			print(f'\n error in loading {self.list_sensors_combo.itemText(idx)} files. \n Exception:{e} ')
 		# how/hide dropdowns
@@ -729,7 +735,7 @@ class HAIS_GUI(QWidget):
 			err=self.run_data_inspection_algorithms(progress)
 		
 			# update the inspection JSON 
-			print(f"\n\n-  self.list_metrics= {self.list_metrics}")
+			# print(f"\n\n-  self.list_metrics= {self.list_metrics}")
 			self.DB.update_inspection_dict(self.list_metrics)
 
 			##---------------  FLAG --------------------
@@ -854,7 +860,9 @@ class HAIS_GUI(QWidget):
 						# QMessageBox.warning(self, "Inspection algorithm", msg )
 						print(msg)
 						continue
-					print(f'\n - inspection report: {self.list_metrics}')
+
+					if self.list_metrics!={}:
+						print(f'\n - inspection report: {self.list_metrics}')
 
 					# get the sensors inspection index
 					if not 'GPS' in sensor_name:

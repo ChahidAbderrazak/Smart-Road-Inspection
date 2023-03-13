@@ -106,6 +106,7 @@ class Ontario511():
 					camera_ID=camera_dict["Id"]
 					RoadwayName=camera_dict['RoadwayName']
 					timestamp=self.get_time_tag(type=1)
+
 					if RoadwayName != None:
 						filePath = os.path.join(self.dst_root, "CAMERAS", camera_dict['RoadwayName'], camera_ID, timestamp+'.jpg')
 						# download/save camera framess
@@ -121,7 +122,7 @@ class Ontario511():
 
 	def download_road_conditions(self, disp=False):
 		global camera_dict
-		import os
+		import os, datetime
 		import numpy as np
 		import urllib.request
 		import polyline
@@ -134,6 +135,9 @@ class Ontario511():
 		for data_dict in tqdm(road_dict[0:-1]):
 			try:
 				LastUpdated=data_dict["LastUpdated"]
+				# Converting timestamp to DateTime object
+				datetime_object = str(datetime.datetime.fromtimestamp(LastUpdated))
+				data_dict["DateTime"]=datetime_object
 				RoadwayName=data_dict["RoadwayName"]
 				Condition=data_dict["Condition"]
 				road_class="__".join(Condition)
@@ -167,21 +171,25 @@ class Ontario511():
 		cnt=0
 		while True:
 			cnt+=1
-			# ######## download CAM streaming ######
-			# print(f'\n ------------ Download Camera frame: {cnt} ------------')
-			# self.download_Ontario511_CAM(disp=disp)
+			######## download CAM streaming ######
+			print(f'\n ------------ Download Camera frame: {cnt} ------------')
+			self.download_Ontario511_CAM(disp=disp)
 
 			######## download HW conditions ######
 			print(f'\n ------------ Download road condition: {cnt} ------------')
 			self.download_road_conditions(disp=disp)
 
 			# sleep
-			print(f'\n ------------ Sleeping [ {self.fs} sec] ------------')
+			print(f'\n ------------ Sleeping [ {int(self.fs/60)} min] ------------')
 			time.sleep(self.fs)
 
 if __name__ == '__main__':
-	dst_root='/media/abdo2020/DATA1/data/raw-dataset/Ontario511'
-	dst_root='/home/chahid/Desktop/dataset/raw-dataset/Ontario511'
+	root= '/media/abdo2020/DATA1/data/'
+	if not os.path.exists(root):
+		root= '/home/chahid/Desktop/dataset/'
+
+	# dst_root='/media/abdo2020/DATA1/data/raw-dataset/Ontario511'
+	dst_root=os.path.join(root, 'raw-dataset','Ontario511')
 	
 	# instantiate  Ontario511()
 	ont511= Ontario511(dst_root)

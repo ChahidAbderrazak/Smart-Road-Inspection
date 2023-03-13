@@ -134,7 +134,6 @@ def getListOfFolders(dirName, ext, path_pattern='', allFolders=list()):
     # print(f'\n dirName[{ext}]={dirName}\n allFolders={allFolders}')           
     return list(set(allFolders)) 
 
-
 def load_image(path):
     import numpy as np
     import cv2
@@ -149,7 +148,6 @@ def load_image(path):
         print(msg)
         raise Exception(msg)
     
-
 def save_image(img, filename):
 		import numpy as np
 		import cv2

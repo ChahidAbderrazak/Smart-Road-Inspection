@@ -16,6 +16,23 @@ except:
 import matplotlib.colors as mcolors
 
 colors_list=['#0051a2', '#97964a', '#ffd44f', '#f4777f', '#93003a',"#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442"]
+
+########## FUNCTIONS ##########
+def read_scan_from_txt(filename):
+		import json
+		# Using readlines()
+		file1 = open(filename, 'r')
+		Lines = file1.readlines()
+		count = 0
+		scans_dict_list=[]
+		# Strips the newline character
+		for line in Lines:
+				count += 1
+				# print("Line{}: {}".format(count, line.strip()))
+				scans_dict_list.append( json.loads(line.strip()) )
+		return scans_dict_list
+
+########## CLASSES ##########
 class RPLidar_sim(object):
 	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
 
@@ -49,7 +66,7 @@ class RPLidar_sim(object):
 		plt.show()
 
 	def plot_lidar(self, num_scans=100):
-		scans_dict_list= self.read_scan(self.filename)
+		scans_dict_list= read_scan_from_txt(self.filename)
 		join_distance_list =[]
 		time_vec = []
 		for k,	scan in enumerate(scans_dict_list):
@@ -102,7 +119,7 @@ class RPLidar_sim(object):
 				format: (quality, Azimuth , distance). For values description please
 				refer to `iter_measures` method's documentation.
 		'''
-		scans_dict_list= self.read_scan(self.filename)
+		scans_dict_list= read_scan_from_txt(self.filename)
 		altitude=0
 		quality = -1
 		scan_list = []
@@ -127,20 +144,7 @@ class RPLidar_sim(object):
 		line.set_array(intens)
 		return line,
 
-	def read_scan(self, filename):
-		import json
-		# Using readlines()
-		file1 = open(filename, 'r')
-		Lines = file1.readlines()
-		count = 0
-		scans_dict_list=[]
-		# Strips the newline character
-		for line in Lines:
-				count += 1
-				# print("Line{}: {}".format(count, line.strip()))
-				scans_dict_list.append( json.loads(line.strip()) )
-		return scans_dict_list
-
+	
 class RPLidar_sensor(object):
 	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
 
@@ -167,7 +171,10 @@ class RPLidar_sensor(object):
 		self.IMAX=IMAX
 
 	def plot_lidar(self, num_scans=100):
-		scans_dict_list= self.read_scan()
+		
+		scans_dict_list= self.load_mission_json()
+		print(f'\n - Visualizing LiDAR data [{self.root}]\n - {len(scans_dict_list)} scans ae found!')
+
 		join_distance_list =[]
 		time_vec = []
 
@@ -178,6 +185,7 @@ class RPLidar_sensor(object):
 		fig = plt.figure()
 
 		for k,	scan in enumerate(scans_dict_list):
+			input(f'\n flag: scan={scan}')
 			detect_obj = scan['points']
 			if len(detect_obj)<2:
 				continue
@@ -206,7 +214,7 @@ class RPLidar_sensor(object):
 			if k==num_scans:
 				break
 
-	def read_scan(self):
+	def load_mission_json(self):
 		import json
 		scans_dict_list=[]
 		# Strips the newline character
@@ -214,11 +222,11 @@ class RPLidar_sensor(object):
 			# load the json file
 			new_scan=utils.load_json(filename)
 			scans_dict_list+=new_scan 
-			#input(f'\n flag: new_scan={new_scan}') 
+			input(f'\n flag: new_scan={new_scan}') 
 		return scans_dict_list
 
-class HAIS_visualizer(object):
-	'''Class for communicating with RPLidar_sim rangefinder scanners : sampling time = 5seconds'''
+class HAIS_visualizer(RPLidar_sensor):
+	'''Class for communicating with RPLidar_sim range finder scanners : sampling time = 5seconds'''
 
 	def __init__(self, root, disp=True, DMAX=100, refresh=30):
 		self.root=root
@@ -235,8 +243,30 @@ class HAIS_visualizer(object):
 	def get_full_path(self, filename):
 		return os.path.join(self.root, filename) 
 
+	def read_scan_file(self, filename):
+		skip=False
+		file_ID, ext = os.path.splitext(filename)
+		try:
+			if ext=='.json':# LiDAR data is  saved as json
+				new_=utils.load_json(filename)
+				if len(new_)==0:
+					skip=True
+				detect_obj = new_[0]['points']
+			elif ext=='.npy': # LiDAR data is  saved as npy
+				# new_=utils.load_json(filename)
+				lidar_Y=np.load(filename)
+				liday_X=np.array([k for k in range(lidar_Y.shape[0])])
+				detect_obj=np.array(lidar_Y+liday_X)
+			elif ext=='.txt':
+				scans_dict_list = read_scan_from_txt(filename)
+				detect_obj=np.array(scans_dict_list)
+		except:
+			print(f'\n Error: cannot read correctly the LiDAR file [{filename}]')
+
+		return detect_obj, skip
+	
 	def visualize(self):
-		scans_dict_list= self.read_scan()	
+		scans_dict_list= self.load_mission_json()	
 		Kinematics_list=[]
 		lat_list, lon_list, alt_list, metric_list =[],[],[], []
 		print(f'\n - Loading the collected data [{len(scans_dict_list)} samples]. Please wait ...')
@@ -249,10 +279,10 @@ class HAIS_visualizer(object):
 				filename=self.get_full_path(scan['filename'])
 				
 				if scan['sensor_name']=='LIDAR':
-					new_=utils.load_json(filename)
-					if len(new_)==0:
+					detect_obj, skip=self.read_scan_file()
+					if skip:
 						continue
-					detect_obj = new_[0]['points']
+
 					if self.disp:
 						self.plot_lidar_data(detect_obj)
 
@@ -378,17 +408,6 @@ class HAIS_visualizer(object):
 		e=0
 		# ax2 = self.fig.add_subplot(23)
 
-	def read_scan(self):
-		import json
-		scans_dict_list=[]
-		# Strips the newline character
-		for filename in self.files_list:
-			# load the json file
-			new_scan=utils.load_json(filename)
-			scans_dict_list+=new_scan 
-			#input(f'\n flag: new_scan={new_scan}') 
-		return scans_dict_list
-
 ##################  TEST SENSORS  ##################
 def run_Lidar_sim():
 	DMAX = 100
@@ -406,19 +425,22 @@ def run_Lidar_HAIS():
 	IMIN = 0
 	IMAX = 50
 	root= "/media/abdo2020/DATA1/Datasets/data-demo/demo_LIDAR"
+	root= '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node7'
+
 	lidar = RPLidar_sensor(root)
 	# vizualise lidar image
-	print('Visualize HAIS Node')
 	lidar.plot_lidar()
 
 def run_HAIS_visualizer():
 	DMAX = 100
 	IMIN = 0
 	IMAX = 50
-	root= '/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/demo-hais-data/node1'
+	# root= '/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/demo-hais-data/node1'
 	# root= '/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak'
 	# root='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads/mission2'
 	# root='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
+	# root= '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node5-JN'
+	root= '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node7'
 	lidar = HAIS_visualizer(root, disp=True)
 	# vizualise lidar image
 	print('Visualize collected the mission ')
@@ -428,9 +450,9 @@ if __name__ == '__main__':
 	# # run the lidar simulator using online dataset format
 	# run_Lidar_sim()
 
-	# # run the lidar sensor of the HAIS dataset format
-	# run_Lidar_HAIS()
+	# run the lidar sensor of the HAIS dataset format
+	run_Lidar_HAIS()
 
-	# run the IMU sensor of the HAIS dataset format
-	run_HAIS_visualizer()
+	# # run the IMU sensor of the HAIS dataset format
+	# run_HAIS_visualizer()
 

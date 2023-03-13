@@ -4,6 +4,8 @@
 **/cache/**
 **/data/**
 **/Other/*
+**/.vsc*/**
+**/__pycache__/**
 *.csv
 *.pyc
 *.pkl
@@ -14,4 +16,5 @@
 *.zip
 *.html
 *.log
+
 
