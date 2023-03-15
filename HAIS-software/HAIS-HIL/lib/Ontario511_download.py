@@ -1,14 +1,20 @@
 import os, sys
 import json, time
+import signal
 from tqdm import tqdm
 
+def timeout_handler(num, stack):
+    print("\n\n - Raise Timeout flag!!")
+    raise Exception("FUBAR")
+
+signal.signal(signal.SIGALRM, timeout_handler)
+
 class Ontario511(): 
-	def __init__(self, dst_root='Ontario511', fs=600): 
+	def __init__(self, dst_root='Ontario511', fs=300): 
 		super().__init__()
 		# parameters
-		self.dst_root=dst_root    		# destination folder
-		self.fs=fs								# download repetition frequency f Cameras frames
-
+		self.dst_root=dst_root    									# destination folder
+		self.fs=fs													# download repetition frequency f Cameras frames
 
 	def get_cameras(self):
 		cam_api_url='https://511on.ca/api/v2/get/cameras'
@@ -114,7 +120,7 @@ class Ontario511():
 
 			except Exception as e:
 				print(f'\n - warring: error in downloading the camera {camera_ID} \n \tException: {e}')
-				print(f'\n camera_dict={camera_dict}')
+				# print(f'\n camera_dict={camera_dict}')
 
 			except KeyboardInterrupt:
 				print(f'\n - Exit Ontario511 download!')
@@ -167,22 +173,40 @@ class Ontario511():
 				sys.exit(0)
 
 	def download(self, disp=False):
+		from timeit import default_timer as timer
+		
 		# downloading all images
 		cnt=0
 		while True:
-			cnt+=1
-			######## download CAM streaming ######
-			print(f'\n ------------ Download Camera frame: {cnt} ------------')
-			self.download_Ontario511_CAM(disp=disp)
+			# elapsed time 
+			start = timer()
+			# download the frame
+			try:
+				cnt+=1
+				######## download CAM streaming ######
+				print(f'\n ------------ Download Camera frame: {cnt} ------------')
+				self.download_Ontario511_CAM(disp=disp)
 
-			######## download HW conditions ######
-			print(f'\n ------------ Download road condition: {cnt} ------------')
-			self.download_road_conditions(disp=disp)
+				######## download HW conditions ######
+				print(f'\n ------------ Download road condition: {cnt} ------------')
+				self.download_road_conditions(disp=disp)
 
+				# exit the code after a specific duration
+				estimated_frame_timeout = timer()-start
+				
+			except Exception as e:
+				if "FUBAR" in str(e):
+					print("\n - Frame Time out! \n Exiting the program forcedly")
+					sys.exit(0)
+			
+			finally:
+				print(f"\n - Frame Download duration[]={estimated_frame_timeout} sec]")
 			# sleep
 			print(f'\n ------------ Sleeping [ {int(self.fs/60)} min] ------------')
-			time.sleep(self.fs)
-
+			time.sleep(self.fs)	
+			# time out flag
+			signal.alarm(3*self.fs)
+			
 if __name__ == '__main__':
 	root= '/media/abdo2020/DATA1/data/'
 	if not os.path.exists(root):
@@ -190,7 +214,7 @@ if __name__ == '__main__':
 
 	# dst_root='/media/abdo2020/DATA1/data/raw-dataset/Ontario511'
 	dst_root=os.path.join(root, 'raw-dataset','Ontario511')
-	
+	print(f'\n - Downloading the data to : {dst_root}')
 	# instantiate  Ontario511()
 	ont511= Ontario511(dst_root)
 	ont511.download(disp=False)
