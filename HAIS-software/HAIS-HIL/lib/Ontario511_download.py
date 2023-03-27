@@ -177,6 +177,8 @@ class Ontario511():
 		
 		# downloading all images
 		cnt=0
+		frame_fs=self.fs
+		signal.alarm(3*frame_fs)
 		while True:
 			# elapsed time 
 			start = timer()
@@ -197,15 +199,16 @@ class Ontario511():
 			except Exception as e:
 				if "FUBAR" in str(e):
 					print("\n - Frame Time out! \n Exiting the program forcedly")
-					sys.exit(0)
+					sys.exit()
+					
 			
 			finally:
-				print(f"\n - Frame Download duration[]={estimated_frame_timeout} sec]")
+				print(f"\n - Frame Download duration={estimated_frame_timeout} sec]")
 			# sleep
 			print(f'\n ------------ Sleeping [ {int(self.fs/60)} min] ------------')
-			time.sleep(self.fs)	
+			time.sleep(frame_fs)	
 			# time out flag
-			signal.alarm(3*self.fs)
+			signal.alarm(int(3*estimated_frame_timeout))
 			
 if __name__ == '__main__':
 	root= '/media/abdo2020/DATA1/data/'
