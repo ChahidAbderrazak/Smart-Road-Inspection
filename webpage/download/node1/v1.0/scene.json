@@ -1,0 +1,29 @@
+[
+  {
+    "token": "2022-10-31-17h-19min-38sec_",
+    "log_token": "car1__Oshawa",
+    "nbr_samples": 725,
+    "first_sample_token": "car1-2022-10-31-17h-19min-38sec__s1",
+    "last_sample_token": "car1-2022-10-31-17h-19min-38sec__s243",
+    "name": "car1-2022-10-31-17h-19min-38sec_",
+    "description": "HAIS- road Inspection Node 1"
+  },
+  {
+    "token": "2022-10-31-17h-23min-47sec_",
+    "log_token": "car1__Oshawa",
+    "nbr_samples": 1397,
+    "first_sample_token": "car1-2022-10-31-17h-23min-47sec__s1",
+    "last_sample_token": "car1-2022-10-31-17h-23min-47sec__s467",
+    "name": "car1-2022-10-31-17h-23min-47sec_",
+    "description": "HAIS- road Inspection Node 1"
+  },
+  {
+    "token": "2022-10-31-17h-31min-41sec_",
+    "log_token": "car1__Oshawa",
+    "nbr_samples": 29,
+    "first_sample_token": "car1-2022-10-31-17h-31min-41sec__s1",
+    "last_sample_token": "car1-2022-10-31-17h-31min-41sec__s11",
+    "name": "car1-2022-10-31-17h-31min-41sec_",
+    "description": "HAIS- road Inspection Node 1"
+  }
+]
