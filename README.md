@@ -11,6 +11,8 @@ Figure: Illustration of the HAIS-system
 The proposed road inspection solution is based computer vision and digital image processing technique. This algorithm   processes sensors data  and detects the potential road damages and conditions:
 <p align="center">
 <img  src="HAIS-Inspection/files/HAIS-Algorithm-Flowchart.jpg" alt="alt text" width="512" >
+</p>
+<p align="center">
 Figure: The road inspection algorithms flowchart
 </p>
 
