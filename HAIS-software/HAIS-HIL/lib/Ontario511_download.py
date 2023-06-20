@@ -213,10 +213,12 @@ class Ontario511():
 if __name__ == '__main__':
 	root= '/media/abdo2020/DATA1/data/'
 	if not os.path.exists(root):
-		root= '/home/chahid/Desktop/dataset/'
+		root= '/media/data/hais-dataset/'
+		if not os.path.exists(root):
+			root= '/home/chahid/Desktop/dataset/'
 
 	# dst_root='/media/abdo2020/DATA1/data/raw-dataset/Ontario511'
-	dst_root=os.path.join(root, 'raw-dataset','Ontario511')
+	dst_root=os.path.join(root, 'raw-data','Ontario511')
 	print(f'\n - Downloading the data to : {dst_root}')
 	# instantiate  Ontario511()
 	ont511= Ontario511(dst_root)
