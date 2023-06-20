@@ -1,0 +1,17 @@
+[
+  {
+    "token": "car1__CSI_CAMERA",
+    "channel": "CSI_CAMERA",
+    "modality": "camera"
+  },
+  {
+    "token": "car1__IMU_SENSOR",
+    "channel": "IMU_SENSOR",
+    "modality": "imu"
+  },
+  {
+    "token": "car1__GPS_SENSOR",
+    "channel": "GPS_SENSOR",
+    "modality": "gps"
+  }
+]
