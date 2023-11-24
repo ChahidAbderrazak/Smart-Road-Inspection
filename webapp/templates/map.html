@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <!-- <base target="_top"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico"> -->
+    <title>HAIS: Highway Automated Inspection System (2022)</title>
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/dashboard/">
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> 
+    <!-- Custom styles for this template -->
+    <link href="../static/css/dashboard.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Leaflet -->
+    <title>HAIS: Highway Automated Inspection System</title>
+
+    <!-- <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" /> -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+
+
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <!-- Include the plugin's CSS and JS: -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" type="text/css"/>
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+    
+    <!-- nodes selection checkbox-->
+    <script type="text/javascript">
+      $(document).ready(function() {
+          $('#NodeName').multiselect({
+              includeSelectAllOption: true, // add select all option as usual   }
+              // }
+          });
+          $('#roadClass').multiselect({
+              includeSelectAllOption: true
+          });
+      });
+    </script>
+
+    <!-- <script type="text/javascript">
+      
+    </script> -->
+
+  <!-- The page styles-->
+    <style>
+        html {box-sizing: border-box;
+        }
+
+        .leaflet-container {height: 400px;
+                            width: 600px;
+                            max-width: 100%;
+                            max-height: 100%;
+                          }
+        *, *:before, *:after {box-sizing: inherit;}
+        
+        .column {float: left;
+                width: 33.3%;
+                margin-bottom: 16px;
+                padding: 0 8px;
+        }
+        
+        @media screen and (max-width: 650px) {
+          .column { width: 100%;
+                    display: block;}
+        }
+        
+        .card { box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);}
+        
+        .container {padding: 0 16px;}
+        
+        .container::after, .row::after {content: "";
+                                        clear: both;
+                                        display: table;}
+        
+        .title {color: grey;}
+        
+        .button {border: none;
+                outline: 0;
+                display: inline-block;
+                padding: 8px;
+                color: white;
+                background-color: #000;
+                text-align: center;
+                cursor: pointer;
+                width: 100%;}
+        
+        .button:hover { background-color: #555;}
+          .bd-placeholder-img {font-size: 1.125rem;
+                              text-anchor: middle;
+                              -webkit-user-select: none;
+                              -moz-user-select: none;
+                              -ms-user-select: none;
+                              user-select: none;}
+
+          @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+              font-size: 3.5rem;
+            }
+          }
+
+        /*  preefined colors */
+        .green{
+            background-color: rgb(11, 93, 11);
+        }
+
+        .lightgreen{
+            background-color: rgb(169, 224, 87);
+        }
+
+        .orange{
+            background-color: rgb(230, 81, 26);
+        }
+
+        .red{
+            background-color: rgb(244, 11, 11);
+        }
+
+        .gray{
+            background-color: rgb(128, 123, 123);
+        }
+
+        /*Legend specific*/
+        .legend {
+          padding: 6px 8px;
+          font: 14px Arial, Helvetica, sans-serif;
+          background: white;
+          background: rgba(255, 255, 255, 0.8);
+          /*box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);*/
+          /*border-radius: 5px;*/
+          line-height: 24px;
+          color: #555;
+        }
+        .legend h4 {
+          text-align: center;
+          font-size: 16px;
+          margin: 2px 12px 8px;
+          color: #777;
+        }
+
+        .legend span {
+          position: relative;
+          bottom: 3px;
+        }
+
+        .legend i {
+          width: 18px;
+          height: 18px;
+          float: left;
+          margin: 0 8px 0 0;
+          opacity: 0.7;
+        }
+
+        .legend i.icon {
+          background-size: 18px;
+          background-color: rgba(255, 255, 255, 1);
+        }
+
+    </style>
+
+  </head>
+
+  <body>
+  <!-- --------------------------  TOP-Bar Menu  ---------------------------------- -->
+
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Smart Road Inspection</a>
+      <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
+      <ul class="navbar-nav px-3">
+        <li class="nav-item text-nowrap">
+          <a class="nav-link" href="#">Log In</a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- --------------------------  Side-Bar Menu  ---------------------------------- -->
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+          <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+
+              <li class="nav-item">
+                <a class="nav-link" href="/">
+                  <span data-feather="map"></span>
+                  Road Conditions
+                </a>
+              </li>
+             
+
+              <li class="nav-item">
+                <a class="nav-link" href="/sensors">
+                  <span data-feather="activity"></span>
+                  Measurment
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link" href="/via-annotator">
+                  <span data-feather="external-link"></span>
+                  VGG Image Annotator
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link" href="/ai">
+                  <span data-feather="bar-chart-2"></span>
+                  Inspection
+                </a>
+              </li> 
+
+              <li class="nav-item">
+                <a class="nav-link" href="/reports">
+                  <span data-feather="layers"></span>
+                  Reports
+                </a>
+              </li>
+              
+              <li class="nav-item">
+                <a class="nav-link active" href="/contact">
+                  <span data-feather="file-text"></span>
+                  Contact
+                </a>
+              </li>
+              <!-- ----------------------------------------------------------------------------- -->
+            </ul>
+          </div>
+        </nav>
+
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+          <!-- ------------------------------------ Inspection Map ----------------------------------------- -->
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-1 mb-3 border-bottom">
+            
+            <h1 class="h3">Inspection Nodes
+                <!-- <select id="NodeName" multiple="multiple">
+                  
+                  <option value="node2">node2</option>
+                  <option value="node3" >node3</option>
+                  <option value="node4">node4</option>
+                  <option value="node5">node5</option>
+                    <option value="node6">node6</option>
+                </select> -->
+
+                <select id="NodeName" multiple="multiple">
+                </select> 
+
+                  &nbsp; Highway conditions 
+                <select id="roadClass" multiple="multiple">
+                  <option class=gray value="0" selected>Scanned road</option>
+                  <option class=green value="3" selected> Bad road</option>
+                  <option class=orange value="2" selected>Regular road</option>
+                  <option class=red  value="1" selected>Good roard</option>
+                </select>
+    
+            </h1>
+            <button id="show-inspections" type="button" class="btn btn-lg btn-secondary" >Show nodes</button>
+            
+            <div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+              </div>
+            </div>
+          </div>
+          <div id="map" style="width: 1800px; height: 500px;"></div>
+
+          <!-- ------------------------------------ Inspection & Maintenance History----------------------------------------- -->
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+            <h1 class="h2">Inspection & Maintenance History</h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+                <button class="btn btn-sm btn-outline-secondary">Share</button>
+                <button class="btn btn-sm btn-outline-secondary">Export</button>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                <span data-feather="calendar"></span>
+                Last year
+              </button>
+            </div>
+          </div>
+          <canvas class="my-4" id="Inspect_Stat_Chart" width="800" height="140"></canvas>
+          
+          <!-- ------------------------------------ Reparations History----------------------------------------- -->
+          <div>
+            <h1 class="h3"> Summary Table </h1>
+            <table class="table table-striped table-sm">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Mission</th>
+                  <th>Roads ID</th>
+                  <th>Date/Time</th>
+                  <th>Responsible</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>reparation</td>
+                  <td>T1/S15, N14</td>
+                  <td>15-04-2022-14:30</td>
+                  <td>Danial</td>
+                  <td> Extended by 2 weeks due to wather condition</td>
+                </tr>
+                
+                <tr>
+                  <td>1</td>
+                  <td>inspection</td>
+                  <td>T1/S15, N14</td>
+                  <td>15-03-2022-14:30</td>
+                  <td>Danial</td>
+                  <td> Car1 and car2 are used</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>reparation</td>
+                    <td>T1/S15, N14</td>
+                    <td>14-04-2022-17:30</td>
+                    <td>Tarek</td>
+                    <td> Done</td>
+                  </tr>
+                  <tr>
+                      <td>3</td>
+                      <td>inspection</td>
+                      <td>S127, N8</td>
+                      <td>12-04-2022-17:30</td>
+                      <td>Joseph</td>
+                      <td>Done </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>reparation</td>
+                        <td> N8</td>
+                        <td>10-04-2022-17:30</td>
+                        <td>Idrees</td>
+                        <td>reparation in process</td>
+                      </tr>
+
+              </tbody>
+            </table>
+
+          </div>
+
+          <!-- ------------------------------------ Missions Scheduler----------------------------------------- -->
+          <div class="table-responsive">
+            <h1 class="h2">Missions Scheduler</h1>
+            <table class="table table-striped table-sm">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Mission</th>
+                  <th>Roads ID</th>
+                  <th>Start location</th>
+                  <th>End location</th>
+                  <th>Date/Time</th>
+                  <th>Priority</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>reparation</td>
+                  <td>T1/S15, N14</td>
+                  <td>(43.89269118, -78.8831329)</td>
+                  <td>(43.90249846, -78.8557504)</td>
+                  <td>01-02-2023</td>
+                  <td>high</td>
+                  <td>paint the lanemarkers</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>reparation</td>
+                    <td>T1/S15, N14</td>
+                    <td>(43.89269118, -78.8831329)</td>
+                    <td>(43.90249846, -78.8557504)</td>
+                    <td>05-02-2023</td>
+                    <td>low</td>
+                    <td>fill cracks</td>
+                  </tr>
+                  <tr>
+                      <td>3</td>
+                      <td>inspection</td>
+                      <td>S127, N8</td>
+                      <td>(43.89269118, -78.8831329)</td>
+                      <td>(43.90249846, -78.8557504)</td>
+                      <td>12-02-2023</td>
+                      <td>high</td>
+                      <td>use Drone1 and Car2 </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>reparation</td>
+                        <td> N8</td>
+                        <td>(43.89269118, -78.8831329)</td>
+                        <td>(43.90249846, -78.8557504)</td>
+                        <td>14-02-2023</td>
+                        <td>medium</td>
+                        <td>repaire the damaged road portion</td>
+                      </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+  <!-- // ############################### SCRIPTS  ############################### -->
+      <!-- Inspection MAP -->
+      <script>
+          var marker_latlng=""
+          function plot_nodes_list(NodeName, roadClass) {
+          let numberSelected = 0;
+          var road_class_list = []
+          // Clear the map
+          clearMap(map)
+
+          // Plot the selected nodes
+          for (let c = 0; c < roadClass.options.length; c++) {
+            if (roadClass.options[c].selected) {
+                // console.log(`- plotting road class${roadClass.options[c].value} `);
+                var selected_class = roadClass.options[c].value;
+                road_class_list.push(parseInt(selected_class));
+                }
+          }
+          for (let i = 0; i < NodeName.options.length; i++) {
+              if (NodeName.options[i].selected) {
+                numberSelected++;
+                // console.log(`- plotting node: ${NodeName.options[i].value} `);
+                var selected_node = NodeName.options[i].text;
+                fetch_coordinates(selected_node, road_class_list)
+                }
+              }
+          return numberSelected;
+        }
+        // ----------------------------------  Events Listners  -----------------------------------------
+
+        document.getElementById('show-inspections').addEventListener('click', () => {
+        // const NodeName = document.selectNodes.NodeName;
+        const NodeName =this.NodeName
+        const roadClass =this.roadClass
+        // plot the selected nodes
+        plot_nodes_list(NodeName, roadClass);
+      });
+
+      // document.getElementById('NodeNames').addEventListener('change', () => {
+      //   // const NodeName = document.selectNodes.NodeName;
+      //   for (let node in curr_node_list ) {
+      //     console.log('tstin : ' + node + ' --> ' + list_nodes[node]);
+          
+      //   }
+      // })
+
+
+        // ----------------------------------  Sensor data popup  -----------------------------------------
+        popup_msg = "";
+        const map = L.map('map').setView([51.505, -0.09], 13);
+        const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+        const popup = L.popup()
+          .setLatLng([51.513, -0.09])
+          .setContent('Click on the road to visualise the sensors data')
+          .openOn(map);
+
+        // legend 
+        
+        /*Legend specific*/
+        var legend = L.control({ position: "bottomleft" });
+
+        legend.onAdd = function(map) {
+          var div = L.DomUtil.create("div", "legend");
+          for (i = 0; i < roadClass.options.length; i++) {
+            div.innerHTML += `<i style="background: ${getColor(i)}"></i><span> ${roadClass.options[i].text}</span><br>`;
+          }
+          return div;
+        };
+
+        legend.addTo(map);
+
+        // ---------------------------- Onclick data exploration -----------------------------------------------
+        function request_reparation() {
+          console.log('Request reparation at data:');
+          console.log(marker_latlng);
+        };
+        function onMapClick(e) {
+          // request the sensors data dict
+          console.log(`Retreived road of picked location: e.latlng= (${e.latlng.lat}, ${e.latlng.lng})`);
+          var picked_location=`${e.latlng.lat}__${e.latlng.lng}`
+          marker_latlng=[e.latlng.lat, e.latlng.lng]
+          fetch(`/get_sensor_data/${picked_location}/`)
+          .then(function (response) {return response.text();})
+          .then(function (text) { 
+            console.log(`Retreived road at location ${picked_location} :`);
+            console.log(text); 
+            // get the route coordinate and color
+            resObj = JSON.parse(text)
+            console.log('sensor data:');
+            console.log(resObj); 
+            // lidar_path=resObj.lidar
+            img_path= JSON.stringify(resObj.camera) //"../static/tmp/cam.jpg"
+            console.log(`image path=${img_path}`);
+            if (img_path.length>3) {
+              popup
+                .setLatLng(e.latlng)
+                .setContent(`<br> image ID ${JSON.stringify(resObj.camera)}
+                <br> <img src=${img_path} alt="" width="300" height="180"> 
+                <br>  ${JSON.stringify(resObj.Kenematics)}
+                <br> <input type="button" value="See all collected data" onclick="window.location.href='sensors';"/>
+                <br> <input type="button" value="request reparation" onclick="request_reparation()";"/>
+                `) // 
+                .openOn(map);
+            }
+              img_path=""
+            }); 
+        };
+        map.on('click', onMapClick);
+
+        // ----------------------------- Fetch the route coordinates ----------------------------------------------
+        function getColor(x) {
+          return x <= 0     ?    'gray':
+                x <= 1     ?   'red':
+                x <= 2     ?   'orange':
+                x <= 3     ?   'green':
+                'green' ;
+        };
+
+        function clearMap(map) {
+            map.eachLayer((layer) => {
+              const hasEmptyContrib = !(layer.getAttribution && layer.getAttribution());
+              const hasNoContrib = !layer.getAttribution;
+              if (hasEmptyContrib || hasNoContrib) {
+                  map.removeLayer(layer);
+              }
+            })
+          }
+
+        function fetch_coordinates(index, road_class_list){
+          fetch(`/get_routes/${index}`) //
+            .then(function (response) {
+                return response.text();
+            }).then(function (text) { 
+                // console.log(`Retreived road of node ${index} :`);
+                // console.log(text); 
+
+                // get the route coordinate and color
+                var latlngs = [];
+                var roads_color = [];
+                resObj = JSON.parse(text)
+                // console.log(`lat coordinates: ${resObj}`);
+                poyline_exist=false
+                for (i = 1; i < resObj.alt.length; i++) {
+                  x=resObj.metric[i]
+                  
+                  // skip the invalid coordinate or metric
+                  if (resObj.lat[i] === -1 || resObj.lon[i] === -1 || resObj.metric[i] === -1) { continue; }
+                  
+                  // skip the nselected road classes
+                  selected_class=(road_class_list.indexOf(parseInt(x)) >= 0)
+                  // console.log(` ${x} selected? ${selected_class}`);
+                  if (selected_class) {
+                  latlngs = []
+                  latlngs.push([resObj.lat[i-1], resObj.lon[i-1]]);
+                  latlngs.push([resObj.lat[i], resObj.lon[i] ]);
+                  metric=0.5*(resObj.metric[i-1]+resObj.metric[i])
+                  // metric=resObj.metric[i-1]
+                  roads_color.push(getColor(metric));
+                  var polyline = L.polyline(latlngs, {color: getColor(x), weight: 8}).addTo(map); //, lineCap: 'square'
+                  var poyline_exist=true
+                }
+                }
+        
+                // zoom the map to the polyline
+                if (poyline_exist){
+                  map.fitBounds(polyline.getBounds());
+                }
+            });   
+          };             
+
+        function show_sensors_data(selectObject) {
+          let numberSelected = 0;
+          for (let i = 0; i < selectObject.options.length; i++) {
+              if (selectObject.options[i].selected) {
+                numberSelected++;
+                console.log(`- plotting node: ${selectObject.options[i].value} `);
+                var selected_node = selectObject.options[i].value;
+                fetch_coordinates(selected_node)
+                }
+              }
+          return numberSelected;
+        };
+
+      </script>  
+
+      <!-- Icons -->
+      <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+      <script>
+        feather.replace()
+      </script>
+
+      <!-- Inspection History Graphs -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+      <script>
+        var days_axis =  ['January', 'February', 'March', 'April', 'May', 'June', 'July',  'August', 'September', 'October', 'November', 'December' ]
+        // var days_axis = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] //["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]; // Utils.months({count: 7});//
+        var data={
+            labels: days_axis ,
+            datasets: [{
+              data: [14, 16, 13, 8, 19, 12, 1, 2, 15, 4, 4,21],
+              label: 'Damaged ',
+              lineTension: 0,
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderColor: 'rgb(255, 99, 132,)',
+              borderWidth: 1,
+              // pointBackgroundColor: '#007bff'
+            },{
+              data: [5, 4, 7, 9, 7, 1, 0, 0, 2, 5, 14,3],
+              label: 'in reperation',
+              lineTension: 0,
+              backgroundColor: 'rgba(255, 159, 64, 0.2)',
+              borderColor: 'rgb(255, 159, 64)',
+              borderWidth: 1,
+              // pointBackgroundColor: '#ff7300'
+
+            },{
+              data: [20, 15, 18, 13, 15, 10, 15, 6, 10, 4, 6,17],
+              label: 'Repaired',
+              lineTension: 0,
+              backgroundColor: 'rgba(0, 255, 0, 0.2)',
+              borderColor: 'rgb(0, 255, 0)',
+              borderWidth: 1,
+              // pointBackgroundColor: '#00FF00'
+
+            }]
+          }
+          // bar colors
+          var ctx = document.getElementById("Inspect_Stat_Chart");
+          var Inspect_Stat_Chart = new Chart(ctx,{type: 'bar',
+                                  data: data,
+                                  options: {
+                                      scales: {
+                                          x: {stacked: true},
+                                          y: {stacked: true},
+                                          yAxes: [{ ticks: {beginAtZero:false},
+                                                    scaleLabel: {
+                                                                  display: true,
+                                                                  labelString: 'Number of missions'
+                                                                }
+                                                 }]
+                                      }},
+                                  legend: { title : {text:"Inspection Statistics"},
+                                            display: true,
+                                            position:'right'
+                                          },
+                                  title: {display: true,},
+                              });
+      </script>
+
+        </main>
+
+      </div>
+    </div>
+
+    <!-- ----------------------------------  Node listing  ----------------------------------------- -->
+    <script>
+      var curr_node_list = document.getElementById("NodeName");
+      function removeOptions(selectElement) {
+        var i, L = selectElement.options.length;
+        for(i = L; i >= 0; i--) {
+            selectElement.remove(i);
+        }
+      }
+
+      function update_node_list() {
+        fetch(`/get_node_list`)
+        .then(function (response) {return response.text();})
+        .then(function (text) { 
+            // source: from hossam code
+            let list_nodes = JSON.parse(text) 
+            var options = [];
+            var select = document.getElementById("NodeName");
+            var options = [];
+            var option = document.createElement('option');
+
+            console.log(list_nodes);
+            for (let node in list_nodes )
+            {
+                option.text = option.value = node;
+                options.push(option.outerHTML);
+            }
+            select.insertAdjacentHTML('beforeEnd', options.join('\n'));
+            });   
+        };
+      
+        // Update the nodes
+      update_node_list()
+    </script>
+    <!-- Bootstrap core JavaScript
+    ======Side============================================ -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+
+  </body>
+</html>

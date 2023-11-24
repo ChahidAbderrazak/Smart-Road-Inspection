@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<body>
+
+	<h1>The select element</h1>
+
+	<p>The select element is used to create a drop-down list.</p>
+		<form name="selectForm">
+			<label for="musicTypes">Choose some music types, then click the button below:</label>
+			<select id="musicTypes3" name="musicTypes">
+				<option value="node1">node1</option>
+				<option value="node2">node2</option>
+				<option value="node3">node3</option>
+			</select>
+
+			<button id="btn" type="button">Plot the nodes</button>
+		</form>
+
+			<br> <input type="button" class="btn btn-lg btn-outline-secondary btn-block"  value="View e-Reports" onclick="window.location.href='reports.html';"/>
+
+
+
+		<script type='text/javascript'>
+		function countSelected(selectObject) {
+			let numberSelected = 0;
+			for (let i = 0; i < selectObject.options.length; i++) {
+				if (selectObject.options[i].selected) {
+					numberSelected++;
+					console.log(`- ${selectObject.options[i].value} is selected`);
+				}
+			}
+			return numberSelected;
+		}
+
+		const btn = document.getElementById('btn');
+
+		btn.addEventListener('click', () => {
+			const musicTypes = document.selectForm.musicTypes;
+			console.log(`You have selected ${countSelected(musicTypes)} option(s).`);
+		});
+
+
+		</script>
+		
+	</body>
+</html>

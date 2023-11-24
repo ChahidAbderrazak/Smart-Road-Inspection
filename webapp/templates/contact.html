@@ -1,0 +1,192 @@
+
+<!-- Source:  https://getbootstrap.com/docs/4.0/examples/dashboard/# -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico"> -->
+
+
+    <title>HAIS: Highway Automated Inspection System (2022)</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/dashboard/">
+
+
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" 
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> 
+
+    <!-- Custom styles for this template -->
+    <link href="../static/css/dashboard.css" rel="stylesheet">
+  </head>
+
+  <body>
+    
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Smart Road Inspection</a>
+      <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
+      <ul class="navbar-nav px-3">
+        <li class="nav-item text-nowrap">
+          <a class="nav-link" href="#">Log In</a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+          <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+              
+              
+              <!-- --------------------------  Side-Bar Menu  ---------------------------------- -->
+              <!-- <li class="nav-item">
+                <a class="nav-link " href="/">
+                  <span data-feather="home"></span>
+                  Dashboard <span class="sr-only">(admin)</span>
+                </a>
+              </li> --> 
+
+              <li class="nav-item">
+                <a class="nav-link" href="/">
+                  <span data-feather="map"></span>
+                  Road Conditions
+                </a>
+              </li>
+              
+
+              <li class="nav-item">
+                <a class="nav-link" href="/sensors">
+                  <span data-feather="activity"></span>
+                  Measurment
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link" href="/via-annotator">
+                  <span data-feather="external-link"></span>
+                  VGG Image Annotator
+                </a>
+              </li>
+
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/ai">
+                  <span data-feather="bar-chart-2"></span>
+                  Inspection
+                </a>
+              </li> 
+
+              <li class="nav-item">
+                <a class="nav-link" href="/reports">
+                  <span data-feather="layers"></span>
+                  Reports
+                </a>
+
+              <li class="nav-item">
+                <a class="nav-link active" href="/contact">
+                  <span data-feather="file-text"></span>
+                  Contact
+                </a>
+              </li>
+              <!-- ----------------------------------------------------------------------------- -->
+            </ul>
+
+           
+          </div>
+        </nav>
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+          
+          
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+            <h1 class="h2">Sensors measurment</h1>
+            <!-- <h2 class="h3"> For your assistance </h2> -->
+            <div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+              </div>
+            </div>
+          </div>
+
+            <div class="row">
+              <div class="column">
+                <div class="card">
+                  <img src="../static/tmp/cam.jpg" height="350" width="auto" class="center">
+                  <div class="container">
+                    <h2>Camera</h2>
+                    <p class="title">RGB camera placed in the back o the car</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="column">
+                <div class="card">
+                  <img src="../static/tmp/lidar.gif" height="350"  width="auto" class="center">
+                  <div class="container">
+                    <h2>Lidar</h2>
+                    <p class="title">road surface smoothness</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="column">
+                <div class="card">
+                  <div class="container">
+                    <br>
+                    <p class="title"> GRZ = [42.2561555, 36.125555]]</p>
+                    <p class="title"> Navigation Angle = 12 &#8728; </p>
+                    <p class="title"> Speed = 25km/h</p>
+                    <p class="title"> Accelerate = 15 km/h<sup>2</sup></p>
+                    <p class="title"> GRX = 105 &#8728;</p>
+                    <p class="title"> GRY = 20 &#8728;</p>
+                    <p class="title"> GRZ = 1 &#8728;</p>
+                    <h2>Kenematics sensors</h2>
+                    <p class="title"> measure car vibration</p>
+                  </div>
+                </div>
+              </div>
+              <!--  Weather sensors: humidity, air pressure, ambient light intensity, Volatile Organic Compounds VOC, IR ray, UV r -->
+              <div class="column">
+                <div class="card">
+                  <div class="container">
+                    <br>
+                    <p class="title"> Temperature = -2 &#8451; </p>
+                    <p class="title"> Humidity = 12 %</p>
+                    <p class="title"> Light intensity = 12 W/sr</p>
+                    <p class="title"> VOC = 15 ppm</p>
+                    <h2>Weather sensors</h2>
+                    <p class="title">measure the wehather conditions</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+
+          
+
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <!-- <script src="../../assets/js/vendor/popper.min.js"></script> -->
+    <script src="../static/js/bootstrap.min.js"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+    <script>
+      feather.replace()
+    </script>
+
+  </body>
+</html>
