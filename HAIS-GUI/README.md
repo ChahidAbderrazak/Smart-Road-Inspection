@@ -1,4 +1,4 @@
-#  HAIS: Road Inspection Module 
+#  HAIS: Road Inspection Module  
 
 The proposed road inspection solution is based computer vision and digital image processing technique. This algorithm   processes sensors data  and detects the potential road damages and conditions. The road inspection has two main steps:
 ## 1. HAIS inspection node
@@ -55,15 +55,14 @@ mysql> show databases;
 
 2. **Setup the conda environment**
 ```
-$ cd setup-env
-$ ./setup-env.sh 
+$  ../bash-scripts/build-anaconda-env.sh
 ```
 
 3. **install additional packages**
 -  [ffmpeg](https://ffmpeg.org/download.html)
 
 
-# Instructions
+# Running the Desktop application
 1. **Run road inspection system**
 ```
 $ ./run.sh
@@ -71,7 +70,16 @@ $ ./run.sh
 
 2. **Download the camera picture from Ontario511 platform**
 ```
-$ ./run_Ontario511_download.sh
+$ ./bash-scripts/run_Ontario511_download.sh
+```
+
+
+#  Sample dataset 
+
+ A sample data set can be downloaded from this Kaggle [link](https://www.kaggle.com/datasets/abderrazakchahid1/sample-data-hais).
+
+```
+kaggle datasets download -d abderrazakchahid1/sample-data-hais
 ```
 
 # Acknowledgement

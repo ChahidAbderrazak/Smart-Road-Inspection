@@ -31,7 +31,7 @@ The use of different sensing technologies is pushing further research, industria
 # Installations
 1. **Setup the conda environment**
 ```
-$ .bash setup-env.sh 
+$ ../bash-scripts/build-anaconda-env.sh
 ```
 
 # Instructions
@@ -39,3 +39,21 @@ $ .bash setup-env.sh
 ```
 $ ./run.sh
 ```
+
+
+
+#  Sample dataset 
+
+ A sample data set can be downloaded from this Kaggle [link](https://www.kaggle.com/datasets/abderrazakchahid1/sample-data-hais).
+
+```
+kaggle datasets download -d abderrazakchahid1/sample-data-hais
+```
+
+**NB** : Please make sure you extract the downladed zip file to the in the root folder:
+<p align="center">
+<img  src="files/data-sample.png" alt="alt text" width="200" >
+ </p>
+<p align="center">
+Figure: folder structure after extracting the data
+</p>

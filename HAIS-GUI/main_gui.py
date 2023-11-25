@@ -24,7 +24,7 @@ def prepare_parser():
 	parser=ArgumentParser(description='Highways inspection')
 	parser.add_argument(
 				"--cfg", 
-				default="../config/config.yml", 
+				default="config/config.yml", 
 				metavar="FILE", 
 				help="path to config file", 
 				type=str, 

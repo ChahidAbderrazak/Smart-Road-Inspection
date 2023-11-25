@@ -269,35 +269,6 @@ def main_prediction_2D_images():
     prediction_df.to_csv( fileame_csv , sep=',')
     return 0
 
-def main_prediction_3D_volumes():
-    transformation = transforms.Compose([
-        transforms.ToTensor(),
-        # Normalize the pixel values (in R, G, and B channels)
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-    ])
-    # get the input variables
-    data_folder, model_name, model_path, resize, class_file, dst_folder, plotting = get_input_variable()
-
-    volume_path = '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/CT-Integrity/Germany-preprocessed/front-part-full-size/real/M4/M4_front.nrrd'  
-    # volume_path = '/media/abdo2020/DATA1/Datasets/images-dataset/raw-data/CT-Integrity/Germany/tool1/2021.08.18/Measurement_4_Parts-removed/image_reconstruction'
-    # load the volume
-    volume = load_input_data_path_or_array(volume_path)
-    # transpose the slices
-    for k in range(3):
-        N,M,L = volume.shape
-        if M==L:
-            break 
-        volume = np.transpose(volume, (2, 0, 1))
-    # deploy the classification model 
-    prediction_df = predict_image(model_name, model_path, class_file=class_file, file_paths=volume, \
-                                  size=(resize,resize), transformation=transformation, plotting=plotting)
-    print(f'\n --> prediction results : \n {prediction_df}')
-    # save resut tables
-    fileame_csv = os.path.join(dst_folder, 'predictions_volume'+ str(volume.shape)+'_'+\
-                str(os.path.basename(model_path) ) + '.csv')
-    create_new_folder(os.path.dirname(fileame_csv))
-    prediction_df.to_csv( fileame_csv , sep=',')
-    return 0
 
 
 if __name__ == '__main__':

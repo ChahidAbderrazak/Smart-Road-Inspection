@@ -439,7 +439,7 @@ ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
               <li class="submenu_divider"></li>
               <li onclick="sel_local_images()" title="Add images locally stored in this computer">Add local files</li>
               <li onclick="project_file_add_url_with_input()" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
-              <li onclick="project_file_add_abs_path_with_input()" title="Add images using absolute path of file (e.g. /media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/image1.jpg)">Add file using absolute path</li>
+              <li onclick="project_file_add_abs_path_with_input()" title="Add images using absolute path of file (e.g. /media/username/Desktop/data/download/image1.jpg)">Add file using absolute path</li>
               <li onclick="sel_local_data_file('files_url')" title="Add images from a list of web url or absolute path stored in a text file (one url or path per line)">Add url or path from text file</li>
               <li onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown)">Remove file</li>
               <li class="submenu_divider"></li>
@@ -769,7 +769,7 @@ ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
             </div>
 
             <div class="value">
-              <input type="text" id="_via_settings.core.default_filepath" placeholder="/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/"/>
+              <input type="text" id="_via_settings.core.default_filepath" placeholder="/media/username/Desktop/data/download/"/>
             </div>
           </div>
 
@@ -780,7 +780,7 @@ ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
             </div>
 
             <div class="value">
-              <input type="text" id="settings_input_new_filepath" placeholder="/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/"/>
+              <input type="text" id="settings_input_new_filepath" placeholder="/media/username/Desktop/data/download/"/>
             </div>
           </div>
 
@@ -859,7 +859,7 @@ ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
 
         <div id="page_start_info" class="display_area_content display_none narrow_page_content">
           <ul>
-            <li>To start annotation, <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">select images</span> (or, add images from <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()">URL</span> or <span class="text_button" title="Add images using absolute path of file (e.g. /media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/image1.jpg)" onclick="project_file_add_abs_path_with_input()">absolute path</span>) and draw regions</li>
+            <li>To start annotation, <span class="text_button" title="Load or Add Images" onclick="sel_local_images()">select images</span> (or, add images from <span class="text_button" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)" onclick="project_file_add_url_with_input()">URL</span> or <span class="text_button" title="Add images using absolute path of file (e.g. /media/username/Desktop/data/download/image1.jpg)" onclick="project_file_add_abs_path_with_input()">absolute path</span>) and draw regions</li>
             <li>Use <span class="text_button" title="Toggle attributes editor panel" onclick="toggle_attributes_editor()">attribute editor</span> to define attributes (e.g. name) and <span class="text_button" title="Toggle annotations editor panel" onclick="annotation_editor_toggle_all_regions_editor()">annotation editor</span> to describe each region (e.g. cat) using these attributes.</li>
             <li>Remember to <span class="text_button" onclick="project_save_with_confirm()">save</span> your project before closing this application so that you can <span class="text_button" onclick="project_open_select_project_file()">load</span> it later to continue annotation.</li>
             <li>For help, see the <span class="text_button" onclick="set_display_area_content(VIA_DISPLAY_AREA_CONTENT_NAME.PAGE_GETTING_STARTED)">Getting Started</span> page and pre-loaded demo: <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_demo.html">image annotation</a> and <a href="http://www.robots.ox.ac.uk/~vgg/software/via/via_face_demo.html">face annotation</a>.</li>
@@ -8485,8 +8485,8 @@ function project_file_add_local(event) {
 
 function project_file_add_abs_path_with_input() {
   var config = {'title':'Add File using Absolute Path' };
-  var input = { 'absolute_path': { type:'text', name:'add one absolute path', placeholder:'/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/image1.jpg', disabled:false, size:50 },
-		'absolute_path_list': { type:'textarea', name:'or, add multiple paths (one path per line)', placeholder:'/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/image1.jpg\n/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/image2.jpg\n/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/image3.png', disabled:false, rows:5, cols:80 }
+  var input = { 'absolute_path': { type:'text', name:'add one absolute path', placeholder:'/media/username/Desktop/data/download/image1.jpg', disabled:false, size:50 },
+		'absolute_path_list': { type:'textarea', name:'or, add multiple paths (one path per line)', placeholder:'/media/username/Desktop/data/download/image1.jpg\n/media/username/Desktop/data/download/image2.jpg\n/media/username/Desktop/data/download/image3.png', disabled:false, rows:5, cols:80 }
               };
 
   invoke_with_user_inputs(project_file_add_abs_path_input_done, input, config);

@@ -4,8 +4,7 @@
 eval "$($(which conda) 'shell.bash' 'hook')"
 echo  "--> Activating conda environment"
 env_name=hais-node-env
-config_file=config/config.yml # config/config_ct_server.yml #
-
+config_file=../config/config.yml # config/config_ct_server.yml #
 
 #######################  HAIS SOFTWARE ##########################
 conda activate $env_name

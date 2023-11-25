@@ -78,11 +78,7 @@ def save_image(img, filename):
 		except:
 			msg = f'\n Cannot save [{filename}]. The format is unsupported!!! '
 			raise Exception(msg)
-	
-def load_napari_tiff(path):
-    import tifffile
-    vol = tifffile.imread(path)
-    return vol
+
 
 def load_data(path):
     data_type_ref = check_supported_data_paths(path)
@@ -234,52 +230,6 @@ def simpleRek2Py(filename, image_width, image_height, image_depth, voxel_datatyp
     shape = image_width, image_height, image_depth
 
     return image.reshape(shape)
-
-def load_volume( path):
-        import numpy as np
-        # Draw rek rek filesL
-        filename, file_extension = os.path.splitext(path)
-        if os.path.exists(path):
-            # read 3D volume from rek file
-            if file_extension=='.rek':
-                # volume_array = scanner.load_Rek2Py(rek_file)
-                # enter slice dimensions (width x height x depth)
-                image_width = 500
-                image_height = 500
-                image_depth = 500
-                # enter voxel datatype ("float32" or "uint16")
-                voxel_datatype = "uint16"
-                # read 3D volume from rek file
-                
-                volume_array = simpleRek2Py(path, image_width, image_height, image_depth, voxel_datatype)  
-            
-            elif file_extension=='.bd': 
-                volume_array = VGI2Py(path)
-
-            elif file_extension=='.nii':
-                import nibabel as nib
-                volume_array = nib.load(path).get_data()
-
-            elif file_extension=='.nrrd':
-                import nrrd
-                volume_array, _ = nrrd.read(path)
-
-            else: 
-                msg = '\n Warning: The file format : %s is not supported!!!!'%(path)
-                raise ValueError(msg)
-            
-            print(f' The selected volume file is [{path}] of size {volume_array.shape}')
-        else:
-            msg = '\n Warning: The file : %s is not found!!!!'%(path)
-            raise Exception(msg)
-        # sanity check the volume mush have this shape [N, M, N]
-        if len(np.unique(volume_array.shape))<=2:
-            if volume_array.shape[0]!=volume_array.shape[2]:
-                volume_array = volume_array.transpose(0, 2, 1)
-        else: 
-            print('Error: the volume does not respect the shape critereon [N, M, N]!')
-            return -1
-        return volume_array
 
 def create_new_directory(DIR):
   if not os.path.exists(DIR):

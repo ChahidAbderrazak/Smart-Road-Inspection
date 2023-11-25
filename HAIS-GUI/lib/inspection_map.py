@@ -196,7 +196,7 @@ def draw_polylines(points, metrics, map, available_colors, inspect_status, horis
 		lgd_txt = '<span style="color: {col};">{txt}</span>'
 		cur_metrics=np.unique(metrics)
 		cur_metrics=[k for k in cur_metrics if k!=-1]
-		print(f'\n flag: cur_metrics={cur_metrics}')
+		# print(f'\n flag: cur_metrics={cur_metrics}')
 		for k in range(len(cur_metrics)):
 				name, color = inspect_status[k], available_colors[k]
 				if name =='' :
@@ -248,9 +248,13 @@ def open_map_html(path):
 	filename='file:///'+ abs_path
 	webbrowser.open_new_tab(filename)
 
-def visualize_map(list_missions, maps_root, show_lanemarker=False):
-	# average status horison
-	horison=2
+def visualize_map(list_missions, maps_root, horison=2, show_lanemarker=False, show_all_nodes=False):
+	# average status horison>=2
+	if horison<2:
+		print(f' - You use horison={horison}. However, It was set horison={horison} because \
+							 the map visualization requires horison>=2 ')
+		horison=2
+
 	# define te colors and inspection status:
 	available_colors = ['gray', 'red',  'orange',  'green', 'green'] # ['gray', 'red', 'coral', 'orange', 'aquamarine2', 'green']
 	if show_lanemarker:
@@ -261,9 +265,11 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 	lat_coord, lon_coord, token_coord, metric_list=[],[],[], []
 	road_coord,lanemarker_coord = [], []
 	cnt=0
-	print(f'\n - The map will show {len(list_missions)} missions. Please wait :) ...')
+	list_missions=list(set(list_missions))
+	print(f' - The map will show {len(list_missions)} missions. Please wait :) ...\n - missions={list_missions}')
 	for dataroot in list_missions:
 		list_files=utils.getListOfFiles(dataroot, ext='.json', path_pattern='inspection_dic.json')
+		print(f'\n - dataroot=  {dataroot} ,  list_files=  {list_files}')
 		for inspect_filename in list_files:
 			# inspect_filename=os.path.join(dataroot, 'inspection_dic.json')
 			if not os.path.exists(inspect_filename):
@@ -271,41 +277,44 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 				# sys.exit(0)
 				continue
 			else:
-				# print(f'\n Loading the inspection_dict: \n {inspect_filename}')
+				print(f'\n - Loading the inspection_dict: \n {inspect_filename}')
 				inspection_dict=utils.load_json(inspect_filename)
 				try:
 					inspection_dict=inspection_dict[0]
-				except:
-					print('The inspection_dict is loaded successfully!!')
+				except:# flag [todo]: I am not sure why I made this try/catch!!!!
+					pass
+					print(' The inspection_dict is loaded successfully!!')
 
 				# update the map routes
 				lat_coord+=inspection_dict['lat']+[-1]
 				lon_coord+=inspection_dict['lon']+[-1]
 				token_coord+=inspection_dict['token']+['']
-				road_coord+=inspection_dict['metric']+['']
+				road_coord+=inspection_dict['road']+['']
 				try:
-					lanemarker_coord+=inspection_dict['Lanemarker']+['']
-				except:
-					print(f'\n Lanemarker data does not exit!!')
+					lanemarker_coord+=inspection_dict['lanemarker']+['']
+				except Exception as e:
+					print(f'\n Error in reading Lanemarker!! \n {e}')
 					pass
+
 				if show_lanemarker:
-					metric_list+=inspection_dict['Lanemarker']+[-1]
-					# print('landmaker status: \n',inspection_dict['Lanemarker'] )
+					metric_list+=inspection_dict['lanemarker']+[-1]
+					# print('landmaker status: \n',inspection_dict['lanemarker'] )
 				else:
-					metric_list+=inspection_dict['metric']+[-1]
+					metric_list+=inspection_dict['road']+[-1]
 				cnt+=1
 
 	# define the html map filepath
-	if cnt>1:
+	print(f'\n - {cnt} nodes are extracted..')
+	if show_all_nodes:
 		map_path=os.path.join(maps_root, 'inspection_Map_all_node.html')
 	else:
 		map_path=os.path.join(maps_root, 'inspection_Map_' +os.path.basename(dataroot)+'.html')
 
 	inspection_routes={	'lat':lat_coord,
 											'lon':lon_coord,
-											'token':lat_coord,
-											'road':lon_coord,
-											'Lanemarker':lat_coord,
+											'token':token_coord,
+											'road':road_coord,
+											'lanemarker':lanemarker_coord,
 											'metric':metric_list}
 
 	df = DataFrame(inspection_routes)
@@ -322,12 +331,12 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 	ave_lg = sum(df2['lon'])/len(df2)
 	myMap = folium.Map(location=[ave_lt, ave_lg], zoom_start=20) 
 	# draw the routes
-	print(f'\n metrics={np.unique(metrics)}')
+	# print(f'\n - metrics= {metrics}\n  unique values={np.unique(metrics)}')
 	draw_polylines(points, metrics, myMap, available_colors, inspect_status, horison=horison)
 
 	# save map to html file
 	myMap.save(map_path)
-	print(f'\n - The inspection map is saved in : \n {map_path}')
+	print(f' - The inspection map is saved in : \n {map_path}')
 
 	# open the map in the browser
 	open_map_html(map_path)
@@ -336,20 +345,8 @@ def visualize_map(list_missions, maps_root, show_lanemarker=False):
 #%%####################### MAIN 
 def run_visualize_nodes_inspection():
 	maps_root='bin/maps'
-	##-------------------  DRONE -------------------
-	# list_missions=['/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge',
-	# 							'/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/road/ERC-parking']
-
 	##-------------------  NODE -------------------
-	# list_missions=[	'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak',
-	# 								'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads_all',
-	# 								'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed',
-	# 								'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' ,
-	# 								'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark',
-	# 								'/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/testing_node2']
-
-	list_missions=[	'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed',
-									'/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed']
+	list_missions=[	'../data/download/node1']
 	
 	# save the visualized map
 	visualize_map(list_missions, maps_root=maps_root)
@@ -359,7 +356,7 @@ if __name__ == '__main__':
 	# # generate  Nroutes randomly inspected roads 
 	# generate_random_roads_inspection()
 
-	# Visuaise a list of inspected roads
+	# Visualize a list of inspected roads
 	run_visualize_nodes_inspection()
 
 

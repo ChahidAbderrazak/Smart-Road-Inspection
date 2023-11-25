@@ -11,9 +11,5 @@ conda activate $env_name
  
 echo && echo " -> Install pip3 packages"
 pip3 install -r requirements.txt 
- 
-echo && echo " -> Saving the version of installed pip3 packages"
-pip3 freeze > requirements_versions.txt
 
-echo && echo " -> Saving the version of installed YML packages"
-conda env export > environment_droplet.yml
+conda deactivate 

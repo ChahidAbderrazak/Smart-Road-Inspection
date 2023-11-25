@@ -21,7 +21,6 @@ except:
 	from lib.global_variables import *
 	from lib import utils, hais_database, inspection_algorithm, inspection_map
 	
-import napari
 from PyQt5 import QtCore, Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QFormLayout, QLabel, QMessageBox, \
 														QLineEdit, QFileDialog, QPushButton, QDialog, QCheckBox, QVBoxLayout,\
@@ -123,21 +122,30 @@ class PreferencesForm(QDialog):
 class HAIS_GUI(QWidget): 
 	def __init__(self, config_file, disp=0): 
 			super(HAIS_GUI, self).__init__()
+			workspace=os.getcwd()
 			self.preferences_path="bin/preferences.json"
 			self.config_file=config_file
 			self.config=self.load_config(config_file)
-			self.root_folder=self.config['DATA']['data_root']
+			self.root_folder=os.path.join(workspace, self.config['DATA']['data_root'] )
+			# check the data folder
+			if not os.path.exists(self.root_folder):
+				workspace=os.path.dirname(os.getcwd())
+				self.root_folder=os.path.join(workspace, self.config['DATA']['data_root'] )
+				if not os.path.exists(self.root_folder):
+					msg=f'Error: The data folder is not found: {self.root_folder} \
+							\n Please download the sample dataset as explained in the README.md'
+					raise Exception(msg)
 			self.version=self.config['DATA']['version']
 			# self.enable_nscene=self.config['DATA']['enable_nscene']
 			self.verbose=self.config['DATA']['enable_nscene']
 			self.img_size=(self.config['INSPECTION']['imgSizes_X'], self.config['INSPECTION']['imgSizes_Y'] )
 			self.viewer_resize=(1200, 800)
 			self.DB=None
-			self.dst_directory=self.config['OUTPUTS']['dst_directory']
+			self.dst_directory=os.path.join(workspace, self.config['OUTPUTS']['dst_directory'])
 			self.maps_root=os.path.join(self.dst_directory, "maps")
-			self.annotation_directory=self.config['ANNOTATION']['annotation_directory']
+			self.annotation_directory=os.path.join(workspace, self.config['ANNOTATION']['annotation_directory'])
 			# create the output folders:
-			self.create_output_directries()
+			self.create_output_folders()
 
 			# data attributes
 			self.image_path=None
@@ -146,7 +154,7 @@ class HAIS_GUI(QWidget):
 			self.node_dict={}
 			self.disp=disp
 
-			# thread falg
+			# thread flag
 			self.Thread_running=False
 
 			# intialize the GUI
@@ -157,7 +165,7 @@ class HAIS_GUI(QWidget):
 			self.init_GUI()
 			self.display()
 			
-	def create_output_directries(self):
+	def create_output_folders(self):
 		for folder in [self.maps_root, self.annotation_directory]:
 			utils.create_new_directory(folder)
 
@@ -205,7 +213,7 @@ class HAIS_GUI(QWidget):
 			self.button_VGA_annotator=QPushButton('Run VGA object annotator')
 			self.button_VGA_annotator.clicked.connect(self.run_VGA_annotator)
 
-			# flag:  integrate the napari verification tool
+			# flag [todo]:  integrate the napari verification tool ( pip  install napari[pyqt5] )
 			# # Annotation verification
 			# self.button_interactive_annotation=QPushButton('Interactive visualization') 
 			# self.button_interactive_annotation.setFont(QFont("Times", 10, QFont.Bold))
@@ -363,27 +371,35 @@ class HAIS_GUI(QWidget):
 		
 		# get list of sensors
 		self.DB=hais_database.HAIS_database(dataroot=self.dataroot, version=self.version, verbose=self.verbose)
-		# get the list of file
-		self.inspect_json_file=self.DB.inspect_json_file
-		self.inspection_dict=self.DB.inspection_dict
-		self.out_metric_arr=np.array([0 for k in range(len(self.inspection_dict['token']))])
-		# print(f'\n  inspection_dict = {self.DB.inspection_dict}')
+		if self.DB.err==1:
+			QMessageBox.warning(self, "Data Error", self.DB.msg)
 
-		# list sensors names
-		# list_sensors=self.DB.get_list_sensors()
-		sensors_file=os.path.join(self.dataroot, self.version, 'sensor.json')
-		list_sensors=utils.load_json(sensors_file)
-		print(f'\n flag: \n - list_sensors0={list_sensors}')
-		list_sensors=[k["channel"] for k in list_sensors if 'CAM' in k["channel"] or 'LIDAR' in k["channel"] ]
-	
-		print(f'\n flag: \n - list_sensors={list_sensors}')
-		self.list_sensors_combo.clear()
-		self.list_sensors_combo.addItem("select a sensor")
-		self.list_sensors_combo.addItems(list_sensors)
+		else:
+			# get the list of file
+			self.inspect_json_file=self.DB.inspect_json_file
+			self.inspection_dict=self.DB.inspection_dict
+			self.out_metric_arr=np.array([0 for k in range(len(self.inspection_dict['token']))])
+			# print(f'\n  inspection_dict = {self.DB.inspection_dict}')
+
+			# list sensors names
+			# list_sensors=self.DB.get_list_sensors()
+			sensors_file=os.path.join(self.dataroot, self.version, 'sensor.json')
+			list_sensors=utils.load_json(sensors_file)
+			# print(f'\n flag: \n - list_sensors0={list_sensors}')
+			list_sensors=[k["channel"] for k in list_sensors if 'CAM' in k["channel"] or 'LIDAR' in k["channel"] ]
+		
+			# print(f'\n flag: \n - list_sensors={list_sensors}')
+			self.list_sensors_combo.clear()
+			self.list_sensors_combo.addItem("select a sensor")
+			self.list_sensors_combo.addItems(list_sensors)
 
 	def on_sensor_selection(self):
+		# get the sensor name and define the module/algorithm
 		# print(f'\n - dataroot={self.dataroot}')
 		self.sensor_name=str(self.list_sensors_combo.currentText())
+		self.define_module_from_sensor_name()
+
+		# find ad visualize the sensor data
 		if self.node_name=='select a sensor':
 			return
 		self.sensor_folder=os.path.join(self.dataroot, 'sweeps', self.sensor_name)
@@ -404,6 +420,7 @@ class HAIS_GUI(QWidget):
 		else:
 			msg=f'\n - No files are found in the database: \n - sensor={self.sensor_name} \n - folder ={self.sensor_folder}'
 			QMessageBox.information(self, "Empty data folder Viewer", msg)
+			
 
 	def inspect_previous_frame(self):
 		self.frame_step=-1
@@ -452,19 +469,20 @@ class HAIS_GUI(QWidget):
 		# 	self.image_path= self.list_files[self.file_index]
 
 	def show_inspection_map(self):
+		list_trips=[]
 		if self.show_all_nodes.isChecked(): # show all nodes
-			list_trips=[]
 			for node_name in self.node_dict.keys():
 				trip_dict=self.node_dict[node_name]
 				for trip_name in trip_dict.keys():
 					list_trips.append(trip_dict[trip_name])
 		else:# show only the current node
 			list_trips=[self.trip_dict[trip_name] for trip_name in self.trip_dict.keys()]
-
+		list_trips=list(set(list_trips))
 		# save the visualized map
-		
-		err=inspection_map.visualize_map(list_trips, maps_root=self.maps_root, 
-																show_lanemarker=self.show_lanemarker.isChecked())
+		err=inspection_map.visualize_map(	list_trips, 
+				   														maps_root=self.maps_root, 
+																			show_lanemarker=self.show_lanemarker.isChecked(),
+																			show_all_nodes=self.show_all_nodes.isChecked())
 		if err==1:
 			self.showdialog_Warning(	title="No inspection route is found", 
 																message=f'The selected node=[{self.node_name}] has no routes or routes with wrong/corrupted GPS data!!')
@@ -552,7 +570,8 @@ class HAIS_GUI(QWidget):
 		self.visualization_formGroupBox=QGroupBox("Visualization")
 		layout=QGridLayout()
 		layout.addWidget(self.show_all_nodes, 0,0)
-		layout.addWidget(self.forcasting, 0,1)
+		# flag [todo]: add forcasting button
+		# layout.addWidget(self.forcasting, 0,1)
 		layout.addWidget(self.show_lanemarker, 0,2)
 		layout.addWidget(self.show_road_condition, 0,3)
 		layout.addWidget(self.button_visualize, 2, 0, 1, 4)
@@ -604,13 +623,21 @@ class HAIS_GUI(QWidget):
 		self.root_folder=os.path.dirname(data_path)
 
 		return data_path
-
-	def get_image_path(self): 
+	
+	def show_loading_data_msg(self):
+		msg=f'The selected data is being checked and processed. Please wait:)... \
+				 \nNB: Please check the terminal console for more details. '
+		QMessageBox.information(self, "Data preparation ", msg)
+		return 0
+	
+	def get_image_path(self):
+			# prepare the selected data
 			self.image_path=self.browse_data_path()
 			if self.image_path=='':
 				return 0
+			# start the data processing of the selected data
+			self.show_loading_data_msg()
 
-			# process the selected data
 			self.input_data_button.setText(self.image_path)
 			if os.path.isdir(self.image_path):
 				## Hide the inspection and annotation widgets
@@ -662,11 +689,10 @@ class HAIS_GUI(QWidget):
 		# print(f'\n\n node dict = \n{self.node_dict}')
 
 	def explore_nodes_and_trips(self, root):
-
 		self.define_nodes_and_trips(root)
 		# update th combo:
 		list_nodes=list(self.node_dict.keys())
-		print(f'\n flag: \n - list_nodes={list_nodes}')
+		# print(f'\n flag: \n - list_nodes={list_nodes}')
 		self.list_nodes_combo.clear()
 		self.list_nodes_combo.addItem("select a node")
 		self.list_nodes_combo.addItems(list_nodes)
@@ -680,7 +706,7 @@ class HAIS_GUI(QWidget):
 		idx_list=[i	for i in range(self.list_sensors_combo.count()) if 'CAM' in self.list_sensors_combo.itemText(i)]
 		
 		try:
-			print(f'\n flag:idx_list={idx_list} ')
+			# print(f'\n flag:idx_list={idx_list} ')
 			idx=0
 			if len(idx_list)>0:
 				idx=idx_list[0]
@@ -690,6 +716,21 @@ class HAIS_GUI(QWidget):
 			print(f'\n error in loading {self.list_sensors_combo.itemText(idx)} files. \n Exception:{e} ')
 		# how/hide dropdowns
 		self.nodes_formGroupBox.setVisible(True)
+
+	def define_module_from_sensor_name(self):
+		# # flag {todo] : define the detection algorithm: lanemarker or road condition algorithms
+		if self.sensor_name=='RIGHT_CAMERA' or self.sensor_name=='LEFT_CAMERA':
+			# lanemarker condition algorithms
+			self.module_name="lanemarker"
+			self.show_lanemarker.setCheckable(True)
+			self.show_lanemarker.setChecked(True)
+			self.show_road_condition.setCheckable(False)
+		else:
+			# road condition algorithms
+			self.module_name="road"	
+			self.show_road_condition.setCheckable(True)
+			self.show_road_condition.setChecked(True)
+			self.show_lanemarker.setCheckable(False)
 
 	def inspection_thread(self):
 		if self.Thread_running:
@@ -754,15 +795,16 @@ class HAIS_GUI(QWidget):
 				# stop the thread
 				self.stop_thread()
 
-				##---------------  FLAG --------------------
-				# save the regression values
-				columns_names=self.list_parameters+['target']
-				data=np.array( self.IMU_vect )
-				print(f'\n df shapes:  dataset {data.shape}, columns_names={len(columns_names)}')
-				df= pd.DataFrame(data,columns=columns_names)
-				print(f'\n IMU dataset {df}')
-				df.to_csv('imu_data.csv')
-				##------------------------------------------
+				# # flag [todo2]: recheck the data storage for future analysis
+				# ##---------------  FLAG --------------------
+				# # save the regression values
+				# columns_names=self.list_parameters+['target']
+				# data=np.array( self.IMU_vect )
+				# print(f'\n df shapes:  dataset {data.shape}, columns_names={len(columns_names)}')
+				# df= pd.DataFrame(data,columns=columns_names)
+				# print(f'\n IMU dataset {df}')
+				# df.to_csv('imu_data.csv')
+				# ##------------------------------------------
 				return
 			elif n==0:
 				self.button_run_inspection.setText('Click to stop the inspection sequence ...')
@@ -778,14 +820,16 @@ class HAIS_GUI(QWidget):
 		return file_id
 
 	def run_data_inspection_algorithms(self, progress=''):
-		try:
+		# try:
 			self.list_metrics={}
 			# print(f'\n - sensor_data_dict={self.sensor_data_dict}')
 			for k, sensor_name in enumerate(self.sensor_data_dict.keys()):
 				# print(f'\n new data: sensor{k}={sensor_name}  --> {self.sensor_name}')
+				self.show_road_condition.setChecked(True)
 				if sensor_name==self.sensor_name:
 					if sensor_name=='RIGHT_CAMERA' or sensor_name=='LEFT_CAMERA':
 						self.module_name="lanemarker"
+						self.show_lanemarker.setChecked(True)
 						img_path=self.sensor_data_dict[sensor_name]
 						image_id=self.get_image_id(img_path)
 						# run Lanemarker reflectivity
@@ -801,12 +845,12 @@ class HAIS_GUI(QWidget):
 			
 						# visualize the image
 						if self.sensor_name==sensor_name:
-							msg=f"{progress}\t fileID=" + os.path.basename(img_path)
+							msg=f"progress:{progress}\t fileID: " + os.path.basename(img_path)
 							self.image_ID.setText(msg)
 							self.visualize_image(out_image)
 
 					elif 'DRONE' in sensor_name or 'CAMERA' in sensor_name:
-						self.module_name="road"
+						self.module_name="road"						
 						img_path=self.sensor_data_dict[sensor_name]
 						image_id=self.get_image_id(img_path)
 						# refresh the algorithm values
@@ -828,19 +872,22 @@ class HAIS_GUI(QWidget):
 																			self.sensor_name, image_id, image_RGB, mask)
 						# visualize the image
 						if self.sensor_name==sensor_name:
-							msg=f"{progress}\t fileID=" + os.path.basename(img_path)
+							msg=f"progress:{progress}\t fileID: " + os.path.basename(img_path)
 							self.image_ID.setText(msg)
 							self.visualize_image(out_image)
 
 					elif 'IMU' in sensor_name:
 						self.module_name="kinematics"
+						self.show_road_condition.setChecked(True)
+
 						# run kinematiccs inspection
 						
 						# get diagnosis
 						out_metric=0
 
 					elif 'GPS' in sensor_name:
-						car_location=self.sensor_data_dict[sensor_name]			
+						car_location=self.sensor_data_dict[sensor_name]
+					
 						# get diagnosis
 						# self.list_metrics.update({"car_location": {	"lat":car_location[0],
 						# 																						"lon":car_location[1],
@@ -878,13 +925,13 @@ class HAIS_GUI(QWidget):
 
 			return  0
 
-		except Exception as e:
-			print(f'\n error in running data inspection\n Exception: {e}')
-			return  1
+		# except Exception as e:
+		# 	print(f'\n error in running data inspection\n Exception: {e}')
+		# 	return  1
 
 	def save_labeling_image(self, class_folder):
 		if os.path.exists(self.image_path):
-			msg=f"fileID=" + os.path.basename(self.image_path)
+			msg=f"fileID: " + os.path.basename(self.image_path)
 			self.image_ID.setText(msg)
 			import shutil
 			dst_file=os.path.join(self.annotation_directory, 'road_quality', class_folder, os.path.basename(self.image_path))
@@ -1006,29 +1053,30 @@ def get_folder_tag(path):
 		return TAG
 
 def Napari_GUI(image_path, mask_path, annotation_directory='annotations', pyqt_gui=True): 
-	# automate_annotation_folder
-	tool_name, scan_name=get_tool_scan_names_path(image_path)
-	annotation_directory=os.path.join(annotation_directory, 'dataset', scan_name)
+	# # automate_annotation_folder
+	# tool_name, scan_name=get_tool_scan_names_path(image_path)
+	# annotation_directory=os.path.join(annotation_directory, 'dataset', scan_name)
 
-	# load input data an masks if availlable
-	img_ref	=utils.load_image(image_path)
-	img_input=utils.load_image(mask_path)
+	# # load input data an masks if available
+	# img_ref	=utils.load_image(image_path)
+	# img_input=utils.load_image(mask_path)
 
-	# run the napari GUI
-	napari.gui_qt()
-	viewer=napari.Viewer(title=f'HAIS: Interactive annotation verification')	# no prior setup needed
-	viewer.dims.ndisplay=2
-	# visualize the reference volume
-	# input(f'flag: img_ref shape={img_ref.shape}')
-	name=get_file_tag(image_path)
-	viewer.add_image(img_ref, name=name)
+	# # run the napari GUI
+	# napari.gui_qt()
+	# viewer=napari.Viewer(title=f'HAIS: Interactive annotation verification')	# no prior setup needed
+	# viewer.dims.ndisplay=2
+	# # visualize the reference volume
+	# # input(f'flag: img_ref shape={img_ref.shape}')
+	# name=get_file_tag(image_path)
+	# viewer.add_image(img_ref, name=name)
 	
-	# # hide the reference data
-	# viewer.layers[name].visible=False
+	# # # hide the reference data
+	# # viewer.layers[name].visible=False
 
-	# visualize the input volume
-	viewer.add_labels(img_input, name='damage mask: '+get_file_tag(mask_path), opacity=0.6)
+	# # visualize the input volume
+	# viewer.add_labels(img_input, name='damage mask: '+get_file_tag(mask_path), opacity=0.6)
 
-	if not pyqt_gui:
-		napari.run(force=True)
+	# if not pyqt_gui:
+	# 	napari.run(force=True)
+
 	return 0, ''

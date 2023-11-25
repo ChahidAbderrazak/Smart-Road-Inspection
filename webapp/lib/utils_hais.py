@@ -8,6 +8,13 @@ import osmnx as ox
 # 						data_folder='temp/data', logs_folder='temp/logs',
 # 						imgs_folder='temp/imgs', cache_folder='temp/cache')
 
+def get_data_folder():
+	download_path=os.path.join(os.path.dirname(os.getcwd()),'data','download')
+	if not os.path.exists(download_path):
+			# get the parent root folder
+			download_path=os.path.join(os.path.dirname(os.path.dirname(os.getcwd())),'data','download')
+	return download_path
+
 def load_json(filename):
 	try:
 		if os.path.exists(filename):
@@ -215,8 +222,7 @@ def search_node_in_DB(database_root, picked_location, max_dist=2, version='v1.0'
 
 if __name__ == '__main__':
 	# update inspection dict
-	database_root='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31'
-	database_root='/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download'
+	database_root='../data/download/node1' 	
 
 	# full_inspection_dict_path= os.path.join(os.getcwd(),'dataabase', 'inspection_dic.json')
 	# # update teh inspection database

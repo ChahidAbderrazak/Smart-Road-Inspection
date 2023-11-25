@@ -1,0 +1,60 @@
+
+DATA: # real
+  data_root: 'data/download' # for the API server
+  version: 'v1.0'            # version of the Nuscene database to consider
+  enable_nscene: True        # manage the DB using Nuscene packages
+  verbose: True              # showing the Nescene displays     
+
+INSPECTION:
+  mask_th : 0.85         # Mask refinement threshold
+  screenshot : True      # save defect mask screen shot 
+  erosion_tol : 2       # erosion tolerance in mask refinement
+  imgSizes_X: 500                       # resizing width
+  imgSizes_Y: 500                       # resizing hight
+
+ANNOTATION:
+  annotation_directory: 'output/automated-annotations'
+  Min_box_area: 50
+  with_masks : True
+
+############################  DEEP LEARNING  ############################
+DATASET: 
+  ext_list: ['.tif', '.tiff', '.jpg','.jpeg']       # supported raw data images format
+  split_size: 0.7                       # the percentage of spliting the the the whole data <train+test+deploy>. Default 0.8  :  80% 
+  imgSizes_X: 128                       # resizing width
+  imgSizes_Y: 128                       # resizing hight
+  dev : False                            # generate small data size for developpment purposes
+
+MODEL:
+  clf_name : 'CNN-MClss'                # Classification model 
+  obj_name : 'RestNet50'                      # Object detection model
+  seg_name : 'TBD'                      # Segmentation model 
+
+TRAIN:
+  Min_nb_img_per_class : 5        # minam number of images per class to stat the trainig
+  split_size: 0.8                 # the percentage of spliting of the trainning/Validation sets.  Default 0.7  :  70% 
+  nb_folds: 1                     # number of time to split and train the modeol on the trainning set, stored in <workspace + train>,  will be repeated on the training set with suffling. Default 2
+  num_epoch: 300                   # number of epochs to train to model for every epoch. Default 500
+  num_workers: 0                  # number of paralle workers. Default 0
+  loss_critereon: 'crossEntropy'  # loss criteria
+  lr: 0.0001            # learning rate
+  batch_size: 5                 # batch size
+  optimizer: "SGD" # 'adam' #    # optimizer to adjust thr Network weights
+  es_patience_ratio : 10 # ~10 Ratio of epochs to be used as early stopping critereon  (num_epoch/es_patience_ratio)
+  transfer_learning: True         # load previously trained model
+  #objct detection
+  N_split : 1                                        # number of times the num_epoch will run
+  lr_scheduling: True                                 # enable learning rate (lr) decaying wrt training epochs 
+  step_size : 3                                       # lr_scheduling param1
+  gamma : 0.1                                         # lr_scheduling param2
+  momentum : 0.9                                      # learning momentum
+  weight_decay : 0.0005                               # learning decay weight
+
+THRESHOLD:
+  ds_max : 1000
+  Cmin : 0.7
+
+OUTPUTS:
+  workspace: 'output/workspace'           # processed data destination
+  dst_directory: 'output/'
+  model_dst: "output/models" #              # folder where the trained model will be saved in the <dst_directory>

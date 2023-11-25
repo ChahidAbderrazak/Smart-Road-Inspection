@@ -63,7 +63,7 @@ def detect_road_damage_using_patch_matching(image_RGB, road_hole_RGB, disp=False
     # print(f'\n \n - hole {len(ij)} coordinate: \n {ij}')
     x, y = ij[::-1]
     detection=[x,y, wcoin, hcoin]
-    # # plot the dsp detectino results
+    # # plot the dsp detection results
     # if disp:
     #     plot_dsp_detection(road_hole_RGB, image, result, [detection])
 
@@ -129,7 +129,7 @@ def inspection_patch_matching(img_path, hole_patch_root, patch_size=(256,256), d
     # final defect mask
     mask[mask<detect_th*np.max(mask)]=0
     image_RGB=image_RGB[:mask.shape[0],:mask.shape[1],:]
-    # plot the dsp detectino results
+    # plot the dsp detection results
     if disp:
         plot_dsp_detection(road_hole_RGB, image, matching_score, mask, detection_list)
     return image, image_RGB, matching_score, mask
@@ -152,7 +152,7 @@ def auto_thresholding(mask0, disp=1):
     idx0=idx=np.where(hist==hist.max())[0][0]
     idx_max=np.where(hist[idx0: ]<=0.5)[0][0]
     
-    if len(np.unique(hist))==1: # mask is empthy
+    if len(np.unique(hist))==1: # mask is empty
         return 0
     
     cnt=0
@@ -327,7 +327,7 @@ def evaluate_damage(damage_mask_rgb, th=[0.08, 0.11]):
     # time.sleep(2)
 
     # # display
-    # if True: # flag
+    # if True: # flag [debug]
     #     utils.show_two_image(damage_mask, damage_mask,img_title=f'damage mask', figsize = (8,8))
 
     return dict
@@ -632,8 +632,7 @@ def main_DSP_segmentation():
     import cv2
     from glob import glob
 
-    # img_folder='/media/abdo2020/DATA1/data/raw-dataset/data-demo/road-conditions-google/good-roads/'#hole/'#cracks/'#
-    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads/'
+    img_folder='../data/download/node1' 
 
     n_segments=200
     compactness=10
@@ -678,8 +677,7 @@ def main_patch_matching_inspection():
     hole_patch_root='bin/holes-patches' 
     hole_patch_root='bin/holes-patches/test' 
 
-    # img_folder='/media/abdo2020/DATA1/data/raw-dataset/road-conditions-google/hole/'#good-roads/'#cracks/'#
-    img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-hais-data/HAIS_DATABASE-medium-speed'# ERC-parking'#   
+    img_folder='../data/download/node1' 
 
     # list the existing images
     img_ext='.jpg'
@@ -738,10 +736,7 @@ def main_image_variation_inspection():
     ##---------------------------------------------
     from glob import glob
     import cv2
-    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-medium-speed'
-    # img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-31/HAIS_DATABASE-high-speed' 
-    # img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads'
-    img_folder='/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node1' 
+    img_folder='../data/download/node1' 
 
     # list the existing images
     img_ext='.jpg'
@@ -785,8 +780,7 @@ def main_lanemarker_inspection():
     from glob import glob
     import cv2
     # load image
-    img_folder='/media/abdo2020/DATA1/Datasets/data-demo/HAIS-data/demo-lane-mark' 
-    img_folder='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-12-12/road-and-mark/sweeps/RIGHT_CAMERA'
+    img_folder= '../data/test-lane-mark'
     ##############
     data_name=os.path.dirname(img_folder)
     out_video=f'results/lane_marker_{data_name}.mp4'

@@ -211,13 +211,14 @@ class Ontario511():
 			signal.alarm(int(3*estimated_frame_timeout))
 			
 if __name__ == '__main__':
-	root= '/media/abdo2020/DATA1/data/'
+	root=os.path.join(os.path.dirname(os.getcwd()),'data')
+	print(f'root1={root}')
 	if not os.path.exists(root):
-		root= '/media/data/hais-dataset/'
-		if not os.path.exists(root):
-			root= '/home/chahid/Desktop/dataset/'
+		# get the parent root folder
+		root=os.path.join(os.path.dirname(os.path.dirname(os.getcwd())),'data')
+		print(f'root2={root}')
+		
 
-	# dst_root='/media/abdo2020/DATA1/data/raw-dataset/Ontario511'
 	dst_root=os.path.join(root, 'raw-data','Ontario511')
 	print(f'\n - Downloading the data to : {dst_root}')
 	# instantiate  Ontario511()

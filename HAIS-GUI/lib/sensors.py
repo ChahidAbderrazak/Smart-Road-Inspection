@@ -413,7 +413,8 @@ def run_Lidar_sim():
 	DMAX = 100
 	IMIN = 0
 	IMAX = 50
-	filename='/media/abdo2020/DATA1/Datasets/numerical-dataset/RPLidar-data/catalog_0_A1_R5_465_1.catalog.txt'# catalog_0_A2_465_2.catalog.txt'#catalog_0_A1_R6_465_1.catalog.txt'#
+	# flag [todo]: check this testing
+	filename='data/test/catalog_0_A1_R5_465_1.catalog.txt'
 	lidar = RPLidar_sim(filename, angle_step=2, DMAX=DMAX, IMIN=IMIN, IMAX=IMAX)
 	# vizualise lidar image
 	print('Visualize RPLidar simulation measurement')
@@ -424,8 +425,7 @@ def run_Lidar_HAIS():
 	DMAX = 100
 	IMIN = 0
 	IMAX = 50
-	root= "/media/abdo2020/DATA1/Datasets/data-demo/demo_LIDAR"
-	root= '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node7'
+	root= '../data/download/node1'
 
 	lidar = RPLidar_sensor(root)
 	# vizualise lidar image
@@ -435,12 +435,7 @@ def run_HAIS_visualizer():
 	DMAX = 100
 	IMIN = 0
 	IMAX = 50
-	# root= '/media/abdo2020/DATA1/data/raw-dataset/data-demo/HAIS-data/demo-hais-data/node1'
-	# root= '/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-11/UOIT-parking-Abderrazak'
-	# root='/media/abdo2020/DATA1/data/raw-dataset/hais-node/2022-10-12/Oshawa-roads/mission2'
-	# root='/media/abdo2020/DATA1/data/raw-dataset/hais-drone/inspection/2022-10-12/UIOT-bridge/bridge2'
-	# root= '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node5-JN'
-	root= '/media/abdo2020/DATA1/data/labeled-dataset/HAIS-project/download/node7'
+	root= '../data/download/node1'
 	lidar = HAIS_visualizer(root, disp=True)
 	# vizualise lidar image
 	print('Visualize collected the mission ')

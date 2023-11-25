@@ -42,6 +42,13 @@ Figure: Illustration of the HAIS visualization web server
 kaggle datasets download -d abderrazakchahid1/sample-data-hais
 ```
 
+**NB** : Please make sure you extract the downloaded zip file to the in the root folder:
+<p align="center">
+<img  src="webapp/files/data-sample.png" alt="alt text" width="200" >
+ </p>
+<p align="center">
+Figure: folder structure after extracting the data
+</p>
 
 # Acknowledgement
 

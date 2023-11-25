@@ -2,7 +2,6 @@
 eval "$($(which conda) 'shell.bash' 'hook')"
 env_name=hais-node-env
 conda activate $env_name
-conda activate hais-webapp-env
 ############################################################
 
 ######################  API FUNCTIONS ##########################
@@ -19,7 +18,7 @@ conda activate hais-webapp-env
 
 ######################  RUN THE API SERVER ##########################
 
-echo && echo && echo  "--> Running the web-app server"
-uvicorn web-app:app --host 0.0.0.0 --port 8000
+echo && echo && echo  "--> Running the webapp server"
+uvicorn webapp:app --host 0.0.0.0 --port 8000
 
 conda deactivate 
