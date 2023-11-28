@@ -1,11 +1,9 @@
-import os, json, sys
-import shutil, time
-from typing import List
+import os, json
+import shutil
 from glob import glob
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi import FastAPI, File, UploadFile, Request, Form
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, File, UploadFile, Request
 
 from PIL import Image
 from io import BytesIO
@@ -16,6 +14,7 @@ from lib import utils_hais
 #----------------------------------------------
 max_dist=10   # maximal distance for the data to be displayed
 download_path=utils_hais.get_data_folder()
+print(f'\n - The data folder is: {download_path}')
 # download_path=os.path.join(os.path.dirname(os.getcwd()),'data','download')
 # if not os.path.exists(download_path):
 #     # get the parent root folder
@@ -33,8 +32,6 @@ try:
 except:
     app.mount("/static", StaticFiles(directory="src/static"), name="static")
     templates = Jinja2Templates(directory="src/templates/")    
-
-
 
 @app.get("/")
 def form_post(request: Request):

@@ -1,0 +1,50 @@
+
+##### Deep learning packages
+torch
+torchvision
+tensorflow
+torchviz
+albumentations
+ensemble-boxes
+tensorboard
+scikit-learn 
+
+######## Web API packages
+fastapi 
+uvicorn
+python-multipart
+
+##### preprocessing packages
+Pillow
+opencv-python-headless 
+# opencv-python
+opencv-contrib-python==4.1.2.30
+scikit-image>=0.19.1
+imutils
+polyline
+
+############ Visualization packages
+networkx
+osmnx==1.1.2
+folium
+geopandas
+
+############ Annotation packages
+nuscenes-devkit==1.1.9
+
+##### General packages
+PyYAML
+matplotlib
+numpy #==1.21
+pandas
+scipy
+glob2
+progressbar
+tqdm
+multiprocess
+seaborn
+
+# testing code package
+pytest
+
+

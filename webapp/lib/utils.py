@@ -1,11 +1,8 @@
-import sys
 import os
 import re
 import functools
 import fnmatch
 import numpy as np
-import matplotlib.pyplot as plt
-
 
 def moving_average(x, y, L, step):
     assert len(x)-- len(y), f'the input vectors are of diferet sizes: \
@@ -128,7 +125,7 @@ def plot_image(img, title, filename = ''):
   plt.show()
 
 def resize_image(src_image, size=(128,128), bg_color="white"): 
-    from PIL import Image, ImageOps 
+    from PIL import Image 
     # resize the image so the longest dimension matches our target size
     src_image.thumbnail(size, Image.ANTIALIAS )
     # Create a new square background image

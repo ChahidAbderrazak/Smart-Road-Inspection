@@ -1,4 +1,4 @@
-import os, sys
+import os
 from fastapi.testclient import TestClient
 from webapp import app
 

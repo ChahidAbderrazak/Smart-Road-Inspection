@@ -7,10 +7,9 @@ import torch
 import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.optim as optim
-try:
-  from lib.utils import *
-except:
-  from src.lib.utils import *
+
+from lib.utils import *
+
 ######################## FUNCTIONS ######################################
  
 def load_dataset(data_path, split_size=0.7, batch_size=50, num_workers=0):

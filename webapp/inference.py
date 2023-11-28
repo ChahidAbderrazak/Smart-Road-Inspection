@@ -6,14 +6,11 @@ from argparse import ArgumentParser
 import torch
 import torchvision.transforms as transforms
 # Import the model architecture
-try:
-    from lib.networks import get_model_instance
-    from lib.utils_dsp import *
-except:
-    from src.lib.networks import get_model_instance
-    from src.lib.utils_dsp import *
 
-# instanciate the model
+from lib.networks import get_model_instance
+
+
+# instantiate the model
 trained_model = None
 
 #Functions
@@ -56,7 +53,7 @@ def save_classes(class_file, classes_list):
     dict_['class_names']=dict_classes
     # create the folder
     create_new_folder(os.path.dirname(class_file))
-    # save the classe JSON file
+    # save the classes in JSON file
     with open(class_file, 'w') as outfile:
         json.dump(dict_, outfile,indent=2)
 
@@ -82,7 +79,7 @@ def predict_image_class(img_arr, classes, model_name, model_path, size, transfor
     print(f'\n - image: size = {img_arr.size}, men={np.mean(img_arr)}, std={np.std(img_arr)}')
     global trained_model
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    # instanciate the model
+    # instantiate the model
     clf_model = get_model_instance(model_name, classes)
     # Load the trained model 
     trained_model = load_trained_model(clf_model, model_path)
@@ -98,7 +95,7 @@ def predict_image_class(img_arr, classes, model_name, model_path, size, transfor
           output = trained_model(x).cpu()  # Forward pass
     else:
           output = trained_model(x)  # Forward pass
-    # get pedicted lables/classes
+    # get predicted labels/classes
     pred = torch.argmax(output, 1)  # Get predicted class if multi-class classification
     predicted_label = pred[0].cpu().numpy()
     # Normalize scores
@@ -143,7 +140,7 @@ def predict_image( model_name, model_path, class_file, file_paths, size=(128,128
     return prediction_df
 
 def resize_image(src_image, size): 
-    from PIL import Image, ImageOps 
+    from PIL import Image 
     # resize the image so the longest dimension matches our target size
     src_image.thumbnail(size, Image.ANTIALIAS )
     # Create a new square background image
@@ -262,11 +259,11 @@ def main_prediction_2D_images():
     prediction_df = predict_image(model_name, model_path, class_file=class_file, file_paths=list_images_paths, \
                                   size=(resize,resize), transformation=transformation, plotting=plotting)
     print(f'\n --> prediction results : \n {prediction_df}')
-    # save resut tables
-    fileame_csv = os.path.join(dst_folder, 'predictions_ ' + \
+    # save result tables
+    filename_csv = os.path.join(dst_folder, 'predictions_ ' + \
                 str(os.path.basename(model_path) ) + '.csv')
-    create_new_folder(os.path.dirname(fileame_csv))
-    prediction_df.to_csv( fileame_csv , sep=',')
+    create_new_folder(os.path.dirname(filename_csv))
+    prediction_df.to_csv( filename_csv , sep=',')
     return 0
 
 

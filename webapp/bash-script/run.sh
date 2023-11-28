@@ -1,6 +1,6 @@
 #!/bin/bash
 eval "$($(which conda) 'shell.bash' 'hook')"
-env_name=hais-node-env
+env_name=hais-webserver-env
 conda activate $env_name
 ############################################################
 
@@ -17,8 +17,11 @@ conda activate $env_name
 # python lib/sql_database.py
 
 ######################  RUN THE API SERVER ##########################
+# ------------------ run the main script  ------------------
+echo && echo " #################################################" 
+echo " ##           HAIS VISUALIZATION                ##" 
+echo " #################################################" && echo 
 
-echo && echo && echo  "--> Running the webapp server"
 uvicorn webapp:app --host 0.0.0.0 --port 8000
 
 conda deactivate 

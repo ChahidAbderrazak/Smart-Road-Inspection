@@ -1,12 +1,15 @@
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 import osmnx as ox
 # ox.config(use_cache=True, log_console=True)
 # ox.config(log_console=True, log_file=True, use_cache=True,
 # 						data_folder='temp/data', logs_folder='temp/logs',
 # 						imgs_folder='temp/imgs', cache_folder='temp/cache')
+
+import json
+import shutil
+
 
 def get_data_folder():
 	download_path=os.path.join(os.path.dirname(os.getcwd()),'data','download')
@@ -18,7 +21,6 @@ def get_data_folder():
 def load_json(filename):
 	try:
 		if os.path.exists(filename):
-			import json
 			with open(filename) as f:
 				data = json.load(f)
 			f.close()
@@ -34,7 +36,6 @@ def load_json(filename):
 		raise ValueError(msg)
 
 def save_json(json_string, filename):
-	import json
 	try:
 		# Using a JSON string
 		with open(filename, 'w') as outfile:
@@ -45,21 +46,20 @@ def save_json(json_string, filename):
 		return 1
 
 def clean_directory(DIR):
-		import shutil
 		if not os.path.exists(DIR):
 				os.makedirs(DIR)
 		else:
 			shutil.rmtree(DIR) 
 			os.makedirs(DIR)
 
+
+from math import sin, cos, sqrt, asin, radians
 def gps_location_distance( point1, point2):
 
 	'''
 	Calculate the great circle distance in meters between two points 
 	on the earth (specified in decimal degrees)
 	'''
-
-	from math import sin, cos, sqrt, asin, radians
 	lat1 = point1[0]
 	lon1 = point1[1]
 	lat2 = point2[0]
@@ -121,14 +121,13 @@ def fuse_inspection_dict_maps(inspection_path, new_inspection_path, min_dist=1):
 		# print(f'\n - closest_node [osmid={osmid}]: \n{closest_node}')
 	print(f'\n\n - max_dist={max_dist} m , min_dist={min_dist} m\n - distance={distance} m')
 
+import pandas as pd
+import geopandas as gd
+from shapely.geometry import Point
+
 def get_sensor_data_from_location(inspection_dict, picked_location, disp=False):
-	import pandas as pd
-	import matplotlib.pyplot as plt
-	import geopandas as gd
-	from shapely.geometry import Point
-	from shapely.ops import nearest_points
+
 	df = pd.DataFrame(inspection_dict)
-	
 	df['id'] = [k for k in range(len(df))]
 	df=df.rename(columns={"lon": "Longitude", "lat": "Latitude", "alt": "Altitude"}, errors="raise")
 	gdf = gd.GeoDataFrame(	df, geometry=gd.points_from_xy(df.Longitude, df.Latitude))
@@ -153,6 +152,7 @@ def get_sensor_data_from_location(inspection_dict, picked_location, disp=False):
 		print(f'\n output sample_token={sample_token} ')
 	return sample_token, distance 
 
+from nuscenes.nuscenes import NuScenes
 def search_node_in_DB(database_root, picked_location, max_dist=2, version='v1.0', disp=False):
 	'''
 	searching the closed node to the GPS location <picked_location> within <max_dist> radius in meters
@@ -166,7 +166,6 @@ def search_node_in_DB(database_root, picked_location, max_dist=2, version='v1.0'
 	empty_db=True
 
 	# search the exising nodes
-	from glob import glob
 	# list_inspections= glob(os.path.join(database_root,'*', 'inspection_dic.json'))
 	list_inspections=[os.path.join(path, name) for path, subdirs, files in os.walk(database_root) for name in files if name=='inspection_dic.json']
 	if disp: 
@@ -190,7 +189,7 @@ def search_node_in_DB(database_root, picked_location, max_dist=2, version='v1.0'
 	if not empty_db:
 		if disp:
 			print(f'\n - Loading the Nuscenes database ...')
-		from nuscenes.nuscenes import NuScenes
+		
 		dataroot=os.path.dirname(file_json)
 
 		def create_sensor_data_dict(sample_token, dataroot, version, disp=True):
