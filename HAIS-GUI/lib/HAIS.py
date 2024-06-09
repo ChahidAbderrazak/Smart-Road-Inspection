@@ -1,28 +1,14 @@
-import os, sys
-import gc
-from tkinter import E
+import os
 import cv2
 import time
-import threading
 import webbrowser
 import numpy as np
-import pandas as pd
 from glob import glob
-from pathlib import Path
-from numpy.core.records import array
-import matplotlib.pyplot as plt
-from pyrsistent import s
 
+from lib import utils, hais_database, inspection_algorithm, inspection_map
 
-try: 
-	from src.lib.global_variables import *
-	from src.lib import utils, hais_database, inspection_algorithm, inspection_map
-except: 
-	from lib.global_variables import *
-	from lib import utils, hais_database, inspection_algorithm, inspection_map
-	
 from PyQt5 import QtCore, Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QFormLayout, QLabel, QMessageBox, \
+from PyQt5.QtWidgets import QWidget, QGroupBox, QFormLayout, QLabel, QMessageBox, \
 														QLineEdit, QFileDialog, QPushButton, QDialog, QCheckBox, QVBoxLayout,\
 														QLabel, QSizePolicy, QScrollArea, QMessageBox, QComboBox, QGridLayout,  \
 														QDialogButtonBox, QAction,QMenuBar, QRadioButton
@@ -30,10 +16,9 @@ from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QFormLayout, QLabe
 from PyQt5.QtGui import QIcon, QFont, QPalette, QColor, QImage, QPixmap, QPalette
 from PyQt5.QtCore import * #QObject, pyqtSignal, QThread
 
-from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
+from PyQt5.QtPrintSupport import QPrinter
 
 # set the transformation
-import torchvision.transforms as transforms
 
 #%%############## CLASSES  ######################
 class GUI_App(QWidget): 

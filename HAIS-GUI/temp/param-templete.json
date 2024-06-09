@@ -1,0 +1,73 @@
+// labels
+
+[
+	{
+    "road_accessibility": ["private", "public"],
+    "road_material": ["Concrete", "Asphalt","Gravel","Earthen", "Murrum","Kankar", "Bituminous" ],
+    "road_infrastructure": ["bridge","Bus_lane","Carpool_lane" , "Cycle_track"],
+    "road_visibility":["good", "fair", "poor"], 
+    
+
+    "road_condition": ["holes","cracks"],
+    "road_lane_marking": ["visible", "barely_visible", "not_visible"],
+    "road_safety_index": ["high", "medium", "low"],
+    "road_snow": ["bare", "partly_covered",  "covered"],
+    "object_visibity":[0,100]
+  }
+]
+
+
+// maps
+[
+	{
+		"category": "1",
+		"token": "1",
+		"filename": "maps/map1.png",
+		"log_tokens": ["car1__Ontario Tech University__S1"]
+		}
+
+]
+
+// category
+[
+{
+  "token": "1",
+  "name": "road.public.Concrete.Bus_lane",
+  "description": "Bus lane in Concrete."
+},
+{
+  "token": "2",
+  "name": "road.public.bridge",
+  "description": "bridge."
+}
+
+]
+
+// Attribute
+
+[
+	{
+		"token": "1",
+		"name": "road.broken",
+		"description": "The road is borken."
+	},
+	{
+		"token": "2",
+		"name": "road.safety.high",
+		"description": "The road is safe with high safety index."
+	}
+
+]
+
+// Scene
+[
+  {
+    "token": "2022-07-14-12h-06min-40sec__S1-UC1",
+    "log_token": "car1__Ontario Tech University__S1",
+    "nbr_samples": 17,
+    "first_sample_token": "37225__S1-UC1",
+    "last_sample_token": "37464__S1-UC1",
+    "name": "S1-UC1",
+    "description": "low-safety index"
+  }
+]

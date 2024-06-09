@@ -1,8 +1,3 @@
-import os
-import numpy as np
-import cv2
-import torch
-from torch.utils.data import DataLoader, Dataset
 import torchvision
 
 # define the model instanciation

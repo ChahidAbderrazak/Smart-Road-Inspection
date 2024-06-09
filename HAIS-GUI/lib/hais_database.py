@@ -6,7 +6,6 @@
 import os, sys
 import time
 import json
-import random
 from tqdm import tqdm
 import pickle
 import os.path as osp

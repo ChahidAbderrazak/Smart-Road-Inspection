@@ -1,11 +1,9 @@
 
 import os
 import cv2
-import time
 import gc
 import numpy as np
 import pandas as pd
-from glob import glob
 import matplotlib.pyplot as plt
 
 #################	 BASIC FUNCTIONS	#################
@@ -664,9 +662,8 @@ def plot_cv_bbox(img, voc_box):
     cv2.destroyAllWindows()
 
 ############ Segmentation from input image texture [DSP-segmentation]  ######################
-from skimage.filters import sobel
 from skimage.color import rgb2gray, gray2rgb
-from skimage.segmentation import felzenszwalb, slic, quickshift, watershed
+from skimage.segmentation import slic
 from skimage.segmentation import mark_boundaries
 from skimage.util import img_as_float
 import cv2 

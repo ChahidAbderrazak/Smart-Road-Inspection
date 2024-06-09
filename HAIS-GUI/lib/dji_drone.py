@@ -1,4 +1,4 @@
-import os, sys
+import os
 from itertools import groupby
 from glob import glob
 try:

@@ -12,6 +12,21 @@ The system collects the road data (camera, LiDAR) using the inspection nodes mou
 Figure: Illustration of the HAIS inspection nodes
 </p>
 
+###  Sample dataset 
+
+ A sample data set can be downloaded from this Kaggle [link](https://www.kaggle.com/datasets/abderrazakchahid1/sample-data-hais).
+
+```
+kaggle datasets download -d abderrazakchahid1/sample-data-hais
+```
+
+**NB** : Please make sure you extract the downloaded zip file to the in the root folder:
+<p align="center">
+<img  src="webapp/files/data-sample.png" alt="alt text" width="200" >
+ </p>
+<p align="center">
+Figure: folder structure after extracting the data
+</p>
 
 ##  2. HAIS GUI for road inspection [[link](HAIS-GUI/README.md)]
 The system processes the different sensor data to generate an inspection report based computer vision and digital image processing technique. This algorithm   processes sensors data  and detects the potential road damages and conditions:
@@ -34,21 +49,7 @@ Figure: Illustration of the HAIS visualization web server
 </p>
 
 
-#  Sample dataset 
 
- A sample data set can be downloaded from this Kaggle [link](https://www.kaggle.com/datasets/abderrazakchahid1/sample-data-hais).
-
-```
-kaggle datasets download -d abderrazakchahid1/sample-data-hais
-```
-
-**NB** : Please make sure you extract the downloaded zip file to the in the root folder:
-<p align="center">
-<img  src="webapp/files/data-sample.png" alt="alt text" width="200" >
- </p>
-<p align="center">
-Figure: folder structure after extracting the data
-</p>
 
 # Acknowledgement
 

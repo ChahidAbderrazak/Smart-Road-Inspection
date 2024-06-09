@@ -1,0 +1,72 @@
+# # ##### MySQL
+# # mysql-connector-python 
+
+# # ##### GUI packages
+# # PyQt5==5.15.2
+# # PyQt5-sip==12.8.1
+
+
+# # ##### General packages
+# # PyYAML
+# # matplotlib
+# # numpy
+# # pandas
+# # glob2
+# # progressbar
+# # tqdm
+
+# # # testing code package
+# # pytest
+
+
+##--------------------------------------
+
+##### Deep learning packages
+torch
+torchvision
+tensorflow
+#torchviz
+#albumentations
+#ensemble-boxes
+#tensorboard
+#scikit-learn 
+
+##### preprocessing packages
+Pillow
+# # opencv-python
+opencv-python-headless 
+opencv-contrib-python #==4.1.2.30
+scikit-image>=0.19.1
+imutils
+# # pylops
+
+##### MySQL
+mysql-connector-python 
+
+##### GUI packages
+PyQt5==5.15.2
+PyQt5-sip==12.8.1
+
+
+##### General packages
+PyYAML
+matplotlib
+numpy
+pandas
+glob2
+progressbar
+tqdm
+
+############ Visualization packages
+networkx
+osmnx==1.1.2
+folium
+geopandas
+polyline
+
+############ Annotation packages
+nuscenes-devkit==1.1.9
+
+# testing code package
+pytest
+

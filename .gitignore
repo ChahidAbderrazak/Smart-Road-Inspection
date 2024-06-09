@@ -5,6 +5,8 @@
 **cache/**
 **data/**
 **Other/*
+**workspace/*
+**output/*
 **.vsc***
 **__pycache__/**
 *.csv

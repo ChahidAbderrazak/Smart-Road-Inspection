@@ -1,0 +1,21 @@
+version: "3"
+services:
+    app:
+        container_name: hais-inspection
+        image: hais-desktop:v1
+        build: 
+            context: ./HAIS-GUI/
+            dockerfile: Dockerfile
+
+    webserver:
+        container_name: hais-visualization
+        image: hais-webserver:v1
+        build: 
+            context: ./webapp/
+            dockerfile: Dockerfile
+        ports:
+            - 8080:8080
+
+      
+        
+

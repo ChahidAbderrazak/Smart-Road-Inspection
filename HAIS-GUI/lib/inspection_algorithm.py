@@ -1,5 +1,4 @@
 import os
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 try:
@@ -50,7 +49,6 @@ def plot_dsp_detection(road_hole, image, matching_score, mask, detection_list):
 def detect_road_damage_using_patch_matching(image_RGB, road_hole_RGB, disp=False):
     # convert to gray scale
     from skimage import color
-    from skimage import data
     from skimage.feature import match_template
     image = color.rgb2gray(image_RGB)
     road_hole = color.rgb2gray(road_hole_RGB)
@@ -136,7 +134,7 @@ def inspection_patch_matching(img_path, hole_patch_root, patch_size=(256,256), d
 
 def auto_thresholding(mask0, disp=1): 
     from kneed import KneeLocator
-    from scipy.signal import argrelextrema, savgol_filter
+    from scipy.signal import savgol_filter
     print(f'\n segments: {np.unique(mask0)}')
     # histogram
     hist, bin=np.histogram(mask0[mask0!=0].ravel(), 256, [0, 255])
@@ -402,7 +400,7 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
     import matplotlib.pyplot as plt
     from glob import glob
     from skimage import color
-    from skimage.color import rgb2gray, gray2rgb
+    from skimage.color import rgb2gray
 
     # load the image
     image_RGB = utils.load_image(img_path)
@@ -425,7 +423,7 @@ def inspection_diff(img_path, bright_th=0, erosion_tol=1,
     return damage_img, image_RGB, damage_mask, nb_cnts, dict_damage
 
 def segmenting_road(img, disp=False):
-    from skimage import data, segmentation, color
+    from skimage import segmentation, color
     from skimage.future import graph
     from matplotlib import pyplot as plt
 
@@ -497,7 +495,7 @@ class ShapeDetector:
         return shape
 
 def image_erosion(img, erosion_tol=5):
-    from skimage.color import rgb2gray, gray2rgb
+    from skimage.color import rgb2gray
 
     img_gray=rgb2gray(img)
     from scipy import ndimage

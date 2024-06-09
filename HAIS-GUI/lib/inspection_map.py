@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 '''Visualize the road conditions map'''
 import os, sys
-from turtle import color
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import matplotlib.animation as animation
-import geopandas as gpd
 import osmnx as ox
 ox.config(use_cache=True, log_console=True)
 
@@ -183,10 +179,7 @@ def generate_random_roads_inspection():
 #########################  folium Visualization ##############################
 from pandas import *
 import numpy as np
-from matplotlib import cm
 import folium
-from folium import plugins
-from IPython.display import HTML, display
 
 def rectify_route_positions(points_list):
 		return [(i,j) for (i,j) in points_list if i!=-1 and j!=-1]
@@ -282,7 +275,6 @@ def visualize_map(list_missions, maps_root, horison=2, show_lanemarker=False, sh
 				try:
 					inspection_dict=inspection_dict[0]
 				except:# flag [todo]: I am not sure why I made this try/catch!!!!
-					pass
 					print(' The inspection_dict is loaded successfully!!')
 
 				# update the map routes
@@ -294,7 +286,6 @@ def visualize_map(list_missions, maps_root, horison=2, show_lanemarker=False, sh
 					lanemarker_coord+=inspection_dict['lanemarker']+['']
 				except Exception as e:
 					print(f'\n Error in reading Lanemarker!! \n {e}')
-					pass
 
 				if show_lanemarker:
 					metric_list+=inspection_dict['lanemarker']+[-1]

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 '''Animates distances and measurement quality'''
 from cProfile import label
-import os, sys, time
+import os, time
 import matplotlib.pyplot as plt
-from matplotlib.transforms import offset_copy
 import numpy as np
 from glob import glob
 import matplotlib.animation as animation
@@ -13,7 +12,6 @@ try:
     from lib import utils
 except:
     import utils
-import matplotlib.colors as mcolors
 
 colors_list=['#0051a2', '#97964a', '#ffd44f', '#f4777f', '#93003a',"#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442"]
 

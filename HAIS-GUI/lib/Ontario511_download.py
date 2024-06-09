@@ -1,7 +1,14 @@
 import os, sys
+import cv2
 import json, time
 import signal
 from tqdm import tqdm
+import urllib.request
+from datetime import datetime
+import matplotlib.pyplot as plt
+import polyline
+from timeit import default_timer as timer
+
 
 def timeout_handler(num, stack):
     print("\n\n - Raise Timeout flag!!")
@@ -18,15 +25,12 @@ class Ontario511():
 
 	def get_cameras(self):
 		cam_api_url='https://511on.ca/api/v2/get/cameras'
-		import urllib.request
-		import json
 		string= urllib.request.urlopen(cam_api_url).read().decode('utf-8')
 		cam_dic = json.loads(string)
 		print(f'\n- {len(cam_dic)} road cameras are found!')
 		return cam_dic
 
 	def get_time_tag(self, type=1):
-		from datetime import datetime
 		today = datetime.now()
 		if type==0:
 				return today.strftime("__%Y-%m-%d")
@@ -34,29 +38,27 @@ class Ontario511():
 				return today.strftime("%Y-%m-%d-%Hh-%Mmin-%Ssec")
 
 	def load_image(self, path):
-			import numpy as np
-			import cv2
-			# print(' The selected image is :', path)
-			# filename, file_extension = os.path.splitext(path)
-			try:
-					img = cv2.imread(path)
-					# print(f' The selected image file is [{path}] of size {img.shape}')
-					return 0, img
-			except Exception as e :
-					msg = '\n Error: the image path ' + path + f'cannot be loaded!!!!\n Exception: {e}'
-					print(msg)
-					return 1, []
+		
+		# print(' The selected image is :', path)
+		# filename, file_extension = os.path.splitext(path)
+		try:
+				img = cv2.imread(path)
+				# print(f' The selected image file is [{path}] of size {img.shape}')
+				return 0, img
+		except Exception as e :
+				msg = '\n Error: the image path ' + path + f'cannot be loaded!!!!\n Exception: {e}'
+				print(msg)
+				return 1, []
 
 	def show_image(self, img, img_title, cmap="cividis", figsize = (8,8)):
-			import matplotlib.pyplot as plt
-			# show image
-			fig = plt.figure(figsize = figsize) # create a 5 x 5 figure 
-			ax3 = fig.add_subplot(111)
-			ax3.imshow(img, interpolation='none', cmap=cmap)
-			ax3.set_title(img_title)#, fontsize=40)
-			# plt.savefig('./residual_image.jpg')   
-			plt.axis("off")
-			plt.show()
+		# show image
+		fig = plt.figure(figsize = figsize) # create a 5 x 5 figure 
+		ax3 = fig.add_subplot(111)
+		ax3.imshow(img, interpolation='none', cmap=cmap)
+		ax3.set_title(img_title)#, fontsize=40)
+		# plt.savefig('./residual_image.jpg')   
+		plt.axis("off")
+		plt.show()
 	
 	def create_new_folder(self, DIR):
 		if not os.path.exists(DIR):
@@ -70,35 +72,32 @@ class Ontario511():
 				json.dump(data_dict, outfile, indent=2)
 				
 	def download_CAM_frame(self, url, filePath, disp=False):
-			global camera_dict
-			import os
-			import numpy as np
-			import urllib.request
-			cam_frame = urllib.request.urlopen(url).read()
-			# print("downloading: ",url)
-			# print (filePath)
-			corrp_img=cam_frame[0]==137
-			# print(f'\, cam_frame={cam_frame[0]} \n corrupted={corrp_img}')
-			# save uncorrupted images
-			if not corrp_img:
-				self.create_new_folder(os.path.dirname(filePath))
-				with open(filePath, 'wb') as localFile:
-					localFile.write(cam_frame)
+		global camera_dict
 
-					# save camera info in json
-					camera_info=os.path.join(os.path.dirname(filePath), 'camera_info.json' )
-					self.save_json(camera_dict, camera_info)
+		cam_frame = urllib.request.urlopen(url).read()
+		# print("downloading: ",url)
+		# print (filePath)
+		corrp_img=cam_frame[0]==137
+		# print(f'\, cam_frame={cam_frame[0]} \n corrupted={corrp_img}')
+		# save uncorrupted images
+		if not corrp_img:
+			self.create_new_folder(os.path.dirname(filePath))
+			with open(filePath, 'wb') as localFile:
+				localFile.write(cam_frame)
 
-					# display:
-					if disp:
-						err1, img = self.load_image(filePath)
-						# show image
-						self.show_image(img, img_title=f'{os.path.basename(filePath)} [error={corrp_img}]')
-				localFile.close()
+				# save camera info in json
+				camera_info=os.path.join(os.path.dirname(filePath), 'camera_info.json' )
+				self.save_json(camera_dict, camera_info)
+
+				# display:
+				if disp:
+					err1, img = self.load_image(filePath)
+					# show image
+					self.show_image(img, img_title=f'{os.path.basename(filePath)} [error={corrp_img}]')
+			localFile.close()
 
 	def download_Ontario511_CAM(self, disp=False):
 		global camera_dict
-		import os , time
 		# get the list of camera dict	
 		cam_dic=self.get_cameras()
 
@@ -128,10 +127,6 @@ class Ontario511():
 
 	def download_road_conditions(self, disp=False):
 		global camera_dict
-		import os, datetime
-		import numpy as np
-		import urllib.request
-		import polyline
 		url='https://511on.ca/api/v2/get/roadconditions'
 		string= urllib.request.urlopen(url).read().decode('utf-8')
 		road_dict = json.loads(string)
@@ -171,10 +166,7 @@ class Ontario511():
 			except KeyboardInterrupt:
 				print(f'\n - Exit Ontario511 download!')
 				sys.exit(0)
-
-	def download(self, disp=False):
-		from timeit import default_timer as timer
-		
+	def download(self, disp=False):		
 		# downloading all images
 		cnt=0
 		frame_fs=self.fs
@@ -209,7 +201,8 @@ class Ontario511():
 			time.sleep(frame_fs)	
 			# time out flag
 			signal.alarm(int(3*estimated_frame_timeout))
-			
+
+
 if __name__ == '__main__':
 	root=os.path.join(os.path.dirname(os.getcwd()),'data')
 	print(f'root1={root}')

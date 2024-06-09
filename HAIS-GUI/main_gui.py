@@ -1,26 +1,15 @@
 
-import os
 import gc
 import sys
-import time
-import yaml
 gc.collect()
-try: 
-    from src.lib.global_variables import *
-except: 
-    from lib.global_variables import *
+# from lib.global_variables import *
 # Load modules
-try: 
-    from src.lib import HAIS
-except: 
-    from lib import HAIS
-		
+from lib import HAIS
 #############################	RUN the GUI	############################
 from PyQt5.QtWidgets import QApplication
 #%%######################### MAIN	######################
+from argparse import ArgumentParser
 def prepare_parser(): 
-	import numpy as np
-	from argparse import ArgumentParser
 	parser=ArgumentParser(description='Highways inspection')
 	parser.add_argument(
 				"--cfg", 

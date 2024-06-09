@@ -2,8 +2,7 @@ import os
 import numpy as np
 import cv2
 import torch
-from torch.utils.data import DataLoader, Dataset
-import torchvision
+from torch.utils.data import Dataset
 
 ######################## DATALOADER ########################
 class Averager:
@@ -29,7 +28,6 @@ class Averager:
 class Dataset_class(Dataset):
     def __init__(self, dataframe, image_dir, transforms=None):
         super().__init__()
-        d=dataframe
         self.image_ids = dataframe['image_id'].unique()
         self.df = dataframe
         self.image_dir = image_dir
