@@ -7,7 +7,7 @@ from fastapi import FastAPI, File, UploadFile, Request
 
 from PIL import Image
 from io import BytesIO
-import numpy as np 
+import numpy as np
 from lib.Autils_classification import predict_image
 from lib import utils_hais
 
@@ -31,7 +31,7 @@ try:
     templates = Jinja2Templates(directory="templates/")
 except:
     app.mount("/static", StaticFiles(directory="src/static"), name="static")
-    templates = Jinja2Templates(directory="src/templates/")    
+    templates = Jinja2Templates(directory="src/templates/")
 
 @app.get("/")
 def form_post(request: Request):
@@ -43,7 +43,7 @@ def form_post(request: Request):
     status_AI="Uploading an image"
     predictions=0
     # prediction using dumy example
-    import random 
+    import random
     scores=[10,20,37,80,50,65]
     random.shuffle(scores)
     probabilities = np.array(scores)
@@ -65,21 +65,21 @@ def read_imagefile(data) -> Image.Image:
 
 @app.post("/ai")
 async def upload_file(request: Request, file: UploadFile = File(...)):
-    # Step 0: Get the image from the user 
+    # Step 0: Get the image from the user
     image = read_imagefile(await file.read())
     image_path="static/files/processed_"+file.filename
     image = image.save(image_path)
 
-    # Step 1: Load the image 
+    # Step 1: Load the image
     print(f'\n image_path={image_path}')
     my_image=Image.open(image_path)
 
     #Step 2 : Resize the image if needed
     my_image_re = my_image.resize((128,128))
     print('Uploaded image (resized):',my_image_re)
-    
+
     # #Step 3 : prediction
-    # import random 
+    # import random
     # scores=[10,20,37,80,50,65]
     # random.shuffle(scores)
     # probabilities = np.array(scores)
@@ -91,10 +91,10 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
     #   "prob1":probabilities[index[-1]],
     # }
 
-    # status_AI=" ( Dumy prediction )"
+    # status_AI=" ( Dummy prediction )"
 
     # Step 3 :prediction using model:
-    # deploy the classification model 
+    # deploy the classification model
     classes = ['road holes', 'road cracks']
     model_path = 'model/model_cpu.pth'
     output = predict_image(model_path, classes, [image_path], plotting=False)
@@ -111,7 +111,7 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
 @app.get("/reports")
 def form_post(request: Request):
     image_path = "  "
-    
+
     return templates.TemplateResponse('reports.html', context={'request': request, 'image_path': image_path})
 
 @app.get("/sensors")
@@ -133,7 +133,7 @@ def form_post(request: Request):
 
 @app.get("/get_node_list")
 async def get_sensor_data():
-    list_nodes=[ os.path.basename(path) for path in glob(os.path.join(download_path,'*')) if os.path.isdir(path)] 
+    list_nodes=[ os.path.basename(path) for path in glob(os.path.join(download_path,'*')) if os.path.isdir(path)]
     dict_list_nodes={node:idx+1 for idx, node in enumerate(list_nodes)}
     data = serialize_sensor_dict(dict_list_nodes)
     print(f'\n Nodes data directory={download_path}')
@@ -171,30 +171,30 @@ async def get_sensor_data(location_str):
     return data
 
 def copy_sensor_data(dict_sensor, tmp_dir):
-    
+
     try:
         dst_cam= os.path.join(tmp_dir, os.path.basename(dict_sensor['camera']) )
-        shutil.copy(dict_sensor['camera'], dst_cam) 
+        shutil.copy(dict_sensor['camera'], dst_cam)
         shutil.copy(dict_sensor['camera'], os.path.join(tmp_dir,'cam.jpg') )
-    except Exception as e: 
+    except Exception as e:
         dst_cam=''
         print(f'\n Error in loading the camera data!! \n Exception: {e}')
     dict_sensor['camera']=dst_cam
     # lidar
-    
-    try: 
-        dst_lidar= os.path.join(tmp_dir, os.path.basename(dict_sensor['lidar']) ) 
-        shutil.copy(dict_sensor['lidar'], dst_lidar) 
-        shutil.copy(dict_sensor['lidar'], os.path.join(tmp_dir,"lidar.gif")) 
+
+    try:
+        dst_lidar= os.path.join(tmp_dir, os.path.basename(dict_sensor['lidar']) )
+        shutil.copy(dict_sensor['lidar'], dst_lidar)
+        shutil.copy(dict_sensor['lidar'], os.path.join(tmp_dir,"lidar.gif"))
     except Exception as e:
-        dst_lidar='' 
+        dst_lidar=''
         print(f'\n Error in loading the lidar data!! \n Exception: {e}')
     dict_sensor['lidar']=dst_lidar
-    
+
 def serialize_sensor_dict(dict_sensor):
     tmp_filename='temp/dict_sensor.json'
     utils_hais.save_json(dict_sensor, tmp_filename)
     f=open(tmp_filename)
     data=json.load(f)
-    
+
     return data

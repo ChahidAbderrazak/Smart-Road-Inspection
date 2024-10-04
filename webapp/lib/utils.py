@@ -4,6 +4,18 @@ import functools
 import fnmatch
 import numpy as np
 
+def load_config(self, config_file):
+	import yaml
+	try:
+		# Read config parameters from the sYAML file
+		with open(config_file, 'r') as stream:
+			config=yaml.safe_load(stream)
+		return config
+	except Exception as e:
+		msg=f'\n\n Error: The config file [{config_file}] cannot be read correctly OR is not found!! \n Exception: {e}'
+		print(msg)
+		raise Exception(msg)
+		
 def moving_average(x, y, L, step):
     assert len(x)-- len(y), f'the input vectors are of diferet sizes: \
                             \n - x length= {len(x)} \n - y length= {len(y)} '
@@ -29,13 +41,13 @@ def plot_with_fill(ax, x, y, L_frame=10, step= 1, color='r', alpha=0.2):
     return ax
 
 def find_subfolder(root, pattern=''):
-    import os 
+    import os
     all_ = os.listdir(root)
     folders = [k for k in all_ if os.path.isdir(k) and pattern in os.path.basename(k)]
     return folders
 
 def find_subfiles(root, pattern='', ext=''):
-    import os 
+    import os
     all_ = os.listdir(root)
     files = [k for k in all_ if os.path.isfile(k) and pattern in os.path.basename(k) and k.endswith(ext)]
     # print(files)
@@ -43,7 +55,7 @@ def find_subfiles(root, pattern='', ext=''):
 
 def progresss_bar(nb_iter):
     '''
-    create a progress bare display of maxim iteration loop = <nb_iter> 
+    create a progress bare display of maxim iteration loop = <nb_iter>
     '''
     import progressbar
     bar = progressbar.ProgressBar(maxval=nb_iter, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
@@ -75,7 +87,7 @@ def load_trained_model(clf_model, model_path):
         try:
             clf_model.load_state_dict(torch.load(model_path))
         except:
-            
+
             clf_model.load_state_dict(torch.load(model_path, map_location=device))
     else:
         msg = f"\n\n - Error: The model path [{model_path}] does not exist OR in loading error!!!"
@@ -113,7 +125,7 @@ def get_time_tag(type=0):
         return today.strftime("__%Y-%m-%d")
     else:
         return today.strftime("__%Y-%m-%d-%Hh-%Mmin")
-    
+
 def plot_image(img, title, filename = ''):
   print(filename)
   # # import Image
@@ -124,8 +136,8 @@ def plot_image(img, title, filename = ''):
   plt.title(title + '\nfile = ' +  filename)
   plt.show()
 
-def resize_image(src_image, size=(128,128), bg_color="white"): 
-    from PIL import Image 
+def resize_image(src_image, size=(128,128), bg_color="white"):
+    from PIL import Image
     # resize the image so the longest dimension matches our target size
     src_image.thumbnail(size, Image.ANTIALIAS )
     # Create a new square background image
@@ -143,9 +155,9 @@ def batch_sample_details(data, target):
     print( 'Image size = ', data_.size() )
     print( 'Image min = ',data_.min() )
     print( 'Image max = ',data_.max() )
-    
+
     for i in np.unique(target_):
-        val = len(target [ target_== i] ) 
+        val = len(target [ target_== i] )
         print( '# sample in  class' + str(i) + ' = ',val )
 
 def save_image(img, filename):
@@ -168,14 +180,14 @@ def create_folder_set(DIR):
   if not os.path.exists(DIR):
       os.makedirs(DIR)
   else:
-    shutil.rmtree(DIR) 
+    shutil.rmtree(DIR)
     os.makedirs(DIR)
     print('\n Warrning: old  folder was removed and replaced by a new empthy folder!! \n', DIR)
 
 # def copy_files(df, dst):
 #   import shutil
 #   create_folder_set(dst)
-#   for k, path in enumerate(df['filename']): 
+#   for k, path in enumerate(df['filename']):
 #     dst_path = dst + df['image_id'][k] + ext
 #     # print('dst_path=', dst_path)
 #     newPath = shutil.copy(path, dst_path)
@@ -186,8 +198,8 @@ def arrange_files(root, classes, data_paths):
   data_dict = {}
   for classe in classes:
     data_dict[classe] = []
-#   print('data_dict = ', data_dict) 
-  sep_OS = os.path.join('1','1')[1]   
+#   print('data_dict = ', data_dict)
+  sep_OS = os.path.join('1','1')[1]
 #   print('classes=', classes)
   # print('data_paths=', data_paths)
 #   print('sep_OS=', sep_OS)
@@ -222,17 +234,17 @@ def get_paths_each_class(root, ext_list):
 
   return data_paths_dict, img_ext, classes
 
-def save_variables(filename, var_list): 
+def save_variables(filename, var_list):
     """
      Save stored  variables list <var_list> in <filename>:
      save_variables(filename, var_list)
     """
-     
+
     import pickle
-    open_file = open(filename, "wb"); 
-    pickle.dump(var_list, open_file); 
+    open_file = open(filename, "wb");
+    pickle.dump(var_list, open_file);
     open_file.close()
-    
+
 def load_variables(filename):
     """
      Load stored  variables From <filename>:
@@ -245,10 +257,10 @@ def load_variables(filename):
     return loaded_obj
 
 def convert_tiff_save_jpg(loadFolder, file_names, saveFolder,size):
-  sep_OS = os.path.join('1','1')[1] 
+  sep_OS = os.path.join('1','1')[1]
   if not os.path.exists(saveFolder):
     create_new_folder(saveFolder)
-  # progress bar 
+  # progress bar
   bar = progresss_bar(len(file_names))
   for k,  file_name in enumerate(file_names):
     # Open the file
@@ -278,13 +290,13 @@ def build_dataset_workspace(raw_data_folder, RAW_DATA_ROOT, ext_list, size, DIR_
     print('#             Building the Dataset workspace from Raw data  ')
     print('#             Building the Dataset workspace from Raw data  ')
     print('###################################################################################')
-  
+
 
     if raw_data_folder:
         # remove the old workspace
         DIR_WORKSPACE = os.path.dirname(os.path.dirname(DIR_TRAIN))
         create_folder_set(DIR_WORKSPACE )
-        # The folder contains a subfolder for each class 
+        # The folder contains a subfolder for each class
         data_paths_dict, img_ext, classes = get_paths_each_class(RAW_DATA_ROOT, ext_list)
         print(f'\n--> Data preparation information: \n - raw data folder: {RAW_DATA_ROOT} \n - destination workspace: {DIR_WORKSPACE}\n - Classes: {classes}')
         from sklearn.model_selection import train_test_split
@@ -293,7 +305,7 @@ def build_dataset_workspace(raw_data_folder, RAW_DATA_ROOT, ext_list, size, DIR_
             print(f'\n\n--> Processing in proress of folder [{sub_folder}] ' )
             # Create a matching subfolder in the output dir
             saveFolder_train = os.path.join(DIR_TRAIN,sub_folder)
-            saveFolder_test =  os.path.join(DIR_TEST,sub_folder); 
+            saveFolder_test =  os.path.join(DIR_TEST,sub_folder);
             saveFolder_deploy = DIR_DEPLOY
             # Loop through the files in the subfolder
             file_names = data_paths_dict[sub_folder]
@@ -335,7 +347,7 @@ def get_workspace_path(RAW_DATA_ROOT, WORKSPACE_folder, dev=False):
     if dev :
         data_TAG = data_TAG + '-dev'
     DIR_WORKSPACE = os.path.join(WORKSPACE_folder , data_TAG,'')
-    
+
     return DIR_WORKSPACE, data_TAG
 
 def get_workspace_folders(DIR_WORKSPACE):
@@ -347,7 +359,7 @@ def get_workspace_folders(DIR_WORKSPACE):
 
 def get_subfolders( root, patern = ''):
         return [ name for name in os.listdir(root) if os.path.isdir(os.path.join(root, name)) if patern in name  ]
-        
+
 def find_recursive(root_dir, ext='.jpg'):
     files = []
     for root, dirnames, filenames in os.walk(root_dir):

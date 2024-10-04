@@ -1,20 +1,37 @@
-version: "3"
+version: "3.7"
+
 services:
+    db:
+        container_name: hais-db
+        image: mysql:5.7
+        ports:
+            - "32001:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: database
+            MYSQL_USER: user
+            MYSQL_PASSWORD: password
+
+
     app:
+        links:
+            - "db"
         container_name: hais-inspection
         image: hais-desktop:v1
         build: 
             context: ./HAIS-GUI/
             dockerfile: Dockerfile
+        # command: 'sh'
+        command: 'python3 main_gui.py --cfg config.yml'
 
-    webserver:
-        container_name: hais-visualization
-        image: hais-webserver:v1
-        build: 
-            context: ./webapp/
-            dockerfile: Dockerfile
-        ports:
-            - 8080:8080
+    # webserver:
+    #     container_name: hais-visualization
+    #     image: hais-webserver:v1
+    #     build: 
+    #         context: ./webapp/
+    #         dockerfile: Dockerfile
+    #     ports:
+    #         - 8080:8080
 
       
         

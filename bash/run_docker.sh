@@ -13,9 +13,9 @@ docker-compose run  \
     -u appuser \
     app 
 
-echo " ==> [Docker-compose] running the HAIS Webserver ..." && echo ""
-docker-compose run  \
-    -p 8080:8080 \
-    -v $(pwd)/data/download:/app/download \
-    -u appuser \
-    webserver 
+# echo " ==> [Docker-compose] running the HAIS Webserver ..." && echo ""
+# docker-compose run  \
+#     -p 8080:8080 \
+#     -v $(pwd)/data/download:/app/download \
+#     -u appuser \
+#     webserver 

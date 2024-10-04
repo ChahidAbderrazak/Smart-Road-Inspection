@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:20.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Add user
@@ -15,11 +15,14 @@ WORKDIR /app
 COPY ./ /app
 
 # Install Python 3, PyQt5
-RUN apt-get update && apt-get install -y python3-opencv python3-pyqt5 python3-pip
+RUN apt-get update && apt-get install -y python3-pip python3-pyqt5 
 
 # Install pip requirements
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
+
+## avoid PyQT issue :  no Qt platform plugin could be initialized
+RUN pip3 uninstall -y opencv-python
 
 # ENV DEBIAN_FRONTEND teletype
 
