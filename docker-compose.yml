@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
     db:
-        container_name: hais-db
+        container_name: '${SQL_CNTNR_NAME}'
         image: mysql:5.7
         ports:
             - "32001:3306"
@@ -16,23 +16,41 @@ services:
     app:
         links:
             - "db"
-        container_name: hais-inspection
-        image: hais-desktop:v1
+        image: '${IMG_BUILDER}:${VERSION}'
+        container_name: '${APP_CNTNR_NAME}'
         build: 
-            context: ./HAIS-GUI/
+            context: ./src/
             dockerfile: Dockerfile
-        # command: 'sh'
-        command: 'python3 main_gui.py --cfg config.yml'
+        
+        volumes:
+            - './src/:/app/src'
+            - './data:/app/data'
+            - './models:/app/models'
+            - './config:/app/config'
+            - './logs:/app/logs'
+            - '/tmp/.X11-unix:/tmp/.X11-unix'
+        environment:
+            - DISPLAY=$DISPLAY
 
-    # webserver:
-    #     container_name: hais-visualization
-    #     image: hais-webserver:v1
-    #     build: 
-    #         context: ./webapp/
-    #         dockerfile: Dockerfile
-    #     ports:
-    #         - 8080:8080
+        # command: 'python3 src/gui.py --cfg config/config.yml'
+        command: 'sh'
+
+
+    webserver:
+        image: '${WEB_IMG_BUILDER}:${VERSION}'
+        container_name: '${WEBAPP_CNTNR_NAME}'
+        build: 
+            context: ./webapp/
+            dockerfile: Dockerfile
+        ports:
+            - 8080:8080
 
       
-        
+        network_mode: host
+        volumes:
+            - './data/download:/app/data/download'
+            - './models:/app/models'
+            - './config:/app/config'
+        command: ' python3 webapp.py '
+        # command: 'sh'
 

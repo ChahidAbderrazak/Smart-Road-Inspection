@@ -30,6 +30,6 @@ config_file = args.cfg
 config = load_config(config_file)
 
 def test_components_continuity_mask():
-    img_path = 'data/M1.tiff'
+    img_path = 'data/road.jpg'
     return 0
 

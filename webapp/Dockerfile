@@ -8,9 +8,8 @@ COPY . /app
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# # Code PyTesting
-# RUN pip install pytest
-# RUN pytest
+# Code PyTesting
+RUN pip install pytest
 
 # Run the software
 EXPOSE 8080

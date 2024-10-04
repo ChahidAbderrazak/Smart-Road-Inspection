@@ -1,7 +1,10 @@
+.env-ip
+logs/*
+models/*
+cache/*
+
 **syntax.py
 **results/**
-**temp/**
-**tmp/**
 **cache/**
 **data/**
 **Other/*

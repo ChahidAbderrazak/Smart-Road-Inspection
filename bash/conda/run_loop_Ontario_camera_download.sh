@@ -2,7 +2,7 @@
 #####################  Ontario511 CAMERA LIVE  ##########################
 clear
 
-cd HAIS-GUI
+cd src
 cnt=0
 while [ 0 -le $cnt ]
 do

@@ -11,12 +11,12 @@ import json
 import shutil
 
 
-def get_data_folder():
-	download_path=os.path.join(os.path.dirname(os.getcwd()),'data','download')
-	if not os.path.exists(download_path):
-			# get the parent root folder
-			download_path=os.path.join(os.path.dirname(os.path.dirname(os.getcwd())),'data','download')
-	return download_path
+# def get_data_folder():
+# 	download_path=os.path.join(os.path.dirname(os.getcwd()),'data','download')
+# 	if not os.path.exists(download_path):
+# 			# get the parent root folder
+# 			download_path=os.path.join(os.path.dirname(os.path.dirname(os.getcwd())),'data','download')
+# 	return download_path
 
 def load_json(filename):
 	try:
@@ -29,7 +29,7 @@ def load_json(filename):
 		else:
 			msg =f'\n\n Error: The JSON file <{filename}> cannot be found!!'
 			raise Exception(msg)
-			
+
 	except:
 		msg = f'\n\n Error: The JSON file <{filename}> cannot be read correctly!!'
 		print(msg)
@@ -49,7 +49,7 @@ def clean_directory(DIR):
 		if not os.path.exists(DIR):
 				os.makedirs(DIR)
 		else:
-			shutil.rmtree(DIR) 
+			shutil.rmtree(DIR)
 			os.makedirs(DIR)
 
 
@@ -57,7 +57,7 @@ from math import sin, cos, sqrt, asin, radians
 def gps_location_distance( point1, point2):
 
 	'''
-	Calculate the great circle distance in meters between two points 
+	Calculate the great circle distance in meters between two points
 	on the earth (specified in decimal degrees)
 	'''
 	lat1 = point1[0]
@@ -65,14 +65,14 @@ def gps_location_distance( point1, point2):
 	lat2 = point2[0]
 	lon2 = point2[1]
 
-	# convert decimal degrees to radians 
+	# convert decimal degrees to radians
 	lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
 
-	# haversine formula 
-	dlon = lon2 - lon1 
-	dlat = lat2 - lat1 
+	# haversine formula
+	dlon = lon2 - lon1
+	dlat = lat2 - lat1
 	a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-	c = 2 * asin(sqrt(a)) 
+	c = 2 * asin(sqrt(a))
 	r = 6371 # Radius of earth in kilometers. Use 3956 for miles. Determines return value units.
 	return c * r *1000
 
@@ -116,7 +116,7 @@ def fuse_inspection_dict_maps(inspection_path, new_inspection_path, min_dist=1):
 		if max_dist<distance:
 			max_dist=distance
 		if min_dist>distance:
-			min_dist=distance	
+			min_dist=distance
 		# print(f'\n\n - point_new={point_new} --> {point_} \n - distance={distance}')
 		# print(f'\n - closest_node [osmid={osmid}]: \n{closest_node}')
 	print(f'\n\n - max_dist={max_dist} m , min_dist={min_dist} m\n - distance={distance} m')
@@ -150,17 +150,17 @@ def get_sensor_data_from_location(inspection_dict, picked_location, disp=False):
 		print( f'\n\n The closed point to  input location [{point}] is the node[ id={nearest_node["id"]} ]: distance={distance} m')
 		print( f'\n{nearest_node} ')
 		print(f'\n output sample_token={sample_token} ')
-	return sample_token, distance 
+	return sample_token, distance
 
 from nuscenes.nuscenes import NuScenes
 def search_node_in_DB(database_root, picked_location, max_dist=2, version='v1.0', disp=False):
 	'''
 	searching the closed node to the GPS location <picked_location> within <max_dist> radius in meters
 	'''
-	# initialization 
-	dict_sensor={"camera": "", 
-							"lidar": "", 
-							"Kenematics": "", 
+	# initialization
+	dict_sensor={"camera": "",
+							"lidar": "",
+							"Kenematics": "",
 							"weather":'',
 							}
 	empty_db=True
@@ -168,14 +168,14 @@ def search_node_in_DB(database_root, picked_location, max_dist=2, version='v1.0'
 	# search the exising nodes
 	# list_inspections= glob(os.path.join(database_root,'*', 'inspection_dic.json'))
 	list_inspections=[os.path.join(path, name) for path, subdirs, files in os.walk(database_root) for name in files if name=='inspection_dic.json']
-	if disp: 
+	if disp:
 		print(f'\n\n database_root={database_root}')
 		print(f'\n ->  {len(list_inspections)} nodes are found: \n{list_inspections}')
 
 	# find the nearest node to the <picked_location>
 	for file in list_inspections:
 		inspection_dict=load_json(file)
-		if disp: 
+		if disp:
 			print(f'\n searching in mission: {os.path.basename(os.path.dirname(file))}')
 		token, distance = get_sensor_data_from_location(inspection_dict,	picked_location, disp=disp)
 		if distance<=max_dist:
@@ -184,12 +184,12 @@ def search_node_in_DB(database_root, picked_location, max_dist=2, version='v1.0'
 			sample_token=token
 			empty_db=False
 			print(f'\n - found candidate: sample_token{sample_token}')
-	
+
 	# reteibe the the sample data
 	if not empty_db:
 		if disp:
 			print(f'\n - Loading the Nuscenes database ...')
-		
+
 		dataroot=os.path.dirname(file_json)
 
 		def create_sensor_data_dict(sample_token, dataroot, version, disp=True):
@@ -221,7 +221,7 @@ def search_node_in_DB(database_root, picked_location, max_dist=2, version='v1.0'
 
 if __name__ == '__main__':
 	# update inspection dict
-	database_root='../data/download/node1' 	
+	database_root='../data/download/node1'
 
 	# full_inspection_dict_path= os.path.join(os.getcwd(),'dataabase', 'inspection_dic.json')
 	# # update teh inspection database
@@ -234,5 +234,5 @@ if __name__ == '__main__':
 	dict_sensor=search_node_in_DB(database_root,	picked_location, max_dist=max_dist, disp=True)
 	print(f'\n sensor dict={dict_sensor}')
 
- 
-  
+
+

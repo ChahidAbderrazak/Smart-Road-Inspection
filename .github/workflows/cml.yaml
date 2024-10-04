@@ -26,9 +26,6 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Test the code using Pytest
-        run: |
-          pytest
 
   test_modules:
     needs: build_test
@@ -43,10 +40,10 @@ jobs:
           # install packages
           pip install -r requirements.txt
 
-      - name: Run the test pipeline
+      - name: Run the pytest pipeline
         run: |
           # run the code tests
-          src/test/test_codes.sh >> results.md
+          pytest >> results.md
 
       - name: Write CML report
         env:
