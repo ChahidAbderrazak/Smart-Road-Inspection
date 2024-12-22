@@ -1,10 +1,10 @@
-#/bin/bash
+#!/bin/bash
 
 # load the other env variables
 . .env
 
 # #### -----------------------   RUNNING THE PROJECT DOCKER  -------------------------------
-# docker-compose  -p "${PROJECT_NAME}" -f docker-compose.yml up -d
+# docker compose  -p "${PROJECT_NAME}" -f docker-compose.yml up -d
 
 #### -----------------------   IP Adresses  -------------------------------
 echo && echo "[${PROJECT_NAME}][IP Adresses] Getting the IP adresses of the different servers..."

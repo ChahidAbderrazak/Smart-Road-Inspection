@@ -33,7 +33,7 @@ services:
             - DISPLAY=$DISPLAY
 
         # command: 'python3 src/gui.py --cfg config/config.yml'
-        command: 'sh'
+        command: 'bash'
 
 
     webserver:
